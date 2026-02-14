@@ -17,7 +17,33 @@ const Ezhuthidu: React.FC<EzhuthiduProps> = ({ settings, activeKeys }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const keyboardContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const mirrorDivRef = useRef<HTMLDivElement>(null);
   const [keyboardExtraOffset, setKeyboardExtraOffset] = useState(0);
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!textareaRef.current) return;
+
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+
+      const newText = content.slice(0, start) + text + content.slice(end);
+      setContent(newText);
+
+      // Update cursor position after paste
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + text.length;
+          textareaRef.current.focus();
+        }
+      }, 0);
+    } catch (err) {
+      console.error('Failed to read clipboard contents: ', err);
+      // Fallback or alert if needed
+      alert('Unable to paste. Please ensure you have granted clipboard permissions.');
+    }
+  };
 
   useEffect(() => {
     const handleMobileInput = (e: Event) => {
@@ -190,33 +216,53 @@ const Ezhuthidu: React.FC<EzhuthiduProps> = ({ settings, activeKeys }) => {
     }
   };
 
-
-  // Simplified Auto-scroll logic: ensures the line being typed is always visible in the bounded viewport
+  // Strict Edge Scroll: Only scrolls when text hits the very bottom edge of the view
   useEffect(() => {
-    if (textareaRef.current && scrollContainerRef.current) {
+    if (textareaRef.current && scrollContainerRef.current && mirrorDivRef.current) {
       const textarea = textareaRef.current;
       const container = scrollContainerRef.current;
+      const mirror = mirrorDivRef.current;
 
       const { selectionStart } = textarea;
       const textBeforeCursor = content.substring(0, selectionStart);
-      const linesBeforeCursor = textBeforeCursor.split('\n').length;
-      const lineHeight = 32;
-      const cursorY = linesBeforeCursor * lineHeight;
 
+      mirror.textContent = textBeforeCursor;
+      if (textBeforeCursor.endsWith('\n')) {
+        mirror.textContent += '\u200B';
+      }
+
+      const cursorY = mirror.clientHeight;
       const containerHeight = container.clientHeight;
       const scrollY = container.scrollTop;
 
-      // Ensure cursor stays in middle view
-      if (cursorY > scrollY + containerHeight - 80 || cursorY < scrollY + 80) {
+      // Calculate position of cursor relative to the visible part of the container
+      const relativeCursorY = cursorY - scrollY;
+
+      // "Edge Threshold" - strictly trigger only if we are within 30px of the bottom edge (keyboard)
+      const threshold = containerHeight - 30;
+
+      if (relativeCursorY > threshold) {
+        // Scroll exactly the amount needed to stay at the threshold
         container.scrollTo({
-          top: cursorY - (containerHeight / 2),
-          behavior: 'smooth'
+          top: scrollY + (relativeCursorY - threshold),
+          behavior: 'auto' // Instant scroll feels more precise and less "detectable"
         });
       }
     }
   }, [content]);
 
-  const wordCount = content.trim() === "" ? 0 : content.trim().split(/\s+/).length;
+  // Auto-resize textarea to fit content and provide "Infinite Paper" feel
+  useEffect(() => {
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      textarea.style.height = 'auto';
+      // Set height to scrollHeight to fit all content, 
+      // ensuring the paper container expands naturally
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [content]);
+
+
 
   return (
     <div className="flex-1 flex flex-col bg-warm-bg overflow-hidden font-display relative min-w-[300px]">
@@ -227,6 +273,9 @@ const Ezhuthidu: React.FC<EzhuthiduProps> = ({ settings, activeKeys }) => {
           <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 px-1 xs:px-2 text-slate-400">
             <button onClick={handleDownloadPDF} disabled={isExporting} className="p-0.5 xs:p-1 hover:text-slate-800 transition-colors disabled:opacity-50" title="Export PDF">
               <span className="material-symbols-outlined text-base xs:text-lg sm:text-xl leading-none">picture_as_pdf</span>
+            </button>
+            <button onClick={handlePaste} className="p-0.5 xs:p-1 hover:text-slate-800 transition-colors" title="Paste Text">
+              <span className="material-symbols-outlined text-base xs:text-lg sm:text-xl leading-none">content_paste</span>
             </button>
             <button
               onClick={() => setShowKeyboard(!showKeyboard)}
@@ -253,12 +302,24 @@ const Ezhuthidu: React.FC<EzhuthiduProps> = ({ settings, activeKeys }) => {
       {/* SCROLLABLE PAPER AREA - Responsive padding and sizing */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto bg-transparent scroll-smooth px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 3xl:px-16 4xl:px-20 5xl:px-24 pb-4 xs:pb-8 sm:pb-12 md:pb-16 lg:pb-20 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         <div className="max-w-full xs:max-w-xl sm:max-w-2xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl 3xl:max-w-7xl 4xl:max-w-8xl 5xl:max-w-9xl mx-auto py-1 xs:py-2">
-          <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 md:p-10 lg:p-12 xl:p-14 2xl:p-16 3xl:p-20 4xl:p-24 5xl:p-28 min-h-[400px] xs:min-h-[500px] sm:min-h-[600px] md:min-h-[800px] lg:min-h-[1000px] xl:min-h-[1100px] 2xl:min-h-[1200px] 3xl:min-h-[1400px] 4xl:min-h-[1600px] 5xl:min-h-[1800px] border border-slate-200/50 shadow-xl xs:shadow-2xl sm:shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden">
+          <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl p-4 xs:p-6 sm:p-8 md:p-10 lg:p-12 xl:p-14 2xl:p-16 3xl:p-20 4xl:p-24 5xl:p-28 min-h-[400px] xs:min-h-[500px] sm:min-h-[600px] md:min-h-[800px] lg:min-h-[1000px] xl:min-h-[1100px] 2xl:min-h-[1200px] 3xl:min-h-[1400px] 4xl:min-h-[1600px] 5xl:min-h-[1800px] border border-slate-200/50 shadow-xl xs:shadow-2xl sm:shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative overflow-hidden mb-[400px]">
             <div className="absolute top-0 left-0 right-0 h-1 xs:h-1.5 2xl:h-2 bg-gradient-to-r from-header-brown to-primary opacity-60"></div>
+
+            {/* Mirror Div for Strict Edge Scroll - Hidden but structurally identical to textarea container */}
+            <div
+              ref={mirrorDivRef}
+              aria-hidden="true"
+              className="w-full absolute top-0 left-0 p-4 xs:p-6 sm:p-8 md:p-10 lg:p-12 xl:p-14 2xl:p-16 3xl:p-20 4xl:p-24 5xl:p-28 pointer-events-none invisible whitespace-pre-wrap break-words text-base xs:text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-3xl 3xl:text-4xl 4xl:text-5xl 5xl:text-6xl leading-relaxed font-tamil border-none"
+              style={{
+                zIndex: -1,
+                height: 'auto',
+              }}
+            ></div>
+
             <textarea
               ref={textareaRef}
               autoFocus
-              className="w-full min-h-[350px] xs:min-h-[450px] sm:min-h-[550px] md:min-h-[750px] lg:min-h-[950px] xl:min-h-[1050px] 2xl:min-h-[1100px] 3xl:min-h-[1300px] 4xl:min-h-[1500px] 5xl:min-h-[1700px] border-none focus:ring-0 p-0 text-base xs:text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-3xl 3xl:text-4xl 4xl:text-5xl 5xl:text-6xl leading-relaxed font-tamil resize-none text-slate-800 placeholder-slate-200 selection:bg-primary/10 bg-transparent"
+              className="w-full h-auto min-h-[350px] xs:min-h-[450px] sm:min-h-[550px] md:min-h-[750px] lg:min-h-[950px] xl:min-h-[1050px] 2xl:min-h-[1100px] 3xl:min-h-[1300px] 4xl:min-h-[1500px] 5xl:min-h-[1700px] border-none focus:ring-0 p-0 text-base xs:text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-2xl 2xl:text-3xl 3xl:text-4xl 4xl:text-5xl 5xl:text-6xl leading-relaxed font-tamil resize-none text-slate-800 placeholder-slate-200 selection:bg-primary/10 bg-transparent mb-[70vh]"
               placeholder="இங்கே எழுதத் தொடங்குங்கள்..."
               value={content}
               onChange={(e) => setContent(e.target.value)}

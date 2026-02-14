@@ -218,19 +218,33 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     if (window.location.hash !== hash) {
       window.history.pushState({ mode: newMode }, '', window.location.pathname + hash);
     }
+
+    if (newMode === 'custom') {
+      // Internal switch to custom: start fresh
+      setTargetText("");
+      setIsCustomSetup(true);
+      sessionStorage.removeItem('ezhuthidu_custom_target');
+      sessionStorage.removeItem('ezhuthidu_custom_setup');
+      sessionStorage.removeItem('ezhuthidu_custom_duration');
+    }
   };
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(categories[0].id);
   const [selectedCompoundVowel, setSelectedCompoundVowel] = useState('அ'); // New state for vowel selection
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(0); // Track which page of 8 lessons to show
   const LESSONS_PER_PAGE = 8;
-  const [targetText, setTargetText] = useState("");
+  const [targetText, setTargetText] = useState(() => {
+    return sessionStorage.getItem('ezhuthidu_custom_target') || "";
+  });
   const [inputText, setInputText] = useState("");
   const [inputHistory, setInputHistory] = useState(""); // Full history for tape calculation
   const [partialInput, setPartialInput] = useState(""); // Tracks intermediate typing (e.g. 'க்' for 'கா')
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [isCustomSetup, setIsCustomSetup] = useState(false);
+  const [isCustomSetup, setIsCustomSetup] = useState(() => {
+    const saved = sessionStorage.getItem('ezhuthidu_custom_setup');
+    return saved ? saved === 'true' : false;
+  });
   const [feedbackStatus, setFeedbackStatus] = useState<'neutral' | 'success' | 'error'>('neutral');
   const [stats, setStats] = useState({
     characters: 0,
@@ -239,7 +253,10 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     grossWpm: 0,
     netWpm: 0
   });
-  const [practiceDuration, setPracticeDuration] = useState<number | null>(null); // in seconds, null means no limit
+  const [practiceDuration, setPracticeDuration] = useState<number | null>(() => {
+    const saved = sessionStorage.getItem('ezhuthidu_custom_duration');
+    return saved ? parseInt(saved) : null;
+  }); // in seconds, null means no limit
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
   const onCompleteCalled = useRef(false);
@@ -248,6 +265,15 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   const inputAreaRef = useRef<HTMLDivElement>(null);
   const targetDisplayRef = useRef<HTMLDivElement>(null);
   // const [showLessonGrid, setShowLessonGrid] = useState(true);
+
+  // Persistence for Custom Text
+  useEffect(() => {
+    if (mode === 'custom') {
+      sessionStorage.setItem('ezhuthidu_custom_target', targetText);
+      sessionStorage.setItem('ezhuthidu_custom_setup', isCustomSetup.toString());
+      sessionStorage.setItem('ezhuthidu_custom_duration', practiceDuration?.toString() || "");
+    }
+  }, [targetText, isCustomSetup, practiceDuration, mode]);
 
   // Update Uyirmei lessons when vowel selection changes
   useEffect(() => {
@@ -268,8 +294,8 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
           : cat
       ));
 
-      // Auto-select the first lesson of the new series
-      if (newLessons.length > 0) {
+      // Auto-select the first lesson of the new series (only if in lesson mode)
+      if (mode === 'lesson' && newLessons.length > 0) {
         setTargetText(newLessons[0].char);
         setInputText("");
         setInputHistory("");
@@ -277,7 +303,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         setFeedbackStatus('neutral');
       }
     }
-  }, [selectedCompoundVowel, selectedCategoryId]);
+  }, [selectedCompoundVowel, selectedCategoryId, mode]);
 
   // Sync target text when grid changes
   useEffect(() => {
@@ -295,7 +321,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
   // Sync target text display scroll with current progress
   useEffect(() => {
-    if (mode === 'free' && targetDisplayRef.current) {
+    if (targetDisplayRef.current) {
       const activeChar = targetDisplayRef.current.querySelector('.char-current');
       if (activeChar) {
         activeChar.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
@@ -332,12 +358,6 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     }
   }, [inputText, selectedCategoryId]);
 
-  // Focus input without scrolling (for lesson mode)
-  useEffect(() => {
-    if (mode === 'lesson') {
-      inputRef.current?.focus({ preventScroll: true });
-    }
-  }, [mode, targetText, selectedCategoryId]);
 
   const currentCategory = categories.find(c => c.id === selectedCategoryId) || categories[0];
 
@@ -351,6 +371,10 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     setFeedbackStatus('neutral'); // Force neutral on reset to prevent stale success state
     setIsFinished(false);
     onCompleteCalled.current = false;
+    // Intentional focus after reset
+    setTimeout(() => {
+      inputRef.current?.focus({ preventScroll: true });
+    }, 0);
   };
 
   const selectLesson = (index: number) => {
@@ -366,6 +390,8 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
   // Reset page when category changes
   useEffect(() => {
+    if (mode !== 'lesson') return;
+
     setCurrentPage(0);
     setCurrentLessonIndex(0);
 
@@ -384,7 +410,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       resetPractice();
       // setFeedbackStatus('neutral'); // Handled by resetPractice
     }
-  }, [selectedCategoryId, selectedCompoundVowel, categories]);
+  }, [selectedCategoryId, selectedCompoundVowel, categories, mode]);
 
   const selectPracticeLesson = (text: string) => {
     setTargetText(text);
@@ -425,8 +451,11 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       setTargetText(getRandomText('free-typing'));
       resetPractice();
     } else if (mode === 'custom') {
-      setTargetText(""); // Ensure custom mode starts with an empty box
-      setIsCustomSetup(true);
+      // Only set to setup mode if we don't have a persisted target text
+      if (!sessionStorage.getItem('ezhuthidu_custom_target')) {
+        setTargetText("");
+        setIsCustomSetup(true);
+      }
     }
   }, [selectedCategoryId, mode, isLoading]);
 
@@ -464,18 +493,24 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       if (type === 'char') {
         const char = value;
 
-        if (mode === 'lesson') {
+        if (mode === 'lesson' && !isCustomSetup) {
           const checkMatch = (produced: string) => {
             if (produced === targetText) {
               setFeedbackStatus('success');
               setInputText(inputText + targetText);
               setPartialInput("");
             } else if (isPotentialMatch(produced, targetText)) {
-              setFeedbackStatus('error');
+              // Only trigger error if not already in error state to prevent noise
+              if (feedbackStatus !== 'error') {
+                setFeedbackStatus('error');
+              }
               setPartialInput(produced);
             } else {
-              setFeedbackStatus('error');
-              setPartialInput("");
+              // Only trigger error if not already in error state
+              if (feedbackStatus !== 'error') {
+                setFeedbackStatus('error');
+                setPartialInput("");
+              }
             }
           };
 
@@ -487,10 +522,15 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
             if (selectedCategoryId === 'keyboard_practice') {
               const result = processTamilInput(partialInput, value, partialInput.length);
               const produced = result.text;
+
+              // Only allow ONE error character at a time
+              const { lastInputStatus } = calculateDynamicTape(targetText, inputText + produced, inputHistory);
+              if (lastInputStatus === 'error' && feedbackStatus === 'error') {
+                setPartialInput("");
+                return;
+              }
+
               const newDisplayInput = inputText + produced;
-
-              const { lastInputStatus } = calculateDynamicTape(targetText, newDisplayInput, inputHistory);
-
               setInputText(newDisplayInput);
               setPartialInput("");
               setFeedbackStatus(lastInputStatus);
@@ -723,11 +763,16 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         // If this is Keyboard Practice, we match using the dynamic Space-Driven logic
         if (selectedCategoryId === 'keyboard_practice') {
           // Update only display input. inputHistory only updates on Space.
+          // LIMIT ACCUMULATION: If already in error state, don't append more wrong chars
+          const { lastInputStatus } = calculateDynamicTape(targetText, inputText + produced, inputHistory);
+
+          if (lastInputStatus === 'error' && feedbackStatus === 'error') {
+            // Already showing an error, don't append another one
+            setPartialInput("");
+            return;
+          }
+
           const newDisplayInput = inputText + produced;
-
-          // calculateDynamicTape handles history + current_input
-          const { lastInputStatus } = calculateDynamicTape(targetText, newDisplayInput, inputHistory);
-
           setInputText(newDisplayInput);
           setPartialInput("");
           setFeedbackStatus(lastInputStatus);
@@ -765,19 +810,23 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
           return;
         }
 
-        // WRONG INPUT - Append to text to show error
-        setFeedbackStatus('error');
-        setPartialInput("");
-        // Append the wrong character so the user sees it (in red due to feedbackStatus)
-        const newInp = inputText + produced;
-        setInputText(newInp);
+        // WRONG INPUT - Only allow ONE error character at a time to prevent repetition/noise
+        if (feedbackStatus !== 'error') {
+          setFeedbackStatus('error');
+          setPartialInput("");
+          const newInp = inputText + produced;
+          setInputText(newInp);
 
-        const newPosEnd = newInp.length;
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.selectionStart = inputRef.current.selectionEnd = newPosEnd;
-          }
-        }, 0);
+          const newPosEnd = newInp.length;
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPosEnd;
+            }
+          }, 0);
+        } else {
+          // Already in error state, don't append another wrong character
+          setPartialInput("");
+        }
         return;
       }
     }
@@ -826,16 +875,54 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
   useEffect(() => {
     const targetGraphemes = getTamilGraphemes(targetText);
-    const inputGraphemes = getTamilGraphemes(inputText);
+    const inputGraphemes = getTamilGraphemes(selectedCategoryId === 'keyboard_practice' ? inputHistory + inputText : inputText);
 
     let correctChars = 0;
-    const lengthToCompare = Math.min(targetGraphemes.length, inputGraphemes.length);
-    for (let i = 0; i < lengthToCompare; i++) {
-      if (inputGraphemes[i] === targetGraphemes[i]) correctChars++;
+    let errors = 0;
+
+    // Split target into tokens to decide on word-based vs character-based matching
+    const targetTokens = targetText.trim().split(/\s+/);
+    const inputRaw = (selectedCategoryId === 'keyboard_practice' ? inputHistory + inputText : inputText);
+    const inputTokens = inputRaw.trim().split(/\s+/).filter(t => t.length > 0);
+
+    if (targetTokens.length > 1 || selectedCategoryId === 'keyboard_practice') {
+      // WORD-BASED SYNC MATCHER
+      let targetIdx = 0;
+      for (let i = 0; i < inputTokens.length; i++) {
+        const inpToken = inputTokens[i];
+        const currentTarget = targetTokens[targetIdx % targetTokens.length];
+        const prevTarget = targetTokens[(targetIdx - 1 + targetTokens.length) % targetTokens.length];
+
+        if (inpToken === currentTarget) {
+          correctChars += getTamilGraphemes(inpToken).length;
+          targetIdx++;
+        } else if (inpToken === prevTarget) {
+          correctChars += getTamilGraphemes(inpToken).length;
+        } else {
+          errors++;
+        }
+      }
+      correctChars += Math.max(0, inputTokens.length - 1); // Spaces
+    } else {
+      // CHARACTER-BASED SYNC MATCHER
+      let targetIdx = 0;
+      for (let i = 0; i < inputGraphemes.length; i++) {
+        const char = inputGraphemes[i];
+        const currentTarget = targetGraphemes[targetIdx % (targetGraphemes.length || 1)];
+        const prevTarget = targetGraphemes[(targetIdx - 1 + targetGraphemes.length) % (targetGraphemes.length || 1)];
+
+        if (char === currentTarget) {
+          correctChars++;
+          targetIdx++;
+        } else if (char === prevTarget) {
+          correctChars++;
+        } else {
+          errors++;
+        }
+      }
     }
 
     const totalChars = inputGraphemes.length;
-    const errors = totalChars - correctChars;
     const minutes = Math.max(elapsedTime / 60, 0.01);
 
     const accuracyRatio = totalChars > 0 ? (correctChars / totalChars) : 1;
@@ -1034,14 +1121,25 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
                 Start
               </button>
               <button
-                onClick={() => setTargetText("")}
+                onClick={() => {
+                  setTargetText("");
+                  sessionStorage.removeItem('ezhuthidu_custom_target');
+                  sessionStorage.removeItem('ezhuthidu_custom_setup');
+                  sessionStorage.removeItem('ezhuthidu_custom_duration');
+                }}
                 className="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-red-100 transition-all border-2 border-red-100 flex items-center justify-center gap-2 text-sm"
               >
                 <span className="material-symbols-outlined text-sm">delete_sweep</span>
                 Clear
               </button>
               <button
-                onClick={() => { setIsCustomSetup(false); updateModeWithHistory('free'); }}
+                onClick={() => {
+                  setIsCustomSetup(false);
+                  sessionStorage.removeItem('ezhuthidu_custom_target');
+                  sessionStorage.removeItem('ezhuthidu_custom_setup');
+                  sessionStorage.removeItem('ezhuthidu_custom_duration');
+                  updateModeWithHistory('free');
+                }}
                 className="flex-1 bg-slate-100 text-slate-800 py-3 rounded-xl font-black uppercase tracking-widest hover:bg-slate-200 transition-all border-2 border-slate-200 flex items-center justify-center gap-2 text-sm"
               >
                 <span className="material-symbols-outlined text-sm">close</span>
@@ -1279,6 +1377,9 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
                   if (mode === 'custom') {
                     setTargetText("");
                     setIsCustomSetup(true);
+                    sessionStorage.removeItem('ezhuthidu_custom_target');
+                    sessionStorage.removeItem('ezhuthidu_custom_setup');
+                    sessionStorage.removeItem('ezhuthidu_custom_duration');
                   }
                 }}
                 className="group flex items-center justify-center gap-2 w-auto min-w-[160px] px-6 py-2 bg-cream-light/50 text-slate-800 border-2 border-slate-200 rounded-xl font-bold hover:bg-cream-light/70 hover:shadow-lg transition-all active:scale-95 shadow-inner text-sm"

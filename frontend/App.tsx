@@ -310,6 +310,11 @@ const AppInner: React.FC = () => {
         setPracticeInitialMode(mode as any);
       } else if (view === 'Practice') {
         setPracticeInitialMode(undefined);
+      } else {
+        // Clear custom practice storage when navigating away from Practice page
+        sessionStorage.removeItem('ezhuthidu_custom_target');
+        sessionStorage.removeItem('ezhuthidu_custom_setup');
+        sessionStorage.removeItem('ezhuthidu_custom_duration');
       }
 
       setCurrentView(view);
