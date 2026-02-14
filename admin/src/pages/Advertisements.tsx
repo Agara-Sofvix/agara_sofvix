@@ -1,0 +1,399 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import {
+    Plus,
+    Edit,
+    Trash2,
+    Megaphone,
+    Search,
+    Save,
+    ExternalLink,
+    CheckCircle2,
+    XCircle,
+    Calendar,
+    Layout
+} from 'lucide-react';
+import { format } from 'date-fns';
+import { ADMIN_API_URL } from '../config/apiConfig';
+
+interface Advertisement {
+    _id: string;
+    title: string;
+    imageUrl: string;
+    linkUrl: string;
+    position: 'left-side' | 'right-side';
+    isActive: boolean;
+    startDate?: string;
+    endDate?: string;
+    createdAt: string;
+}
+
+const Advertisements = () => {
+    const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    // Form State
+    const [formData, setFormData] = useState({
+        title: '',
+        imageUrl: '',
+        linkUrl: '',
+        position: 'left-side' as const,
+        isActive: true,
+        startDate: '',
+        endDate: '',
+    });
+
+    useEffect(() => {
+        fetchAdvertisements();
+    }, []);
+
+    const fetchAdvertisements = async () => {
+        setLoading(true);
+        try {
+            const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+            const token = user.token;
+            const response = await axios.get(`${ADMIN_API_URL}/advertisements`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setAdvertisements(response.data.advertisements);
+        } catch (error) {
+            console.error('Error fetching advertisements:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+            const token = user.token;
+
+            if (editingId) {
+                await axios.put(`${ADMIN_API_URL}/advertisements/${editingId}`, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                alert('Advertisement updated successfully!');
+            } else {
+                await axios.post(`${ADMIN_API_URL}/advertisements`, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                alert('Advertisement added successfully!');
+            }
+
+            resetForm();
+            fetchAdvertisements();
+        } catch (error) {
+            console.error('Error saving advertisement:', error);
+            alert('Failed to save advertisement.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this advertisement?')) return;
+
+        try {
+            const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+            const token = user.token;
+            await axios.delete(`${ADMIN_API_URL}/advertisements/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchAdvertisements();
+        } catch (error) {
+            console.error('Error deleting advertisement:', error);
+            alert('Failed to delete advertisement.');
+        }
+    };
+
+    const handleEdit = (ad: Advertisement) => {
+        setEditingId(ad._id);
+        setFormData({
+            title: ad.title,
+            imageUrl: ad.imageUrl,
+            linkUrl: ad.linkUrl,
+            position: ad.position as any,
+            isActive: ad.isActive,
+            startDate: ad.startDate ? format(new Date(ad.startDate), 'yyyy-MM-dd') : '',
+            endDate: ad.endDate ? format(new Date(ad.endDate), 'yyyy-MM-dd') : '',
+        });
+    };
+
+    const resetForm = () => {
+        setEditingId(null);
+        setFormData({
+            title: '',
+            imageUrl: '',
+            linkUrl: '',
+            position: 'left-side',
+            isActive: true,
+            startDate: '',
+            endDate: '',
+        });
+    };
+
+    const filteredAds = advertisements.filter(ad =>
+        ad.title.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const getPositionBadge = (pos: string) => {
+        const colors: any = {
+            'left-side': 'text-emerald-500 bg-emerald-500/10',
+            'right-side': 'text-blue-500 bg-blue-500/10',
+        };
+        return colors[pos] || 'text-slate-500 bg-slate-500/10';
+    };
+
+    return (
+        <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                    <div className="max-w-5xl mx-auto space-y-8">
+
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-blue-600/10 rounded-xl">
+                                    <Megaphone className="text-blue-500" size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-bold tracking-tight">Advertisement Management</h2>
+                                    <p className="text-slate-500 dark:text-slate-400 mt-1">Create and manage display advertisements across the platform.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Search */}
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search advertisements by title..."
+                                className="w-full pl-10 pr-4 py-3 bg-[#1a1d21] border border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none transition-all shadow-sm text-slate-300 placeholder-slate-600"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Ads List */}
+                        <div className="space-y-4">
+                            {loading ? (
+                                <div className="text-center py-12 text-slate-500">Loading advertisements...</div>
+                            ) : filteredAds.length === 0 ? (
+                                <div className="text-center py-12 text-slate-500">No advertisements found.</div>
+                            ) : (
+                                filteredAds.map((ad) => (
+                                    <div key={ad._id} className="bg-[#1a1d21] border border-slate-800 rounded-xl p-4 hover:border-blue-500/50 transition-all group shadow-sm">
+                                        <div className="flex items-center gap-4">
+                                            {/* Preview */}
+                                            <div className="w-20 h-20 rounded-lg overflow-hidden bg-[#0f1214] border border-slate-800 flex-shrink-0">
+                                                <img
+                                                    src={ad.imageUrl}
+                                                    alt={ad.title}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => (e.currentTarget.src = 'https://via.placeholder.com/150?text=Ad+Preview')}
+                                                />
+                                            </div>
+
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <h3 className="font-bold text-slate-200 truncate">{ad.title}</h3>
+                                                        <a
+                                                            href={ad.linkUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-0.5"
+                                                        >
+                                                            {ad.linkUrl} <ExternalLink size={10} />
+                                                        </a>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleEdit(ad)}
+                                                            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-blue-500 transition-all"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(ad._id)}
+                                                            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-red-500 transition-all"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-4 mt-3">
+                                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getPositionBadge(ad.position)}`}>
+                                                        {ad.position}
+                                                    </span>
+                                                    <div className="flex items-center gap-1 text-[10px] text-slate-500 font-bold uppercase">
+                                                        {ad.isActive ? (
+                                                            <><CheckCircle2 size={12} className="text-emerald-500" /> Active</>
+                                                        ) : (
+                                                            <><XCircle size={12} className="text-red-500" /> Inactive</>
+                                                        )}
+                                                    </div>
+                                                    {ad.startDate && (
+                                                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                                                            <Calendar size={12} /> {format(new Date(ad.startDate), 'MMM d')} - {ad.endDate ? format(new Date(ad.endDate), 'MMM d, yyyy') : 'Indefinite'}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Form Sidebar */}
+            <aside className="w-80 bg-[#1a1d21] border-l border-slate-800 p-6 overflow-y-auto custom-scrollbar shadow-xl z-10">
+                <div className="mb-6">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-blue-500 flex items-center gap-2">
+                        {editingId ? <Edit size={16} /> : <Plus size={16} />}
+                        {editingId ? 'Edit Ad' : 'New Advertisement'}
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                        {editingId ? 'Modify existing advertisement details.' : 'Fill in the details to create a new ad.'}
+                    </p>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Title</label>
+                        <input
+                            type="text"
+                            className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-sm text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                            placeholder="Ad Campaign Name"
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Image URL</label>
+                        <input
+                            type="text"
+                            className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-sm text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                            placeholder="https://..."
+                            value={formData.imageUrl}
+                            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Click URL</label>
+                        <input
+                            type="text"
+                            className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-sm text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                            placeholder="https://..."
+                            value={formData.linkUrl}
+                            onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
+                            required
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Position</label>
+                            <select
+                                className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-xs text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                value={formData.position}
+                                onChange={(e) => setFormData({ ...formData, position: e.target.value as any })}
+                            >
+                                <option value="left-side">Left Side</option>
+                                <option value="right-side">Right Side</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Start Date</label>
+                            <input
+                                type="date"
+                                className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-xs text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500"
+                                value={formData.startDate}
+                                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">End Date</label>
+                            <input
+                                type="date"
+                                className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-xs text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500"
+                                value={formData.endDate}
+                                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 py-2">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={formData.isActive}
+                                onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                            />
+                            <div className="w-9 h-5 bg-[#0f1214] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-500 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600 peer-checked:after:bg-white"></div>
+                        </label>
+                        <span className="text-xs font-semibold text-slate-400">Mark as Active</span>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={resetForm}
+                                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[10px] uppercase tracking-widest rounded-lg transition-all"
+                            >
+                                Cancel
+                            </button>
+                        )}
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className={`${editingId ? 'flex-[2]' : 'w-full'} py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-50`}
+                        >
+                            {isSubmitting ? 'Saving...' : (
+                                <>
+                                    <Save size={14} />
+                                    {editingId ? 'Update Ad' : 'Create Ad'}
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </form>
+
+                <div className="mt-8 pt-8 border-t border-slate-800">
+                    <div className="bg-blue-500/5 border border-blue-500/20 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Layout size={16} className="text-blue-500" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Placement Info</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">
+                            <strong>Left Side:</strong> Banner appears in the left 15% space.<br />
+                            <strong>Right Side:</strong> Banner appears in the right 15% space.
+                        </p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    );
+};
+
+export default Advertisements;
