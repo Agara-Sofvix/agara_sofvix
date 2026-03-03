@@ -28,6 +28,30 @@ export const getSettings = async (req: Request, res: Response): Promise<void> =>
                 },
                 branding: {
                     primaryColor: '#135bec'
+                },
+                seo: {
+                    metaTitle: 'எழுத்திடு - Master Tamil Typing',
+                    metaDescription: 'Learn and master Tamil typing with interactive lessons, tests, and tournaments.',
+                    metaKeywords: 'tamil typing, learn tamil, typing test, tamil keyboard',
+                    ogTitle: 'எழுத்திடு - Tamil Typing Platform',
+                    ogDescription: 'Master Tamil typing through engagement and fun.',
+                    ogImage: '',
+                    twitterHandle: '@ezhuthidu',
+                    googleAnalyticsId: '',
+                    googleSearchConsoleId: '',
+                    robotsTxt: 'User-agent: *\nAllow: /',
+                    sitemapEnabled: true,
+                    schemaSettings: {
+                        faqEnabled: true,
+                        breadcrumbEnabled: true,
+                        organizationEnabled: true
+                    },
+                    socialLinks: {
+                        facebook: '',
+                        instagram: '',
+                        linkedin: '',
+                        youtube: ''
+                    }
                 }
             });
         }
@@ -52,7 +76,8 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
             sessionTimeout,
             webhookUrl,
             notifications,
-            branding
+            branding,
+            seo
         } = req.body;
 
         let settings = await Settings.findOne();
@@ -80,6 +105,13 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
             settings.branding = {
                 ...settings.branding,
                 ...branding
+            };
+        }
+
+        if (seo !== undefined) {
+            settings.seo = {
+                ...settings.seo,
+                ...seo
             };
         }
 
@@ -255,6 +287,30 @@ export const getPublicSettings = async (req: Request, res: Response): Promise<vo
                 },
                 branding: {
                     primaryColor: '#135bec'
+                },
+                seo: {
+                    metaTitle: 'எழுத்திடு - Master Tamil Typing',
+                    metaDescription: 'Learn and master Tamil typing with interactive lessons, tests, and tournaments.',
+                    metaKeywords: 'tamil typing, learn tamil, typing test, tamil keyboard',
+                    ogTitle: 'எழுத்திடு - Tamil Typing Platform',
+                    ogDescription: 'Master Tamil typing through engagement and fun.',
+                    ogImage: '',
+                    twitterHandle: '@ezhuthidu',
+                    googleAnalyticsId: '',
+                    googleSearchConsoleId: '',
+                    robotsTxt: 'User-agent: *\nAllow: /',
+                    sitemapEnabled: true,
+                    schemaSettings: {
+                        faqEnabled: true,
+                        breadcrumbEnabled: true,
+                        organizationEnabled: true
+                    },
+                    socialLinks: {
+                        facebook: '',
+                        instagram: '',
+                        linkedin: '',
+                        youtube: ''
+                    }
                 }
             });
         }
@@ -268,11 +324,53 @@ export const getPublicSettings = async (req: Request, res: Response): Promise<vo
             branding: {
                 logoUrl: settings.branding.logoUrl || '',
                 primaryColor: settings.branding.primaryColor || '#135bec'
-            }
+            },
+            seo: settings.seo || {}
         };
 
         res.json(responseData);
     } catch (error: any) {
         res.status(500).json({ message: 'Error fetching public settings', error: error.message });
+    }
+};
+
+// Get robots.txt
+export const getRobotsTxt = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const settings = await Settings.findOne();
+        const robotsTxt = settings?.seo?.robotsTxt || 'User-agent: *\nAllow: /';
+        res.type('text/plain');
+        res.send(robotsTxt);
+    } catch (error: any) {
+        res.status(500).send('User-agent: *\nAllow: /');
+    }
+};
+
+// Get sitemap.xml (Basic implementation)
+export const getSitemapXml = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const settings = await Settings.findOne();
+        if (!settings?.seo?.sitemapEnabled) {
+            res.status(404).send('Sitemap disabled');
+            return;
+        }
+
+        const baseUrl = process.env.FRONTEND_URL || 'https://ezhuthidu.com';
+
+        // Basic sitemap with home page - can be expanded to include all dynamic routes
+        const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`;
+
+        res.type('application/xml');
+        res.send(sitemap);
+    } catch (error: any) {
+        res.status(500).send('Error generating sitemap');
     }
 };

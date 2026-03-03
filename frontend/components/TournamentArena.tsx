@@ -148,177 +148,206 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
         }
       `}} />
 
-      <div className="arena-asymmetric-grid py-8">
-
-        {/* Left Column: GLOBAL LEADERBOARD + PERSONAL STANDING (lg+) */}
-        <section className="flex flex-col gap-12 animate-in slide-in-from-left-8 duration-700 lg:col-start-1 order-3 lg:order-1">
-          <div>
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-black opacity-60">Tournament Leaderboard</h2>
-            <div className="space-y-1">
-              {isLoading ? (
-                <p className="text-xs opacity-50">Loading leaderboard...</p>
-              ) : leaderboard.length > 0 ? (
-                <>
-                  {leaderboard.slice(0, 5).map((entry, i) => (
-                    <div key={i} className={`rank-item ${(entry.user.username === stats.displayName || entry.user.name === stats.displayName) ? 'bg-primary/5 rounded-xl px-2 border-l-2 border-primary' : ''}`}>
-                      <div className="flex items-center gap-4">
-                        <span className="text-xl font-black italic text-slate-400">0{i + 1}</span>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-bold">{entry.user.username || entry.user.name} {(entry.user.username === stats.displayName || entry.user.name === stats.displayName) && '(You)'}</span>
-                          <span className="text-[8px] opacity-60 uppercase tracking-wider">{entry.accuracy}% Accuracy</span>
-                        </div>
-                      </div>
-                      <span className="text-lg font-black text-primary">{entry.wpm} WPM</span>
-                    </div>
-                  ))}
-
-                  {/* Show current user if not in Top 5 */}
-                  {(() => {
-                    const userRankIndex = leaderboard.findIndex(e => e.user.username === stats.displayName || e.user.name === stats.displayName);
-                    if (userRankIndex >= 5) {
-                      const userEntry = leaderboard[userRankIndex];
-                      return (
-                        <>
-                          <div className="py-2 flex justify-center opacity-30">
-                            <span className="text-xs font-black tracking-[0.3em]">•••</span>
-                          </div>
-                          <div className="rank-item border-2 border-dashed border-primary/20 bg-primary/5 rounded-xl px-2">
-                            <div className="flex items-center gap-4">
-                              <span className="text-xl font-black italic text-primary/40">{(userRankIndex + 1).toString().padStart(2, '0')}</span>
-                              <div className="flex flex-col">
-                                <span className="text-xs font-bold">{userEntry.user.username || userEntry.user.name} (You)</span>
-                                <span className="text-[8px] opacity-60 uppercase tracking-wider">{userEntry.accuracy}% Accuracy</span>
-                              </div>
-                            </div>
-                            <span className="text-lg font-black text-primary">{userEntry.wpm} WPM</span>
-                          </div>
-                        </>
-                      );
-                    }
-                    return null;
-                  })()}
-                </>
-              ) : (
-                <div className="text-center py-4 opacity-50 text-xs">No entries yet. Be the first!</div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-black opacity-60">Personal Standing</h2>
-            <div className="standing-card">
-              <span className="material-symbols-outlined text-4xl mb-3 opacity-20">leaderboard</span>
-              <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">Ranking</p>
-              <p className="text-xl font-black">
-                {isLoading ? '...' : (() => {
-                  const rank = leaderboard.findIndex(e => e.user.username === stats.displayName || e.user.name === stats.displayName) + 1;
-                  return rank > 0 ? `#${rank}` : 'Not Ranked';
-                })()}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Center Column: LIVE ACTIVE (lg+) */}
-        <section className="flex flex-col items-center animate-in zoom-in duration-700 order-1 lg:order-2 lg:col-start-2">
+      {!isLoading && !activeTournament ? (
+        <div className="flex flex-col items-center justify-center py-20 animate-in zoom-in duration-700">
           <div className="organic-core max-w-[550px] w-full mb-12">
             <div className="absolute inset-0 bg-gradient-to-tr from-[#92450f]/5 to-transparent pointer-events-none"></div>
-            <div className="flex items-center gap-3 mb-6 bg-red-600/10 border border-red-600/20 px-4 py-1.5 rounded-full">
-              <span className={`w-2 h-2 rounded-full pulse-live ${activeTournament ? 'bg-red-600' : 'bg-slate-400'}`}></span>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-700">
-                {activeTournament ? 'Live Tournament Active' : 'Arena Closed'}
+            <div className="flex items-center gap-3 mb-6 bg-slate-600/10 border border-slate-600/20 px-4 py-1.5 rounded-full">
+              <span className="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-700">
+                Arena Closed
               </span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tighter mb-4 leading-tight">
-              {activeTournament ? activeTournament.name : 'Elite Sprint'}
+              No Active Tournaments
             </h1>
             <p className="text-xs font-bold opacity-70 max-w-[280px] mb-8 leading-relaxed text-center mx-auto text-slate-600">
-              {activeTournament ? activeTournament.description : 'The pinnacle of Tamil typing proficiency. Prove your digital legacy.'}
+              There are currently no tournaments scheduled. Please check back later for upcoming events.
             </p>
             <button
-              className="group relative w-64 h-16 rounded-full bg-[#92450f] text-white overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl"
-              onClick={() => onNavigate('TournamentStart')}
+              onClick={() => onNavigate('Home')}
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[#92450f] hover:opacity-60 transition-all group"
             >
-              <span className="relative z-10 text-lg font-black tracking-widest uppercase">Start</span>
-              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
+              <span className="material-symbols-outlined text-xs transition-transform group-hover:-translate-x-1">arrow_back</span>
+              Back to Home
             </button>
-            <div className="mt-6 flex items-center gap-2 opacity-40">
-              <span className="material-symbols-outlined text-sm">lock</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest">Secure Protocol Enabled</span>
-            </div>
           </div>
+        </div>
+      ) : (
+        <>
+          <div className="arena-asymmetric-grid py-8">
 
-          <div className="flex flex-wrap justify-center gap-6 w-full">
-            <div className="pill-stat">
-              <div className="w-10 h-10 rounded-full bg-[#92450f]/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#92450f]">groups</span>
-              </div>
+            {/* Left Column: GLOBAL LEADERBOARD + PERSONAL STANDING (lg+) */}
+            <section className="flex flex-col gap-12 animate-in slide-in-from-left-8 duration-700 lg:col-start-1 order-3 lg:order-1">
               <div>
-                <p className="text-2xl font-black leading-none">{leaderboard.length.toLocaleString()}</p>
-                <p className="text-[10px] font-bold uppercase opacity-50">Competitors</p>
-              </div>
-            </div>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-black opacity-60">Tournament Leaderboard</h2>
+                <div className="space-y-1">
+                  {isLoading ? (
+                    <p className="text-xs opacity-50">Loading leaderboard...</p>
+                  ) : leaderboard.length > 0 ? (
+                    <>
+                      {leaderboard.slice(0, 5).map((entry, i) => (
+                        <div key={i} className={`rank-item ${(entry.user.username === stats.displayName || entry.user.name === stats.displayName) ? 'bg-primary/5 rounded-xl px-2 border-l-2 border-primary' : ''}`}>
+                          <div className="flex items-center gap-4">
+                            <span className="text-xl font-black italic text-slate-400">0{i + 1}</span>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold">{entry.user.username || entry.user.name} {(entry.user.username === stats.displayName || entry.user.name === stats.displayName) && '(You)'}</span>
+                              <span className="text-[8px] opacity-60 uppercase tracking-wider">{entry.accuracy}% Accuracy</span>
+                            </div>
+                          </div>
+                          <span className="text-lg font-black text-primary">{entry.wpm} WPM</span>
+                        </div>
+                      ))}
 
-            <div className="pill-stat">
-              <div className="w-10 h-10 rounded-full bg-[#92450f]/10 flex items-center justify-center overflow-hidden">
-                <img
-                  alt="Top User"
-                  className="w-full h-full object-cover"
-                  src={leaderboard[0] ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${leaderboard[0].user.username || leaderboard[0].user.name}` : "https://api.dicebear.com/7.x/avataaars/svg?seed=Kathir"}
-                />
+                      {/* Show current user if not in Top 5 */}
+                      {(() => {
+                        const userRankIndex = leaderboard.findIndex(e => e.user.username === stats.displayName || e.user.name === stats.displayName);
+                        if (userRankIndex >= 5) {
+                          const userEntry = leaderboard[userRankIndex];
+                          return (
+                            <>
+                              <div className="py-2 flex justify-center opacity-30">
+                                <span className="text-xs font-black tracking-[0.3em]">•••</span>
+                              </div>
+                              <div className="rank-item border-2 border-dashed border-primary/20 bg-primary/5 rounded-xl px-2">
+                                <div className="flex items-center gap-4">
+                                  <span className="text-xl font-black italic text-primary/40">{(userRankIndex + 1).toString().padStart(2, '0')}</span>
+                                  <div className="flex flex-col">
+                                    <span className="text-xs font-bold">{userEntry.user.username || userEntry.user.name} (You)</span>
+                                    <span className="text-[8px] opacity-60 uppercase tracking-wider">{userEntry.accuracy}% Accuracy</span>
+                                  </div>
+                                </div>
+                                <span className="text-lg font-black text-primary">{userEntry.wpm} WPM</span>
+                              </div>
+                            </>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </>
+                  ) : (
+                    <div className="text-center py-4 opacity-50 text-xs">No entries yet. Be the first!</div>
+                  )}
+                </div>
               </div>
+
               <div>
-                <p className="text-2xl font-black leading-none">{leaderboard[0] ? (leaderboard[0].user.username || leaderboard[0].user.name) : 'No Leader'}</p>
-                <p className="text-[10px] font-bold uppercase opacity-50">Current Leader</p>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-black opacity-60">Personal Standing</h2>
+                <div className="standing-card">
+                  <span className="material-symbols-outlined text-4xl mb-3 opacity-20">leaderboard</span>
+                  <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">Ranking</p>
+                  <p className="text-xl font-black">
+                    {isLoading ? '...' : (() => {
+                      const rank = leaderboard.findIndex(e => e.user.username === stats.displayName || e.user.name === stats.displayName) + 1;
+                      return rank > 0 ? `#${rank}` : 'Not Ranked';
+                    })()}
+                  </p>
+                </div>
               </div>
-            </div>
+            </section>
+
+            {/* Center Column: LIVE ACTIVE (lg+) */}
+            <section className="flex flex-col items-center animate-in zoom-in duration-700 order-1 lg:order-2 lg:col-start-2">
+              <div className="organic-core max-w-[550px] w-full mb-12">
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#92450f]/5 to-transparent pointer-events-none"></div>
+                <div className="flex items-center gap-3 mb-6 bg-red-600/10 border border-red-600/20 px-4 py-1.5 rounded-full">
+                  <span className={`w-2 h-2 rounded-full pulse-live ${activeTournament ? 'bg-red-600' : 'bg-slate-400'}`}></span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-700">
+                    {activeTournament ? 'Live Tournament Active' : 'Arena Closed'}
+                  </span>
+                </div>
+                <h1 className="text-4xl sm:text-5xl font-black tracking-tighter mb-4 leading-tight">
+                  {activeTournament ? activeTournament.name : 'Elite Sprint'}
+                </h1>
+                <p className="text-xs font-bold opacity-70 max-w-[280px] mb-8 leading-relaxed text-center mx-auto text-slate-600">
+                  {activeTournament ? activeTournament.description : 'The pinnacle of Tamil typing proficiency. Prove your digital legacy.'}
+                </p>
+                <button
+                  className="group relative w-64 h-16 rounded-full bg-[#92450f] text-white overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl"
+                  onClick={() => onNavigate('TournamentStart')}
+                >
+                  <span className="relative z-10 text-lg font-black tracking-widest uppercase">Start</span>
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </button>
+                <div className="mt-6 flex items-center gap-2 opacity-40">
+                  <span className="material-symbols-outlined text-sm">lock</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Secure Protocol Enabled</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-center gap-6 w-full">
+                <div className="pill-stat">
+                  <div className="w-10 h-10 rounded-full bg-[#92450f]/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[#92450f]">groups</span>
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black leading-none">{leaderboard.length.toLocaleString()}</p>
+                    <p className="text-[10px] font-bold uppercase opacity-50">Competitors</p>
+                  </div>
+                </div>
+
+                <div className="pill-stat">
+                  <div className="w-10 h-10 rounded-full bg-[#92450f]/10 flex items-center justify-center overflow-hidden">
+                    <img
+                      alt="Top User"
+                      className="w-full h-full object-cover"
+                      src={leaderboard[0] ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${leaderboard[0].user.username || leaderboard[0].user.name}` : "https://api.dicebear.com/7.x/avataaars/svg?seed=Kathir"}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-black leading-none">{leaderboard[0] ? (leaderboard[0].user.username || leaderboard[0].user.name) : 'No Leader'}</p>
+                    <p className="text-[10px] font-bold uppercase opacity-50">Current Leader</p>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            {/* Right Column: SYSTEM GUIDELINES (lg+) */}
+            <section className="flex flex-col items-center animate-in slide-in-from-right-8 duration-700 order-2 lg:order-3 lg:col-start-3">
+              <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-10 text-black opacity-60">System Guidelines</h2>
+
+              <div className="grid grid-cols-2 gap-4 w-full max-w-[320px]">
+                <div className="guideline-tile">
+                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">cake</span>
+                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">16+ Age<br />Requirement</p>
+                </div>
+                <div className="guideline-tile mt-8">
+                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">history_edu</span>
+                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Multiple<br />Attempts</p>
+                </div>
+                <div className="guideline-tile">
+                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">refresh</span>
+                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">No Page<br />Reload</p>
+                </div>
+                <div className="guideline-tile mt-8">
+                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">extension_off</span>
+                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Anti-Cheat<br />Active</p>
+                </div>
+                <div className="guideline-tile">
+                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">precision_manufacturing</span>
+                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">95% Acc<br />Minimum</p>
+                </div>
+                <div className="guideline-tile mt-8">
+                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">shield_lock</span>
+                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Permanent<br />Entry</p>
+                </div>
+              </div>
+            </section>
 
           </div>
-        </section>
 
-        {/* Right Column: SYSTEM GUIDELINES (lg+) */}
-        <section className="flex flex-col items-center animate-in slide-in-from-right-8 duration-700 order-2 lg:order-3 lg:col-start-3">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-10 text-black opacity-60">System Guidelines</h2>
-
-          <div className="grid grid-cols-2 gap-4 w-full max-w-[320px]">
-            <div className="guideline-tile">
-              <span className="material-symbols-outlined text-3xl mb-4 opacity-70">cake</span>
-              <p className="text-[10px] font-black uppercase leading-tight tracking-widest">16+ Age<br />Requirement</p>
-            </div>
-            <div className="guideline-tile mt-8">
-              <span className="material-symbols-outlined text-3xl mb-4 opacity-70">history_edu</span>
-              <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Multiple<br />Attempts</p>
-            </div>
-            <div className="guideline-tile">
-              <span className="material-symbols-outlined text-3xl mb-4 opacity-70">refresh</span>
-              <p className="text-[10px] font-black uppercase leading-tight tracking-widest">No Page<br />Reload</p>
-            </div>
-            <div className="guideline-tile mt-8">
-              <span className="material-symbols-outlined text-3xl mb-4 opacity-70">extension_off</span>
-              <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Anti-Cheat<br />Active</p>
-            </div>
-            <div className="guideline-tile">
-              <span className="material-symbols-outlined text-3xl mb-4 opacity-70">precision_manufacturing</span>
-              <p className="text-[10px] font-black uppercase leading-tight tracking-widest">95% Acc<br />Minimum</p>
-            </div>
-            <div className="guideline-tile mt-8">
-              <span className="material-symbols-outlined text-3xl mb-4 opacity-70">shield_lock</span>
-              <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Permanent<br />Entry</p>
-            </div>
+          <div className="mt-16 flex justify-center pb-12">
+            <button
+              onClick={() => onNavigate('Home')}
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary hover:opacity-60 transition-all group"
+            >
+              <span className="material-symbols-outlined text-xs transition-transform group-hover:-translate-x-1">arrow_back</span>
+              Back to Home
+            </button>
           </div>
-        </section>
-
-      </div>
-
-      <div className="mt-16 flex justify-center pb-12">
-        <button
-          onClick={() => onNavigate('Home')}
-          className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary hover:opacity-60 transition-all group"
-        >
-          <span className="material-symbols-outlined text-xs transition-transform group-hover:-translate-x-1">arrow_back</span>
-          Back to Home
-        </button>
-      </div>
+        </>
+      )}
     </div>
   );
 };

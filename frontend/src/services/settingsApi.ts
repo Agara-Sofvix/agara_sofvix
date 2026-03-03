@@ -11,6 +11,30 @@ export interface PublicSettings {
         logoUrl?: string;
         primaryColor: string;
     };
+    seo: {
+        metaTitle: string;
+        metaDescription: string;
+        metaKeywords: string;
+        ogTitle: string;
+        ogDescription: string;
+        ogImage: string;
+        twitterHandle: string;
+        googleAnalyticsId?: string;
+        googleSearchConsoleId?: string;
+        robotsTxt?: string;
+        sitemapEnabled: boolean;
+        schemaSettings: {
+            faqEnabled: boolean;
+            breadcrumbEnabled: boolean;
+            organizationEnabled: boolean;
+        };
+        socialLinks: {
+            facebook?: string;
+            instagram?: string;
+            linkedin?: string;
+            youtube?: string;
+        };
+    };
 }
 
 export const fetchPublicSettings = async (): Promise<PublicSettings> => {

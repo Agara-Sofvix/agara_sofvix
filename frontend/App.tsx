@@ -21,7 +21,7 @@ import RulesModal from './components/RulesModal';
 import NotificationPanel from './components/NotificationPanel';
 import LoginRequiredModal from './components/LoginRequiredModal';
 import AdminApp from './AdminApp';
-import { SettingsProvider, useSettings } from './src/context/SettingsContext';
+import { SettingsProvider, useSettings, updatePageTitle } from './src/context/SettingsContext';
 import { useNotifications } from './hooks/useNotifications';
 import Maintenance from './components/Maintenance';
 import SideAds from './components/SideAds';
@@ -40,7 +40,11 @@ const VIEW_TO_PATH: Record<string, string> = {
   'About': '/about',
   'Keyboard Layout': '/keyboard-layout',
   'Games': '/games',
+  'Admin': '/admin/',
 };
+
+// Sections that require login
+const restrictedViews = ['TournamentArena', 'TournamentLive', 'Dashboard'];
 
 const PATH_TO_VIEW: Record<string, string> = Object.entries(VIEW_TO_PATH).reduce((acc, [view, path]) => {
   acc[path] = view;
@@ -140,6 +144,20 @@ const AppInner: React.FC = () => {
     document.documentElement.classList.remove('dark');
   }, [appUiSettings]);
 
+  const { settings: globalSettings, loading: settingsLoading } = useSettings();
+
+  // Dynamic Page Titles for SEO
+  useEffect(() => {
+    if (globalSettings) {
+      const siteName = globalSettings.siteName || 'Ezhuthidu';
+      if (currentView === 'Home') {
+        document.title = globalSettings.seo?.metaTitle || siteName;
+      } else {
+        updatePageTitle(currentView, siteName);
+      }
+    }
+  }, [currentView, globalSettings]);
+
   // Reset scroll when test starts (transition from selection to live)
   useEffect(() => {
     if (testConfig) {
@@ -152,7 +170,7 @@ const AppInner: React.FC = () => {
   }, [userStats]);
 
   // Check if accessing admin panel
-  if (currentView === 'Admin') {
+  if (currentView === 'Admin' && !window.location.pathname.startsWith('/admin')) {
     return <AdminApp />;
   }
 
@@ -205,6 +223,17 @@ const AppInner: React.FC = () => {
       } else {
         setIsTournamentActive(false);
       }
+
+      // Enforce authentication for restricted views
+      if (!isLoggedIn && restrictedViews.includes(view)) {
+        setCurrentView('Home');
+        setPendingView(view);
+        setIsLoginRequiredModalOpen(true);
+        // Correct the URL to home
+        window.history.replaceState({ view: 'Home' }, '', '/');
+      } else {
+        setCurrentView(view);
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -213,13 +242,23 @@ const AppInner: React.FC = () => {
 
   useEffect(() => {
     const path = window.location.pathname;
-    const initialView = PATH_TO_VIEW[path];
-    if (initialView && initialView !== currentView) {
-      setCurrentView(initialView);
-    }
+    let initialView = PATH_TO_VIEW[path] || 'Home';
 
     // Auto-login if token exists
     const token = localStorage.getItem('token');
+
+    // Enforce authentication for restricted views on initial load
+    // If there is a token, we defer the decision until restoreSession completes
+    if (!token && restrictedViews.includes(initialView)) {
+      initialView = 'Home';
+      setPendingView(PATH_TO_VIEW[path]);
+      setIsLoginRequiredModalOpen(true);
+      window.history.replaceState({ view: 'Home' }, '', '/');
+    }
+
+    if (initialView !== currentView) {
+      setCurrentView(initialView);
+    }
     if (token) {
       const restoreSession = async () => {
         try {
@@ -248,8 +287,6 @@ const AppInner: React.FC = () => {
   const [practiceInitialMode, setPracticeInitialMode] = useState<'free' | 'lesson' | 'custom' | undefined>(undefined);
 
   const handleNavigate = (view: string, mode?: string) => {
-    // Sections that require login
-    const restrictedViews = ['TournamentArena', 'TournamentLive', 'Dashboard'];
 
     if (!isLoggedIn && restrictedViews.includes(view)) {
       setPendingView(view);
@@ -531,7 +568,6 @@ const AppInner: React.FC = () => {
 
   const isTournamentLive = currentView === 'TournamentLive';
   const isTournamentResult = currentView === 'TournamentResult';
-  const { settings: globalSettings, loading: settingsLoading } = useSettings();
 
   if (!settingsLoading && globalSettings?.maintenanceMode && currentView !== 'Admin') {
     return <Maintenance contactEmail={globalSettings.contactEmail} />;

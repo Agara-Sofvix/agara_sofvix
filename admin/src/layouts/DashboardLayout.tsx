@@ -14,7 +14,8 @@ import {
     Moon,
     LogOut,
     Plus,
-    Megaphone
+    Megaphone,
+    Globe
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
@@ -114,6 +115,7 @@ const DashboardLayout = () => {
         { icon: FileText, label: 'Content (Lyrics)', path: '/content' },
         { icon: Megaphone, label: 'Advertisements', path: '/advertisements' },
         { icon: Bell, label: 'Announcements', path: '/notifications' },
+        { icon: Globe, label: 'SEO Manager', path: '/seo' },
     ];
 
     const bottomMenuItems = [

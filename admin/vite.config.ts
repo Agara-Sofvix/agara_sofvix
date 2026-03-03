@@ -4,11 +4,15 @@ import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH || '/',
+  base: '/',
   plugins: [react()],
   server: {
     port: 3001,
     proxy: {
+      '/api': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
       '/uploads': {
         target: 'http://localhost:5001',
         changeOrigin: true,

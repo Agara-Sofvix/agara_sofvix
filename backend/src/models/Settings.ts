@@ -25,6 +25,30 @@ export interface ISettings extends Document {
         logoUrl?: string;
         primaryColor: string;
     };
+    seo: {
+        metaTitle: string;
+        metaDescription: string;
+        metaKeywords: string;
+        ogTitle: string;
+        ogDescription: string;
+        ogImage: string;
+        twitterHandle: string;
+        googleAnalyticsId?: string;
+        googleSearchConsoleId?: string;
+        robotsTxt?: string;
+        sitemapEnabled: boolean;
+        schemaSettings: {
+            faqEnabled: boolean;
+            breadcrumbEnabled: boolean;
+            organizationEnabled: boolean;
+        };
+        socialLinks: {
+            facebook?: string;
+            instagram?: string;
+            linkedin?: string;
+            youtube?: string;
+        };
+    };
     updatedAt: Date;
     updatedBy?: mongoose.Types.ObjectId;
 }
@@ -53,6 +77,30 @@ const SettingsSchema = new Schema({
     branding: {
         logoUrl: { type: String },
         primaryColor: { type: String, default: '#135bec' }
+    },
+    seo: {
+        metaTitle: { type: String, default: 'எழுத்திடு - Master Tamil Typing' },
+        metaDescription: { type: String, default: 'Learn and master Tamil typing with interactive lessons, tests, and tournaments.' },
+        metaKeywords: { type: String, default: 'tamil typing, learn tamil, typing test, tamil keyboard' },
+        ogTitle: { type: String, default: 'எழுத்திடு - Tamil Typing Platform' },
+        ogDescription: { type: String, default: 'Master Tamil typing through engagement and fun.' },
+        ogImage: { type: String, default: '' },
+        twitterHandle: { type: String, default: '@ezhuthidu' },
+        googleAnalyticsId: { type: String, default: '' },
+        googleSearchConsoleId: { type: String, default: '' },
+        robotsTxt: { type: String, default: 'User-agent: *\nAllow: /' },
+        sitemapEnabled: { type: Boolean, default: true },
+        schemaSettings: {
+            faqEnabled: { type: Boolean, default: true },
+            breadcrumbEnabled: { type: Boolean, default: true },
+            organizationEnabled: { type: Boolean, default: true }
+        },
+        socialLinks: {
+            facebook: { type: String, default: '' },
+            instagram: { type: String, default: '' },
+            linkedin: { type: String, default: '' },
+            youtube: { type: String, default: '' }
+        }
     },
     updatedAt: { type: Date, default: Date.now },
     updatedBy: { type: Schema.Types.ObjectId, ref: 'Admin' }

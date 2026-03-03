@@ -22,6 +22,7 @@ import advertisementRoutes from './routes/advertisementRoutes';
 import { initSocket } from './socket';
 import { maintenanceMode } from './middlewares/maintenanceMiddleware';
 import { seedAdmin } from './seedAdmin';
+import { getRobotsTxt, getSitemapXml } from './controllers/settingsController';
 
 dotenv.config();
 
@@ -112,6 +113,9 @@ const resolveUploads = () => {
 };
 
 app.use('/uploads', express.static(resolveUploads()));
+
+app.get('/robots.txt', getRobotsTxt);
+app.get('/sitemap.xml', getSitemapXml);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

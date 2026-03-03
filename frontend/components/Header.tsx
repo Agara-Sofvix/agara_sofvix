@@ -29,6 +29,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
   const isAuthPage = activeTab === 'Login' || activeTab === 'Signup';
 
   const handleNavClick = (e: React.MouseEvent, item: string) => {
+    if (item === 'Admin') return; // Allow normal navigation for Admin to trigger proxy
     e.preventDefault();
     onNavigate(item);
     setIsMobileMenuOpen(false);
@@ -98,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
                 ? 'text-white border-b-2 border-white'
                 : 'text-white/70 hover:text-white'
                 }`}
-              href="#"
+              href={item === 'Admin' ? '/admin/' : '#'}
               onClick={(e) => handleNavClick(e, item)}
             >
               {item}
@@ -158,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
                   ? 'text-white bg-white/10'
                   : 'text-white/70 hover:text-white hover:bg-white/5'
                   }`}
-                href="#"
+                href={item === 'Admin' ? '/admin/' : '#'}
                 onClick={(e) => handleNavClick(e, item)}
               >
                 {item}

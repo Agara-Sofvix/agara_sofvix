@@ -9,6 +9,7 @@ import Leaderboards from './pages/Leaderboards';
 import Content from './pages/Content';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
+import SEO from './pages/SEO';
 import Advertisements from './pages/Advertisements';
 import Login from './pages/Login'; // Enabled
 
@@ -42,11 +43,13 @@ const PublicRoute = ({ children }: { children: JSX.Element }) => {
 };
 
 function App() {
+  const basename = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') ? '/admin' : '/';
+
   return (
     <div id="admin-root-container">
       <AuthProvider>
         <SettingsProvider>
-          <BrowserRouter basename={import.meta.env.BASE_URL?.replace(/\/$/, '') || '/'}>
+          <BrowserRouter basename={basename}>
             <Routes>
               <Route path="/login" element={
                 <PublicRoute>
@@ -67,6 +70,7 @@ function App() {
                 <Route path="notifications" element={<Notifications />} />
                 <Route path="advertisements" element={<Advertisements />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="seo" element={<SEO />} />
               </Route>
 
               <Route path="*" element={<Navigate to="/" replace />} />
