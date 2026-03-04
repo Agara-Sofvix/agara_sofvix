@@ -74,13 +74,23 @@ export interface Settings {
             faqEnabled: boolean;
             breadcrumbEnabled: boolean;
             organizationEnabled: boolean;
+            faqItems: Array<{ question: string; answer: string }>;
         };
-        linkedin: string;
-        youtube: string;
-        faqItems: Array<{ question: string; answer: string }>;
+        socialLinks: {
+            facebook?: string;
+            instagram?: string;
+            linkedin?: string;
+            youtube?: string;
+        };
+        primaryKeywords: string[];
+        longTailKeywords: string[];
     };
-    primaryKeywords: string[];
-    longTailKeywords: string[];
+    pagesSeo?: Array<{
+        path: string;
+        title: string;
+        description: string;
+        keywords: string;
+    }>;
 }
 
 export const fetchSettings = async (): Promise<Settings> => {

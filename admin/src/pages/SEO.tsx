@@ -27,6 +27,7 @@ import {
     Twitter,
     Code2,
     ChevronRight,
+    HelpCircle,
 } from 'lucide-react';
 import { fetchSettings, updateSettings } from '../services/settingsApi';
 
