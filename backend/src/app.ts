@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 import path from 'path';
+import fs from 'fs';
 import connectDB from './config/db';
 import authRoutes from './routes/authRoutes';
 import typingRoutes from './routes/typingRoutes';
@@ -23,8 +24,9 @@ import { initSocket } from './socket';
 import { maintenanceMode } from './middlewares/maintenanceMiddleware';
 import { seedAdmin } from './seedAdmin';
 import { getRobotsTxt, getSitemapXml } from './controllers/settingsController';
+import { seoMiddleware } from './middlewares/seoMiddleware';
 
-dotenv.config();
+dotenv.config({ override: true });
 
 connectDB().then(() => {
     seedAdmin();
@@ -99,30 +101,59 @@ app.use('/api/advertisements', advertisementRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Serve Static Uploads
-const resolveUploads = () => {
-    const paths = [
-        path.join(process.cwd(), 'public/uploads'),
-        path.join(process.cwd(), 'backend/public/uploads'),
-        path.join(__dirname, '../public/uploads'),
-        path.join(__dirname, '../../public/uploads')
+const resolvePublicPath = (targetSubPath: string) => {
+    const root = process.cwd();
+    const candidates = [
+        path.join(root, targetSubPath),
+        path.join(root, 'public', targetSubPath.split('/').pop() || ''),
+        path.join(root, 'backend', targetSubPath),
+        path.join(__dirname, '..', '..', targetSubPath)
     ];
-    for (const p of paths) {
-        if (require('fs').existsSync(p)) return p;
+
+    for (const p of candidates) {
+        if (fs.existsSync(p)) return p;
     }
-    return paths[0];
+    // Final fallback: if in backend folder, try public/
+    const simplePublic = path.join(root, targetSubPath.replace('public/', ''));
+    if (fs.existsSync(simplePublic)) return simplePublic;
+
+    return candidates[0];
 };
 
-app.use('/uploads', express.static(resolveUploads()));
+app.use('/uploads', express.static(resolvePublicPath('public/uploads')));
+app.use('/avatars', express.static(resolvePublicPath('public/avatars')));
 
 app.get('/robots.txt', getRobotsTxt);
 app.get('/sitemap.xml', getSitemapXml);
 
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
+// Serve built frontend static assets (JS, CSS, images, fonts)
+const cwd = process.cwd();
+const frontendDist = fs.existsSync(path.join(cwd, 'frontend', 'dist'))
+    ? path.join(cwd, 'frontend', 'dist')
+    : path.join(cwd, '..', 'frontend', 'dist');
+if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist, { index: false })); // index:false so SEO middleware handles HTML
+}
+
+// SSR meta-injection: catch all frontend routes and inject correct SEO tags
+app.get(/.*/, seoMiddleware);
 
 const PORT = process.env.PORT || 5001;
 
 httpServer.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });
+
+// Graceful shutdown — ensures port is released before nodemon restarts
+const shutdown = () => {
+    httpServer.close(() => {
+        console.log('Server closed. Port released.');
+        process.exit(0);
+    });
+    // Force exit if close takes too long
+    setTimeout(() => process.exit(1), 3000);
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+

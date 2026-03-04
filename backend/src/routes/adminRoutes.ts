@@ -30,7 +30,7 @@ import {
     updateAdvertisement,
     deleteAdvertisement
 } from '../controllers/advertisementController';
-import { getSystemEvents, markEventsAsRead } from '../controllers/adminEventController';
+import { getSystemEvents, markEventsAsRead, getUnreadEventsCount } from '../controllers/adminEventController';
 import { globalSearch } from '../controllers/adminSearchController';
 import { adminAuth } from '../middlewares/adminMiddleware';
 
@@ -79,6 +79,7 @@ router.delete('/notifications/:id', adminAuth, deleteNotification);
 
 // System Events
 router.get('/events', adminAuth, getSystemEvents);
+router.get('/events/unread-count', adminAuth, getUnreadEventsCount);
 router.put('/events/read', adminAuth, markEventsAsRead);
 
 // Advertisement Management

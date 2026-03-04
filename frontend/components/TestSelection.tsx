@@ -8,15 +8,14 @@ interface TestSelectionProps {
 }
 
 const testModules = [
-    { id: 'general', label: 'General Knowledge', icon: 'public', color: 'text-blue-500', bg: 'bg-blue-50', desc: 'Diverse topics covering everyday knowledge and trivia.' },
     { id: 'literature', label: 'Literature', icon: 'auto_stories', color: 'text-purple-500', bg: 'bg-purple-50', desc: 'Classical and modern Tamil literary excerpts.' },
-    { id: 'history', label: 'History', icon: 'history_edu', color: 'text-amber-600', bg: 'bg-amber-50', desc: 'Key historical events and cultural chronicles.' },
-    { id: 'science', label: 'Science', icon: 'science', color: 'text-emerald-500', bg: 'bg-emerald-50', desc: 'Scientific discoveries and technical Tamil terminology.' },
+    { id: 'news', label: 'News', icon: 'newspaper', color: 'text-cyan-600', bg: 'bg-cyan-50', desc: 'Stay updated while improving your typing with latest news.' },
+    { id: 'election', label: 'Election', icon: 'how_to_vote', color: 'text-red-600', bg: 'bg-red-50', desc: 'Political discourse and election-related Tamil content.' },
     { id: 'social', label: 'Social Issues', icon: 'forum', color: 'text-rose-500', bg: 'bg-rose-50', desc: 'Current affairs and social commentary in Tamil.' },
 ];
 
 const TestSelection: React.FC<TestSelectionProps> = ({ onStart, defaultDuration = '1m', isLoggedIn, onOpenLoginRequired }) => {
-    const [selectedModule, setSelectedModule] = useState('general');
+    const [selectedModule, setSelectedModule] = useState('literature');
     const [duration, setDuration] = useState(defaultDuration);
 
     const handleStart = () => {

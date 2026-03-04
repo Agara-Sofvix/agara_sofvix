@@ -2,20 +2,63 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../../public/uploads/branding');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Robust directory resolution
+const resolveUploadPath = (subDir: string) => {
+    const root = process.cwd();
+    const candidates = [
+        path.join(root, subDir),
+        path.join(root, 'backend', subDir),
+        path.join(__dirname, '..', subDir),
+        path.join(__dirname, '..', '..', subDir)
+    ];
 
-// Configure storage
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
+    for (const p of candidates) {
+        if (fs.existsSync(p)) return p;
+    }
+
+    // If starting from backend folder, the path is already correct as subDir
+    if (root.endsWith('backend') && fs.existsSync(path.join(root, subDir.replace('public/', '')))) {
+        return path.join(root, subDir.replace('public/', ''));
+    }
+
+    // Default: prefer creating in backend/public if possible
+    const target = root.endsWith('backend') ? path.join(root, subDir.replace('public/', '')) : path.join(root, 'backend', subDir);
+    if (!fs.existsSync(target)) {
+        fs.mkdirSync(target, { recursive: true });
+    }
+    return target;
+};
+
+const baseUploadDir = resolveUploadPath('public/uploads');
+const brandingDir = path.join(baseUploadDir, 'branding');
+const profilesDir = path.join(baseUploadDir, 'profiles');
+
+[brandingDir, profilesDir].forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+});
+
+// Configure storage for branding
+const brandingStorage = multer.diskStorage({
+    destination: (req: any, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+        cb(null, brandingDir);
     },
-    filename: (req, file, cb) => {
+    filename: (req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
         const ext = path.extname(file.originalname);
         const filename = `logo-${Date.now()}${ext}`;
+        cb(null, filename);
+    }
+});
+
+// Configure storage for profiles
+const profileStorage = multer.diskStorage({
+    destination: (req: any, file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
+        cb(null, profilesDir);
+    },
+    filename: (req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
+        const ext = path.extname(file.originalname);
+        const filename = `avatar-${Date.now()}${ext}`;
         cb(null, filename);
     }
 });
@@ -32,11 +75,21 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
     }
 };
 
-// Create multer instance
+// Create multer instances
 export const logoUpload = multer({
-    storage,
+    storage: brandingStorage,
     fileFilter,
     limits: {
         fileSize: 2 * 1024 * 1024 // 2MB limit
     }
 });
+
+export const profileUpload = multer({
+    storage: profileStorage,
+    fileFilter,
+    limits: {
+        fileSize: 2 * 1024 * 1024 // 2MB limit
+    }
+});
+
+export default profileUpload;

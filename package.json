@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "lsof -ti:5001 | xargs kill -9 || true && concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"npm run dev --prefix admin\"",
+    "dev": "lsof -ti:5001,3000,3001 | xargs kill -9 2>/dev/null; sleep 0.5 && concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"npm run dev --prefix admin\"",
     "build": "npm run build --prefix backend && npm run build --prefix frontend",
     "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend && npm install --prefix admin",
     "postinstall": "npm install --prefix backend && npm install --prefix frontend && npm install --prefix admin",

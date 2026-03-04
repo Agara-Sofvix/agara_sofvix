@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { registerUser } from '../src/services/api';
 
 interface SignupProps {
-  onNavigate: (user: { name: string, token?: string, dob?: string }) => void;
+  onNavigate: (user: { name: string, token?: string, dob?: string, profilePic?: string }) => void;
   onLoginNavigate: () => void;
 }
 
@@ -15,8 +15,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigate, onLoginNavigate }) => {
     password: '',
     confirmPassword: '',
     username: '',
-    dob: '',
-    experience: ''
+    dob: ''
   });
   const [error, setError] = useState('');
 
@@ -38,7 +37,7 @@ const Signup: React.FC<SignupProps> = ({ onNavigate, onLoginNavigate }) => {
         dob: formData.dob
       });
 
-      onNavigate({ name: data.name, token: data.token });
+      onNavigate({ name: data.name, token: data.token, dob: data.dob, profilePic: data.profilePic });
     } catch (err: any) {
       setError(err.message);
     }
@@ -143,22 +142,6 @@ const Signup: React.FC<SignupProps> = ({ onNavigate, onLoginNavigate }) => {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest ml-1 text-slate-700">Typing experience level</label>
-            <div className="relative">
-              <select
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl px-4 py-3 text-sm focus:border-primary focus:ring-0 transition-all appearance-none cursor-pointer text-slate-800"
-                value={formData.experience}
-                onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-              >
-                <option value="" disabled>Select level</option>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined pointer-events-none text-gray-500">expand_more</span>
-            </div>
-          </div>
 
           <div className="md:col-span-2 pt-6">
             <button className="w-full bg-header-brown text-white font-black py-4 rounded-xl hover:bg-header-brown/90 transition-all tracking-widest text-sm uppercase shadow-lg active:scale-[0.98]" type="submit">

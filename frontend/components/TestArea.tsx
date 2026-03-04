@@ -16,11 +16,16 @@ interface TestAreaProps {
 }
 
 const testModules: Record<string, { label: string; category: string }> = {
+  'free-typing': { label: 'Free Typing', category: 'free-typing' },
   general: { label: 'General Knowledge', category: 'general' },
   literature: { label: 'Literature', category: 'literature' },
   history: { label: 'History', category: 'history' },
   science: { label: 'Science', category: 'science' },
   social: { label: 'Social Issues', category: 'social' },
+  tournament: { label: 'Tournament', category: 'tournament' },
+  news: { label: 'News', category: 'news' },
+  cinema: { label: 'Cinema', category: 'cinema' },
+  election: { label: 'Election', category: 'election' },
 };
 
 const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activeKeys, settings }) => {
@@ -48,7 +53,10 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
   }, [testConfig.module, isLoading]);
 
   const startTest = () => {
-    const randomText = getRandomText(testModules[testConfig.module].category);
+    const moduleId = testConfig.module;
+    const category = testModules[moduleId]?.category || moduleId;
+    const randomText = getRandomText(category);
+
     setTargetText(randomText);
     setInputText("");
     setTimeLeft(testConfig.duration);
@@ -59,14 +67,14 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
   };
 
   useEffect(() => {
-    if (isTestActive && !isGameOver && inputRef.current) {
+    if (isTestActive && !isGameOver && targetText && inputRef.current) {
       inputRef.current.focus({ preventScroll: true });
     }
-  }, [isTestActive, isGameOver]);
+  }, [isTestActive, isGameOver, targetText]);
 
   useEffect(() => {
     let timer: number;
-    if (isTestActive && timeLeft > 0) {
+    if (isTestActive && timeLeft > 0 && targetText) {
       timer = window.setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -78,7 +86,7 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isTestActive, timeLeft]);
+  }, [isTestActive, timeLeft, targetText]);
 
   // Sync target text display scroll with current progress
   useEffect(() => {
@@ -365,6 +373,29 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
     );
   }
 
+  if (!isLoading && !targetText && isTestActive) {
+    return (
+      <div className="w-full max-w-2xl mx-auto py-20 text-center animate-in fade-in zoom-in duration-500">
+        <div className="bg-white/80 backdrop-blur-sm border-2 border-slate-100 rounded-[40px] p-12 shadow-xl">
+          <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="material-symbols-outlined text-4xl text-amber-500">error_outline</span>
+          </div>
+          <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-2">No Content Available</h2>
+          <p className="text-slate-600 mb-8 font-tamil">இந்தத் தலைப்பில் இன்னும் உள்ளடக்கங்கள் இல்லை. விரைவில் சேர்க்கப்படும்!</p>
+          <button
+            onClick={onReturn}
+            className="px-8 py-3 bg-header-brown text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg"
+          >
+            Choose Another Topic
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const moduleInfo = testModules[testConfig.module];
+  const moduleLabel = moduleInfo ? moduleInfo.label : testConfig.module.charAt(0).toUpperCase() + testConfig.module.slice(1);
+
   return (
     <div className="w-full mx-auto space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 font-tamil">
       <div className="flex items-center justify-between mb-1">
@@ -373,7 +404,7 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
             <span className="material-symbols-outlined text-header-brown animate-pulse text-base">timer</span>
             <h2 className="text-xl font-black text-header-brown uppercase tracking-tight">Active Test</h2>
           </div>
-          <p className="text-[10px] font-bold text-header-brown/60 uppercase tracking-widest ml-7">Section: {testModules[testConfig.module].label}</p>
+          <p className="text-[10px] font-bold text-header-brown/60 uppercase tracking-widest ml-7">Section: {moduleLabel}</p>
         </div>
         <div className="flex items-center gap-4">
           <div className={`px-4 py-1.5 rounded-xl flex items-center gap-3 shadow-lg transition-all duration-300 ${timeLeft < 10 ? 'bg-red-500 text-white animate-bounce' : 'bg-header-brown text-white'}`}>

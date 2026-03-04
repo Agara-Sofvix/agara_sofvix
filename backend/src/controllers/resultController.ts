@@ -36,6 +36,29 @@ export const getUserResults = async (req: Request, res: Response): Promise<void>
         const typingResults = await TypingResult.find({ user: userId });
         const tournamentResults = await TournamentResult.find({ user: userId }).populate('tournament', 'name');
 
+        // Calculate rank for each tournament result
+        const tournamentResultsWithRank = await Promise.all(tournamentResults.map(async (r) => {
+            // Find all results for this tournament to determine rank
+            if (!r.tournament) return null;
+
+            const tournamentId = (r.tournament as any)._id || r.tournament;
+            const allTournamentResults = await TournamentResult.find({ tournament: tournamentId }).sort({ wpm: -1, accuracy: -1 });
+            const rank = allTournamentResults.findIndex(entry => entry.user.toString() === userId.toString()) + 1;
+
+            return {
+                _id: r._id,
+                wpm: r.wpm,
+                accuracy: r.accuracy,
+                type: 'Tournament',
+                createdAt: r.createdAt,
+                tournamentName: (r.tournament as any).name || 'Unknown Tournament',
+                rank: rank
+            };
+        }));
+
+        // Filter out nulls from missing tournaments
+        const validTournamentResults = tournamentResultsWithRank.filter(r => r !== null);
+
         // Combine and format them for the frontend
         const history = [
             ...typingResults.map(r => ({
@@ -45,13 +68,7 @@ export const getUserResults = async (req: Request, res: Response): Promise<void>
                 type: 'Test',
                 createdAt: r.createdAt
             })),
-            ...tournamentResults.map(r => ({
-                _id: r._id,
-                wpm: r.wpm,
-                accuracy: r.accuracy,
-                type: 'Tournament',
-                createdAt: r.createdAt
-            }))
+            ...validTournamentResults
         ].sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime());
 
         res.json(history);

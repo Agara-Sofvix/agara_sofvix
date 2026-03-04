@@ -85,6 +85,25 @@ export const updatePageTitle = (pageTitle: string, siteName?: string) => {
     document.title = pageTitle ? `${pageTitle} | ${name}` : name;
 };
 
+// Apply SEO for a specific page path (called on navigation)
+export const applyPageSeo = (path: string, pagesSeo: Array<{ path: string; title: string; description: string; keywords: string }>, globalSeo?: any) => {
+    const pageSeo = pagesSeo?.find(p => p.path === path);
+    if (pageSeo && (pageSeo.title || pageSeo.description)) {
+        if (pageSeo.title) document.title = pageSeo.title;
+        const updateMeta = (name: string, content: string, attr: 'name' | 'property' = 'name') => {
+            if (!content) return;
+            let el = document.querySelector(`meta[${attr}="${name}"]`);
+            if (!el) { el = document.createElement('meta'); el.setAttribute(attr, name); document.head.appendChild(el); }
+            el.setAttribute('content', content);
+        };
+        if (pageSeo.description) updateMeta('description', pageSeo.description);
+        if (pageSeo.keywords) updateMeta('keywords', pageSeo.keywords);
+    } else if (globalSeo) {
+        // Fall back to global SEO
+        applySeoSettings(globalSeo);
+    }
+};
+
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     const [settings, setSettings] = useState<PublicSettings | null>(null);
     const [loading, setLoading] = useState(true);

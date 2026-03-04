@@ -46,39 +46,37 @@ function App() {
   const basename = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin') ? '/admin' : '/';
 
   return (
-    <div id="admin-root-container">
-      <AuthProvider>
-        <SettingsProvider>
-          <BrowserRouter basename={basename}>
-            <Routes>
-              <Route path="/login" element={
-                <PublicRoute>
-                  <Login />
-                </PublicRoute>
-              } />
+    <AuthProvider>
+      <SettingsProvider>
+        <BrowserRouter basename={basename}>
+          <Routes>
+            <Route path="/login" element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } />
 
-              <Route path="/" element={
-                <PrivateRoute>
-                  <DashboardLayout />
-                </PrivateRoute>
-              }>
-                <Route index element={<Dashboard />} />
-                <Route path="tournaments" element={<Tournaments />} />
-                <Route path="users" element={<Users />} />
-                <Route path="leaderboards" element={<Leaderboards />} />
-                <Route path="content" element={<Content />} />
-                <Route path="notifications" element={<Notifications />} />
-                <Route path="advertisements" element={<Advertisements />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="seo" element={<SEO />} />
-              </Route>
+            <Route path="/" element={
+              <PrivateRoute>
+                <DashboardLayout />
+              </PrivateRoute>
+            }>
+              <Route index element={<Dashboard />} />
+              <Route path="tournaments" element={<Tournaments />} />
+              <Route path="users" element={<Users />} />
+              <Route path="leaderboards" element={<Leaderboards />} />
+              <Route path="content" element={<Content />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="advertisements" element={<Advertisements />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="seo" element={<SEO />} />
+            </Route>
 
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </SettingsProvider>
-      </AuthProvider>
-    </div>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </SettingsProvider>
+    </AuthProvider>
   );
 }
 

@@ -1,0 +1,25 @@
+
+/* Custom Scrollbar for the Fixed Editor */
+.custom-scrollbar::-webkit-scrollbar {
+    display: block !important;
+    width: 6px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e2e8f0 !important;
+    border-radius: 10px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1 !important;
+}
+
+/* Ensure Firefox support */
+.custom-scrollbar {
+    scrollbar-width: thin !important;
+    scrollbar-color: #e2e8f0 transparent !important;
+}

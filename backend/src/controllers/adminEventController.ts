@@ -24,3 +24,14 @@ export const markEventsAsRead = async (req: Request, res: Response): Promise<voi
         res.status(500).json({ message: error.message });
     }
 };
+// @desc    Get unread system events count
+// @route   GET /api/admin/events/unread-count
+// @access  Private (Admin)
+export const getUnreadEventsCount = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const count = await SystemEvent.countDocuments({ read: false });
+        res.json({ count });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

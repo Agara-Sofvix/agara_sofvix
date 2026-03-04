@@ -1,6 +1,6 @@
 const base = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL != null
   ? (import.meta.env.VITE_API_URL as string)
-  : 'http://localhost:5001';
+  : (typeof window !== 'undefined' && window.location.port === '3000' ? '' : 'http://localhost:5001');
 export const API_BASE = base ? `${base.replace(/\/$/, '')}/api` : '/api';
 export const SOCKET_ORIGIN = base || (typeof window !== 'undefined' ? window.location.origin : '');
 

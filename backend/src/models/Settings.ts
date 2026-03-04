@@ -7,6 +7,18 @@ export interface IApiKey {
     lastUsed?: Date;
 }
 
+export interface IFaqItem {
+    question: string;
+    answer: string;
+}
+
+export interface IPageSeo {
+    path: string;
+    title: string;
+    description: string;
+    keywords: string;
+}
+
 export interface ISettings extends Document {
     siteName: string;
     marqueeText: string;
@@ -41,6 +53,7 @@ export interface ISettings extends Document {
             faqEnabled: boolean;
             breadcrumbEnabled: boolean;
             organizationEnabled: boolean;
+            faqItems: IFaqItem[];
         };
         socialLinks: {
             facebook?: string;
@@ -48,7 +61,10 @@ export interface ISettings extends Document {
             linkedin?: string;
             youtube?: string;
         };
+        primaryKeywords: string[];
+        longTailKeywords: string[];
     };
+    pagesSeo: IPageSeo[];
     updatedAt: Date;
     updatedBy?: mongoose.Types.ObjectId;
 }
@@ -93,15 +109,27 @@ const SettingsSchema = new Schema({
         schemaSettings: {
             faqEnabled: { type: Boolean, default: true },
             breadcrumbEnabled: { type: Boolean, default: true },
-            organizationEnabled: { type: Boolean, default: true }
+            organizationEnabled: { type: Boolean, default: true },
+            faqItems: [{
+                question: { type: String, required: true },
+                answer: { type: String, required: true }
+            }]
         },
         socialLinks: {
             facebook: { type: String, default: '' },
             instagram: { type: String, default: '' },
             linkedin: { type: String, default: '' },
             youtube: { type: String, default: '' }
-        }
+        },
+        primaryKeywords: { type: [String], default: ['tamil typing game', 'tamil typing practice', 'tamil typing speed test', 'learn tamil typing online'] },
+        longTailKeywords: { type: [String], default: ['how to learn tamil typing fast', 'tamil keyboard typing practice online', 'free tamil typing speed test', 'best tamil typing game online', 'tamil typing practice for beginners'] }
     },
+    pagesSeo: [{
+        path: { type: String, required: true },
+        title: { type: String, default: '' },
+        description: { type: String, default: '' },
+        keywords: { type: String, default: '' },
+    }],
     updatedAt: { type: Date, default: Date.now },
     updatedBy: { type: Schema.Types.ObjectId, ref: 'Admin' }
 });

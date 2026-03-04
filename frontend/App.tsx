@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { saveResult, submitTournamentResult, getActiveTournament } from '@/src/services/api';
+import { saveResult, submitTournamentResult, getActiveTournament } from './src/services/api';
 import Header from './components/Header';
 import Marquee from './components/Marquee';
 import Hero from './components/Hero';
@@ -14,6 +14,9 @@ import About from './components/About';
 import Ezhuthidu from './components/Ezhuthidu';
 import Login from './components/Login';
 import Signup from './components/Signup';
+import ForgotPassword from './components/ForgotPassword';
+import VerifyOTP from './components/VerifyOTP';
+import ResetPassword from './components/ResetPassword';
 import Dashboard from './components/Dashboard';
 import TournamentArena from './components/TournamentArena';
 import Footer from './components/Footer';
@@ -21,10 +24,11 @@ import RulesModal from './components/RulesModal';
 import NotificationPanel from './components/NotificationPanel';
 import LoginRequiredModal from './components/LoginRequiredModal';
 import AdminApp from './AdminApp';
-import { SettingsProvider, useSettings, updatePageTitle } from './src/context/SettingsContext';
+import { SettingsProvider, useSettings, updatePageTitle, applyPageSeo } from './src/context/SettingsContext';
 import { useNotifications } from './hooks/useNotifications';
 import Maintenance from './components/Maintenance';
 import SideAds from './components/SideAds';
+import TrophyEarnedModal from './components/TrophyEarnedModal';
 
 const VIEW_TO_PATH: Record<string, string> = {
   'Home': '/',
@@ -36,6 +40,9 @@ const VIEW_TO_PATH: Record<string, string> = {
   'Dashboard': '/dashboard',
   'Login': '/login',
   'Signup': '/signup',
+  'ForgotPassword': '/forgot-password',
+  'VerifyOTP': '/verify-otp',
+  'ResetPassword': '/reset-password',
   'Ezhuthidu': '/ezhuthidu',
   'About': '/about',
   'Keyboard Layout': '/keyboard-layout',
@@ -57,15 +64,26 @@ export interface UserStats {
   avgWpm: number;
   accuracy: number;
   streak: number;
-  level: number;
   tournamentBest: number;
   dob?: string;
+  profilePic?: string;
+  trophies: Array<{
+    id: string;
+    type: 'Test' | 'Tournament' | 'Accuracy';
+    tier: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
+    label: string;
+    value: number | string;
+    icon: string;
+  }>;
   history: Array<{
     id: string;
     date: string;
     type: string;
     wpm: number;
+    accuracy: number;
     label: string;
+    rank?: number;
+    tournamentName?: string;
   }>;
 }
 
@@ -91,17 +109,24 @@ const STORAGE_KEY_STATS = 'ezhuthidu_user_stats';
 const STORAGE_KEY_SETTINGS = 'ezhuthidu_settings';
 
 const AppInner: React.FC = () => {
-  const [currentView, setCurrentView] = useState('Home');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentView, setCurrentView] = useState(() => PATH_TO_VIEW[window.location.pathname] || 'Home');
+  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'));
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [isTournamentActive, setIsTournamentActive] = useState(false);
   const [lastTournamentScore, setLastTournamentScore] = useState<TournamentScore | null>(null);
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+
+  const handleOpenNotificationPanel = () => {
+    setIsNotificationPanelOpen(true);
+    handleMarkNotificationsAsRead();
+  };
   const [testConfig, setTestConfig] = useState<{ duration: number, module: string } | null>(null);
   const [activeTournamentId, setActiveTournamentId] = useState<string | null>(null);
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [pendingView, setPendingView] = useState<string | null>(null);
+  const [latestEarnedTrophy, setLatestEarnedTrophy] = useState<any | null>(null);
+  const [resetEmail, setResetEmail] = useState<string>('');
 
   const [appUiSettings, setAppUiSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
@@ -114,22 +139,30 @@ const AppInner: React.FC = () => {
 
   const [userStats, setUserStats] = useState<UserStats>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_STATS);
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...parsed,
+        trophies: parsed.trophies || []
+      };
+    }
+    return {
       displayName: '',
       bestWpm: 0,
       avgWpm: 0,
       accuracy: 0,
       streak: 0,
-      level: 1,
       tournamentBest: 0,
       dob: undefined,
+      profilePic: undefined,
+      trophies: [],
       history: []
     };
   });
 
   // Notifications
   const [lastNotificationReadAt, setLastNotificationReadAt] = useState<string | undefined>(undefined);
-  const { unreadCount, markAsRead, refresh: refreshNotifications } = useNotifications(isLoggedIn, lastNotificationReadAt);
+  const { unreadCount, markAsRead, refresh: refreshNotifications } = useNotifications(isLoggedIn);
 
   const handleMarkNotificationsAsRead = async () => {
     const newReadTime = await markAsRead();
@@ -146,15 +179,12 @@ const AppInner: React.FC = () => {
 
   const { settings: globalSettings, loading: settingsLoading } = useSettings();
 
-  // Dynamic Page Titles for SEO
+  // Dynamic Per-Page SEO on navigation
   useEffect(() => {
     if (globalSettings) {
-      const siteName = globalSettings.siteName || 'Ezhuthidu';
-      if (currentView === 'Home') {
-        document.title = globalSettings.seo?.metaTitle || siteName;
-      } else {
-        updatePageTitle(currentView, siteName);
-      }
+      const path = VIEW_TO_PATH[currentView] || '/';
+      const pagesSeo = (globalSettings as any).pagesSeo || [];
+      applyPageSeo(path, pagesSeo, globalSettings.seo);
     }
   }, [currentView, globalSettings]);
 
@@ -166,8 +196,11 @@ const AppInner: React.FC = () => {
   }, [testConfig]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(userStats));
-  }, [userStats]);
+    // Only persist if we have a valid logged-in session to avoid overwriting with defaults
+    if (isLoggedIn && userStats.displayName) {
+      localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(userStats));
+    }
+  }, [userStats, isLoggedIn]);
 
   // Check if accessing admin panel
   if (currentView === 'Admin' && !window.location.pathname.startsWith('/admin')) {
@@ -211,10 +244,12 @@ const AppInner: React.FC = () => {
       .catch(err => console.error("No active tournament found", err));
   }, []);
 
+  // Handle URL change without page refresh and Session Restoration
   useEffect(() => {
-    const handlePopState = () => {
+    const handlePopState = (e: PopStateEvent) => {
+      const state = e.state;
       const path = window.location.pathname;
-      const view = PATH_TO_VIEW[path] || 'Home';
+      const view = state?.view || PATH_TO_VIEW[path] || 'Home';
       setCurrentView(view);
 
       // Handle tournament active state on back/forward
@@ -223,71 +258,75 @@ const AppInner: React.FC = () => {
       } else {
         setIsTournamentActive(false);
       }
-
-      // Enforce authentication for restricted views
-      if (!isLoggedIn && restrictedViews.includes(view)) {
-        setCurrentView('Home');
-        setPendingView(view);
-        setIsLoginRequiredModalOpen(true);
-        // Correct the URL to home
-        window.history.replaceState({ view: 'Home' }, '', '/');
-      } else {
-        setCurrentView(view);
-      }
     };
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
 
-  useEffect(() => {
+    // Initial load logic
     const path = window.location.pathname;
-    let initialView = PATH_TO_VIEW[path] || 'Home';
-
-    // Auto-login if token exists
+    const initialView = PATH_TO_VIEW[path] || 'Home';
     const token = localStorage.getItem('token');
 
     // Enforce authentication for restricted views on initial load
-    // If there is a token, we defer the decision until restoreSession completes
     if (!token && restrictedViews.includes(initialView)) {
-      initialView = 'Home';
-      setPendingView(PATH_TO_VIEW[path]);
+      setCurrentView('Home');
+      setPendingView(initialView);
       setIsLoginRequiredModalOpen(true);
       window.history.replaceState({ view: 'Home' }, '', '/');
     }
 
-    if (initialView !== currentView) {
-      setCurrentView(initialView);
-    }
     if (token) {
       const restoreSession = async () => {
         try {
-          const { getProfile, getUserHistory } = await import('@/src/services/api');
+          const { getProfile, getUserHistory } = await import('./src/services/api');
           const profile = await getProfile(token);
           const historyData = await getUserHistory(token);
 
           setIsLoggedIn(true);
           const restoredStats = calculateStats(historyData, profile.name || 'User');
-          restoredStats.dob = profile.dob;
-          setUserStats(restoredStats);
+
+          setUserStats(prev => ({
+            ...prev,
+            ...restoredStats,
+            dob: profile.dob,
+            profilePic: profile.profilePic
+          }));
 
           if (profile.lastNotificationReadAt) {
             setLastNotificationReadAt(profile.lastNotificationReadAt);
           }
-        } catch (err) {
+
+          // If user refreshes while on /login or /signup, redirect them to dashboard
+          const authOnlyViews = ['Login', 'Signup'];
+          if (authOnlyViews.includes(initialView)) {
+            setCurrentView('Dashboard');
+            window.history.replaceState({ view: 'Dashboard' }, '', '/dashboard');
+          }
+        } catch (err: any) {
           console.error("Failed to restore session", err);
-          localStorage.removeItem('token'); // Clear invalid token
-          setIsLoggedIn(false);
+          // ONLY logout if it's a definitive auth failure (401 or 403)
+          if (err.status === 401 || err.status === 403) {
+            console.warn("Invalid session token - logging out");
+            localStorage.removeItem('token');
+            setIsLoggedIn(false);
+            if (restrictedViews.includes(initialView)) {
+              setCurrentView('Home');
+              window.history.replaceState({ view: 'Home' }, '', '/');
+            }
+          } else {
+            console.warn("Session restore failed due to network/server issue. Retaining session state.");
+          }
         }
       };
       restoreSession();
     }
+
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const [practiceInitialMode, setPracticeInitialMode] = useState<'free' | 'lesson' | 'custom' | undefined>(undefined);
 
   const handleNavigate = (view: string, mode?: string) => {
-
     if (!isLoggedIn && restrictedViews.includes(view)) {
       setPendingView(view);
       setIsLoginRequiredModalOpen(true);
@@ -312,25 +351,26 @@ const AppInner: React.FC = () => {
 
     if (view === 'Logout') {
       setIsLoggedIn(false);
-      localStorage.removeItem('token'); // Clear token
-      setUserStats(prev => ({
-        ...prev,
+      localStorage.removeItem('token');
+      localStorage.removeItem(STORAGE_KEY_STATS);
+      setUserStats({
         displayName: '',
         bestWpm: 0,
         avgWpm: 0,
         accuracy: 0,
         streak: 0,
-        level: 1,
         tournamentBest: 0,
         dob: undefined,
+        profilePic: undefined,
+        trophies: [],
         history: []
-      }));
+      });
       setCurrentView('Home');
       setIsTournamentActive(false);
+      window.history.replaceState({ view: 'Home' }, '', '/');
     } else if (view === 'TournamentStart' || view === 'TournamentLive') {
       setIsTournamentActive(true);
       setCurrentView('TournamentLive');
-      // Sync with History API
       const path = '/tournament/live';
       if (window.location.pathname !== path) {
         window.history.pushState({ view: 'TournamentLive' }, '', path);
@@ -348,15 +388,12 @@ const AppInner: React.FC = () => {
       } else if (view === 'Practice') {
         setPracticeInitialMode(undefined);
       } else {
-        // Clear custom practice storage when navigating away from Practice page
         sessionStorage.removeItem('ezhuthidu_custom_target');
         sessionStorage.removeItem('ezhuthidu_custom_setup');
         sessionStorage.removeItem('ezhuthidu_custom_duration');
       }
 
       setCurrentView(view);
-
-      // Sync with History API
       const path = VIEW_TO_PATH[view] || '/';
       if (window.location.pathname !== path) {
         window.history.pushState({ view }, '', path);
@@ -365,20 +402,23 @@ const AppInner: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+
   const calculateStats = (history: any[], displayName: string) => {
+    const baseStats = {
+      displayName,
+      bestWpm: 0,
+      avgWpm: 0,
+      accuracy: 0,
+      streak: 0,
+      tournamentBest: 0,
+      trophies: [] as any[],
+      history: [] as any[]
+    };
+
     if (!history || history.length === 0) {
-      return {
-        displayName,
-        bestWpm: 0,
-        avgWpm: 0,
-        accuracy: 0,
-        streak: 0,
-        level: 1,
-        tournamentBest: 0,
-        dob: undefined,
-        history: []
-      };
+      return baseStats;
     }
+
 
     const totalWpm = history.reduce((acc, curr) => acc + (curr.wpm || 0), 0);
     const avgWpm = Math.round(totalWpm / history.length);
@@ -420,8 +460,41 @@ const AppInner: React.FC = () => {
       }
     }
 
-    // Level calculation: based on skill (Best WPM)
-    const level = Math.floor(bestWpm / 10) + 1;
+
+    // Trophy Calculation
+    const trophies = [];
+
+    // Test Milestones
+    const testCount = history.filter(h => h.type === 'Test').length;
+    if (testCount >= 50) {
+      trophies.push({ id: 'test_50', type: 'Test', tier: 'Bronze', label: 'First 50', value: '50 Tests', icon: 'military_tech' });
+    }
+    if (testCount >= 100) {
+      trophies.push({ id: 'test_100', type: 'Test', tier: 'Silver', label: 'Century Club', value: '100 Tests', icon: 'military_tech' });
+    }
+    if (testCount >= 150) {
+      trophies.push({ id: 'test_150', type: 'Test', tier: 'Gold', label: 'Century & Half', value: '150 Tests', icon: 'military_tech' });
+    }
+
+    // Tournament Ranks
+    const top3Finishes = history.filter(h => h.type === 'Tournament' && h.rank >= 1 && h.rank <= 3);
+    const tournamentWins = top3Finishes.filter(h => h.rank === 1).length;
+    if (tournamentWins > 0) {
+      trophies.push({ id: 'tourney_win', type: 'Tournament', tier: 'Diamond', label: 'Grand Champion', value: `${tournamentWins} Wins`, icon: 'trophy' });
+    }
+    if (top3Finishes.length > tournamentWins) {
+      trophies.push({ id: 'tourney_podium', type: 'Tournament', tier: 'Gold', label: 'Podium Finisher', value: `${top3Finishes.length} Podiums`, icon: 'workspace_premium' });
+    }
+
+    // Accuracy Milestones
+    const accuracies = history.map(h => h.accuracy || 0);
+    const has95 = accuracies.some(a => a >= 95);
+    const has98 = accuracies.some(a => a >= 98);
+    const has100 = accuracies.some(a => a === 100);
+
+    if (has95) trophies.push({ id: 'acc_95', type: 'Accuracy', tier: 'Silver', label: 'Precise Gamer', value: '95%+ Acc', icon: 'stars' });
+    if (has98) trophies.push({ id: 'acc_98', type: 'Accuracy', tier: 'Gold', label: 'Eagle Eye', value: '98%+ Acc', icon: 'stars' });
+    if (has100) trophies.push({ id: 'acc_100', type: 'Accuracy', tier: 'Diamond', label: 'Perfectionist', value: '100% Acc', icon: 'stars' });
 
     return {
       displayName,
@@ -429,16 +502,18 @@ const AppInner: React.FC = () => {
       avgWpm,
       accuracy: Math.min(100, Math.max(0, avgAccuracy)),
       streak,
-      level,
       tournamentBest,
+      trophies,
       history: history.slice(0, 20).map(item => ({
         id: item._id || item.id,
         date: new Date(item.createdAt || item.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: item.type || 'Test',
         wpm: item.wpm,
+        accuracy: item.accuracy || 0,
+        rank: item.rank,
+        tournamentName: item.tournamentName,
         label: item.wpm >= bestWpm ? 'PB REACHED' : 'COMPLETED'
-      })),
-      dob: history.length > 0 ? history[0].user?.dob : undefined // Note: historical data might need mapping
+      }))
     };
   };
 
@@ -461,19 +536,21 @@ const AppInner: React.FC = () => {
       avgWpm: 0,
       accuracy: 0,
       streak: 0,
-      level: 1,
       tournamentBest: 0,
       dob: user.dob,
+      profilePic: (user as any).profilePic,
+      trophies: [],
       history: []
     };
 
     if (token) {
       try {
-        const { getUserHistory } = await import('@/src/services/api');
+        const { getUserHistory } = await import('./src/services/api');
         const historyData = await getUserHistory(token!);
-        const { dob } = await import('@/src/services/api').then(m => m.getProfile(token!));
+        const { dob, profilePic } = await import('./src/services/api').then(m => m.getProfile(token!));
         newStats = calculateStats(historyData, user.name || 'User');
         newStats.dob = dob;
+        newStats.profilePic = profilePic;
       } catch (err) {
         console.error("Failed to load user history", err);
       }
@@ -481,11 +558,12 @@ const AppInner: React.FC = () => {
 
     setUserStats(newStats);
 
-    if (pendingView) {
-      setCurrentView(pendingView);
-      setPendingView(null);
-    } else {
-      setCurrentView('Dashboard');
+    const targetView = pendingView || 'Dashboard';
+    const targetPath = VIEW_TO_PATH[targetView] || '/dashboard';
+    setCurrentView(targetView);
+    setPendingView(null);
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState({ view: targetView }, '', targetPath);
     }
   };
 
@@ -501,20 +579,26 @@ const AppInner: React.FC = () => {
         date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: finalType,
         wpm,
+        accuracy,
         label: wpm >= (isTournament ? prev.tournamentBest : prev.bestWpm) ? 'PB REACHED' : 'COMPLETED'
       };
 
       const newHistory = [newHistoryItem, ...prev.history].slice(0, 20);
-      const totalWpm = newHistory.reduce((acc, curr) => acc + (curr.wpm || 0), 0);
-      const avgWpm = Math.round(totalWpm / newHistory.length);
-      const bestWpm = Math.max(prev.bestWpm, wpm);
+      const updatedStats = calculateStats(newHistory, prev.displayName);
+
+      // Check for newly earned trophies
+      const oldTrophyIds = new Set(prev.trophies.map(t => t.id));
+      const newTrophiesDetected = updatedStats.trophies.filter(t => !oldTrophyIds.has(t.id));
+
+      if (newTrophiesDetected.length > 0) {
+        setLatestEarnedTrophy(newTrophiesDetected[0]);
+      }
 
       return {
         ...prev,
-        bestWpm,
-        tournamentBest: isTournament ? Math.max(prev.tournamentBest, wpm) : prev.tournamentBest,
-        avgWpm,
-        level: Math.floor(bestWpm / 10) + 1,
+        ...updatedStats,
+        dob: prev.dob,
+        profilePic: prev.profilePic,
         history: newHistory
       };
     });
@@ -537,10 +621,14 @@ const AppInner: React.FC = () => {
         }
 
         // Fetch official updated stats from backend for accuracy
-        const { getUserHistory } = await import('@/src/services/api');
+        const { getUserHistory } = await import('./src/services/api');
         const historyData = await getUserHistory(token);
         const updatedStats = calculateStats(historyData, userStats.displayName);
-        setUserStats(updatedStats);
+
+        setUserStats(prev => ({
+          ...prev, // Preserve identity (profilePic, dob, displayName)
+          ...updatedStats
+        }));
       }
     } catch (err) {
       console.error("Failed to save result or update stats", err);
@@ -566,6 +654,10 @@ const AppInner: React.FC = () => {
     }
   };
 
+  const updateUserStats = (newStats: Partial<UserStats>) => {
+    setUserStats(prev => ({ ...prev, ...newStats }));
+  };
+
   const isTournamentLive = currentView === 'TournamentLive';
   const isTournamentResult = currentView === 'TournamentResult';
 
@@ -581,13 +673,14 @@ const AppInner: React.FC = () => {
           onNavigate={handleNavigate}
           isLoggedIn={isLoggedIn}
           displayName={userStats.displayName}
-          onOpenNotifications={() => setIsNotificationPanelOpen(true)}
+          profilePic={userStats.profilePic}
+          onOpenNotifications={handleOpenNotificationPanel}
           unreadCount={unreadCount ?? 0}
         />
       )}
 
       <main className={`
-        ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-16 xs:pt-20'} 
+        ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-12 xs:pt-14'} 
         ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-screen overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow overflow-x-hidden'}
       `}>
         <div className={`flex flex-row w-full ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full justify-center' : 'min-h-full justify-center'} max-w-screen-4xl mx-auto`}>
@@ -632,6 +725,7 @@ const AppInner: React.FC = () => {
                 stats={userStats}
                 settings={appUiSettings}
                 setSettings={setAppUiSettings}
+                onUpdateStats={updateUserStats}
               />
             ) : currentView === 'TournamentArena' ? (
               <TournamentArena onNavigate={handleNavigate} stats={userStats} />
@@ -649,9 +743,15 @@ const AppInner: React.FC = () => {
                 onNavigate={handleNavigate}
               />
             ) : currentView === 'Login' ? (
-              <Login onNavigate={(name) => handleLogin(name)} onSignupNavigate={() => handleNavigate('Signup')} />
+              <Login onNavigate={(user) => handleLogin(user)} onSignupNavigate={() => handleNavigate('Signup')} onForgotPasswordNavigate={() => handleNavigate('ForgotPassword')} />
             ) : currentView === 'Signup' ? (
-              <Signup onNavigate={(name) => handleLogin(name)} onLoginNavigate={() => handleNavigate('Login')} />
+              <Signup onNavigate={(user) => handleLogin(user)} onLoginNavigate={() => handleNavigate('Login')} />
+            ) : currentView === 'ForgotPassword' ? (
+              <ForgotPassword onOTPNavigate={(email) => { setResetEmail(email); handleNavigate('VerifyOTP'); }} onLoginNavigate={() => handleNavigate('Login')} />
+            ) : currentView === 'VerifyOTP' ? (
+              <VerifyOTP email={resetEmail} onResetNavigate={() => handleNavigate('ResetPassword')} onLoginNavigate={() => handleNavigate('Login')} />
+            ) : currentView === 'ResetPassword' ? (
+              <ResetPassword email={resetEmail} onLoginNavigate={() => handleNavigate('Login')} />
             ) : currentView === 'Ezhuthidu' ? (
               <Ezhuthidu settings={appUiSettings} activeKeys={activeKeys} />
             ) : currentView === 'Practice' ? (
@@ -719,6 +819,10 @@ const AppInner: React.FC = () => {
         isOpen={isLoginRequiredModalOpen}
         onClose={() => setIsLoginRequiredModalOpen(false)}
         onLogin={() => handleNavigate('Login')}
+      />
+      <TrophyEarnedModal
+        trophy={latestEarnedTrophy}
+        onClose={() => setLatestEarnedTrophy(null)}
       />
     </div>
   );

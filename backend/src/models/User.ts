@@ -9,6 +9,9 @@ export interface IUser extends Document {
     isBanned: boolean;
     dob: Date;
     lastNotificationReadAt: Date;
+    profilePic?: string;
+    resetOTP?: number;
+    resetOTPExpire?: Date;
     matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
 
@@ -21,11 +24,13 @@ const UserSchema: Schema = new Schema({
         type: String,
         required: true,
         unique: true,
+        lowercase: true,
     },
     email: {
         type: String,
         required: true,
         unique: true,
+        lowercase: true,
     },
     password: {
         type: String,
@@ -43,13 +48,23 @@ const UserSchema: Schema = new Schema({
         type: Date,
         default: Date.now,
     },
+    profilePic: {
+        type: String,
+        default: '',
+    },
+    resetOTP: {
+        type: Number,
+    },
+    resetOTPExpire: {
+        type: Date,
+    },
 }, {
     timestamps: true,
 });
 
 UserSchema.pre<IUser>('save', async function (next) {
     if (!this.isModified('password')) {
-        next();
+        return next();
     }
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

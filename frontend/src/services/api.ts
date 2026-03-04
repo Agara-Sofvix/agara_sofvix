@@ -88,7 +88,9 @@ export const getProfile = async (token: string) => {
     });
 
     if (!response.ok) {
-        throw new Error('Failed to fetch profile');
+        const err: any = new Error('Failed to fetch profile');
+        err.status = response.status;
+        throw err;
     }
 
     return response.json();
@@ -103,7 +105,9 @@ export const getUserHistory = async (token: string) => {
     });
 
     if (!response.ok) {
-        throw new Error('Failed to fetch user history');
+        const err: any = new Error('Failed to fetch user history');
+        err.status = response.status;
+        throw err;
     }
 
     return response.json();
@@ -171,11 +175,111 @@ export const markNotificationsAsRead = async (token: string) => {
     return response.json();
 };
 
+export const getUnreadNotificationCount = async (token: string) => {
+    const response = await fetch(`${API_URL}/notifications/unread-count`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch unread notification count');
+    }
+
+    return response.json();
+};
+
 export const getActiveAdvertisements = async () => {
     const response = await fetch(`${API_URL}/advertisements/active`);
 
     if (!response.ok) {
         throw new Error('Failed to fetch advertisements');
+    }
+
+    return response.json();
+};
+export const updateProfilePic = async (formData: FormData, token: string) => {
+    const response = await fetch(`${API_URL}/auth/update-profile-pic`, {
+        method: 'PUT',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update profile picture');
+    }
+
+    return response.json();
+};
+
+export const setAvatar = async (avatarPath: string, token: string) => {
+    const response = await fetch(`${API_URL}/auth/set-avatar`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ avatarPath }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update avatar');
+    }
+
+    return response.json();
+};
+
+export const forgotPassword = async (email: string) => {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to request reset code');
+    }
+
+    return response.json();
+};
+
+export const verifyOTP = async (email: string, otp: string) => {
+    const response = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp: parseInt(otp) }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Verification failed');
+    }
+
+    return response.json();
+};
+
+export const resetPassword = async (data: { email: string; password: string }) => {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to reset password');
     }
 
     return response.json();

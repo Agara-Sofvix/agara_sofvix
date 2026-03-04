@@ -13,8 +13,8 @@ export const getSettings = async (req: Request, res: Response): Promise<void> =>
         // If no settings exist, create default settings
         if (!settings) {
             settings = await Settings.create({
-                siteName: 'Ezhuthidu',
-                marqueeText: '🏆 Tamil Typing Tournament – Registration Open | ⏳ Tournament Starts in 2 Days',
+                siteName: 'எழுத்திடு',
+                marqueeText: '🏆 தமிழ் தட்டச்சுப் போட்டி – முன்பதிவு தொடங்கிவிட்டது | ⏳ போட்டி இன்னும் 2 நாட்களில் தொடங்கும்',
                 contactEmail: 'admin@ezhuthidu.com',
                 maintenanceMode: false,
                 sessionTimeout: 60,
@@ -44,7 +44,11 @@ export const getSettings = async (req: Request, res: Response): Promise<void> =>
                     schemaSettings: {
                         faqEnabled: true,
                         breadcrumbEnabled: true,
-                        organizationEnabled: true
+                        organizationEnabled: true,
+                        faqItems: [
+                            { question: 'How to learn Tamil typing fast?', answer: '1. Learn the Tamil keyboard layout. 2. Practice daily. 3. Use online typing games. 4. Track your typing speed.' },
+                            { question: 'What is the best Tamil typing game?', answer: 'Ezhuthidu is the best free Tamil typing game to practice Tamil keyboard typing online.' }
+                        ]
                     },
                     socialLinks: {
                         facebook: '',
@@ -113,6 +117,10 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
                 ...settings.seo,
                 ...seo
             };
+        }
+
+        if (req.body.pagesSeo !== undefined) {
+            settings.pagesSeo = req.body.pagesSeo;
         }
 
         settings.updatedAt = new Date();
@@ -273,7 +281,7 @@ export const getPublicSettings = async (req: Request, res: Response): Promise<vo
         // If no settings exist, create default settings
         if (!settings) {
             settings = await Settings.create({
-                siteName: 'Ezhuthidu',
+                siteName: 'எழுத்திடு',
                 contactEmail: 'admin@ezhuthidu.com',
                 maintenanceMode: false,
                 sessionTimeout: 60,
@@ -303,7 +311,11 @@ export const getPublicSettings = async (req: Request, res: Response): Promise<vo
                     schemaSettings: {
                         faqEnabled: true,
                         breadcrumbEnabled: true,
-                        organizationEnabled: true
+                        organizationEnabled: true,
+                        faqItems: [
+                            { question: 'How to learn Tamil typing fast?', answer: '1. Learn the Tamil keyboard layout. 2. Practice daily. 3. Use online typing games. 4. Track your typing speed.' },
+                            { question: 'What is the best Tamil typing game?', answer: 'Ezhuthidu is the best free Tamil typing game to practice Tamil keyboard typing online.' }
+                        ]
                     },
                     socialLinks: {
                         facebook: '',
@@ -325,7 +337,8 @@ export const getPublicSettings = async (req: Request, res: Response): Promise<vo
                 logoUrl: settings.branding.logoUrl || '',
                 primaryColor: settings.branding.primaryColor || '#135bec'
             },
-            seo: settings.seo || {}
+            seo: settings.seo || {},
+            pagesSeo: settings.pagesSeo || []
         };
 
         res.json(responseData);
@@ -346,7 +359,7 @@ export const getRobotsTxt = async (req: Request, res: Response): Promise<void> =
     }
 };
 
-// Get sitemap.xml (Basic implementation)
+// Get sitemap.xml — All important routes
 export const getSitemapXml = async (req: Request, res: Response): Promise<void> => {
     try {
         const settings = await Settings.findOne();
@@ -355,17 +368,39 @@ export const getSitemapXml = async (req: Request, res: Response): Promise<void> 
             return;
         }
 
-        const baseUrl = process.env.FRONTEND_URL || 'https://ezhuthidu.com';
+        const baseUrl = process.env.SITE_URL || process.env.FRONTEND_URL || 'https://ezhuthidu.com';
+        const today = new Date().toISOString().split('T')[0];
 
-        // Basic sitemap with home page - can be expanded to include all dynamic routes
+        // Core pages
+        const corePages = [
+            { loc: '/', changefreq: 'daily', priority: '1.0' },
+            { loc: '/practice', changefreq: 'weekly', priority: '0.9' },
+            { loc: '/test', changefreq: 'weekly', priority: '0.9' },
+            { loc: '/ezhuthidu', changefreq: 'weekly', priority: '0.9' },
+            { loc: '/keyboard-layout', changefreq: 'monthly', priority: '0.8' },
+            { loc: '/tournament', changefreq: 'weekly', priority: '0.8' },
+            { loc: '/about', changefreq: 'monthly', priority: '0.7' },
+        ];
+
+        // Custom pages from SEO Manager
+        const customPages = (settings.pagesSeo || [])
+            .filter(p => p.path && p.path !== '/' && !corePages.some(cp => cp.loc === p.path))
+            .map(p => ({
+                loc: p.path,
+                changefreq: 'weekly',
+                priority: '0.8'
+            }));
+
+        const allPages = [...corePages, ...customPages];
+
         const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${baseUrl}/</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
+${allPages.map(p => `  <url>
+    <loc>${baseUrl}${p.loc}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`).join('\n')}
 </urlset>`;
 
         res.type('application/xml');

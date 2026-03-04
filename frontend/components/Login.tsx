@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { loginUser } from '../src/services/api';
 
 interface LoginProps {
-  onNavigate: (user: { name: string, token?: string }) => void;
+  onNavigate: (user: { name: string, token?: string, profilePic?: string }) => void;
   onSignupNavigate: () => void;
+  onForgotPasswordNavigate: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onNavigate, onSignupNavigate }) => {
+const Login: React.FC<LoginProps> = ({ onNavigate, onSignupNavigate, onForgotPasswordNavigate }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
@@ -26,7 +27,7 @@ const Login: React.FC<LoginProps> = ({ onNavigate, onSignupNavigate }) => {
         password: formData.password
       });
 
-      onNavigate({ name: data.name, token: data.token });
+      onNavigate({ name: data.name, token: data.token, profilePic: data.profilePic });
     } catch (err: any) {
       setError(err.message);
     }
@@ -90,7 +91,13 @@ const Login: React.FC<LoginProps> = ({ onNavigate, onSignupNavigate }) => {
               />
               <span className="text-xs font-bold opacity-70 text-slate-700 group-hover:opacity-100 transition-opacity">Remember me</span>
             </label>
-            <a className="text-xs font-bold text-primary hover:underline" href="#">Forgot Password?</a>
+            <button
+              type="button"
+              className="text-xs font-bold text-primary hover:underline"
+              onClick={onForgotPasswordNavigate}
+            >
+              Forgot Password?
+            </button>
           </div>
 
           <div className="pt-2">

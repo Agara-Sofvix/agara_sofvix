@@ -17,6 +17,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/admin/, '')
         },
         '/uploads': { target: apiTarget, changeOrigin: true },
+        '/avatars': { target: apiTarget, changeOrigin: true },
       },
     },
     plugins: [react()],

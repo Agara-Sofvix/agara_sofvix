@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getNotifications, markNotificationsAsRead } from '../src/services/api';
+import { getNotifications, markNotificationsAsRead, getUnreadNotificationCount } from '../src/services/api';
 
 export interface Notification {
     _id: string;
@@ -20,20 +20,20 @@ export const useNotifications = (isLoggedIn: boolean, lastReadAt?: string | Date
             const data = await getNotifications();
             setNotifications(data);
 
-            if (isLoggedIn && lastReadAt) {
-                const lastRead = new Date(lastReadAt).getTime();
-                const unread = data.filter((n: Notification) => new Date(n.createdAt).getTime() > lastRead).length;
-                setUnreadCount(unread);
+            if (isLoggedIn) {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    const { count } = await getUnreadNotificationCount(token);
+                    setUnreadCount(count);
+                }
             } else {
-                // Guest mode or no lastReadAt
+                // Guest mode - use local storage
                 const localLastRead = localStorage.getItem('lastNotificationReadAt');
                 if (localLastRead) {
                     const lastRead = new Date(localLastRead).getTime();
                     const unread = data.filter((n: Notification) => new Date(n.createdAt).getTime() > lastRead).length;
                     setUnreadCount(unread);
                 } else {
-                    // If no lastReadAt, assume everything since last visit? Or show all?
-                    // Let's default to showing all unread if never read before
                     setUnreadCount(data.length);
                 }
             }
@@ -42,7 +42,7 @@ export const useNotifications = (isLoggedIn: boolean, lastReadAt?: string | Date
         } finally {
             setLoading(false);
         }
-    }, [isLoggedIn, lastReadAt]);
+    }, [isLoggedIn]);
 
     useEffect(() => {
         fetchNotifications();

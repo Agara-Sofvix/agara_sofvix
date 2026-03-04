@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Notification from '../models/Notification';
+import User from '../models/User';
 
 // @desc    Get active notifications for users
 // @route   GET /api/notifications
@@ -18,15 +19,32 @@ export const getActiveNotifications = async (req: Request, res: Response): Promi
 // @access  Private
 export const markNotificationsAsRead = async (req: Request, res: Response): Promise<void> => {
     try {
-        const user = await import('../models/User').then(m => m.default.findById((req as any).user._id));
+        const updatedUser = await User.findByIdAndUpdate(
+            (req as any).user._id,
+            { lastNotificationReadAt: new Date() },
+            { new: true, runValidators: false }
+        );
 
-        if (user) {
-            user.lastNotificationReadAt = new Date();
-            await user.save();
-            res.json({ message: 'Notifications marked as read', lastNotificationReadAt: user.lastNotificationReadAt });
+        if (updatedUser) {
+            res.json({ message: 'Notifications marked as read', lastNotificationReadAt: updatedUser.lastNotificationReadAt });
         } else {
             res.status(404).json({ message: 'User not found' });
         }
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// @desc    Get unread notification count
+// @route   GET /api/notifications/unread-count
+// @access  Protected/Public (handled in controller)
+export const getUnreadNotificationCount = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const lastRead = (req as any).user?.lastNotificationReadAt || new Date(0);
+        const count = await Notification.countDocuments({
+            isActive: true,
+            createdAt: { $gt: lastRead }
+        });
+        res.json({ count });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

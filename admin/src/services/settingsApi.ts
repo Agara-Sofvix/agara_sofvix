@@ -75,13 +75,12 @@ export interface Settings {
             breadcrumbEnabled: boolean;
             organizationEnabled: boolean;
         };
-        socialLinks: {
-            facebook: string;
-            instagram: string;
-            linkedin: string;
-            youtube: string;
-        };
+        linkedin: string;
+        youtube: string;
+        faqItems: Array<{ question: string; answer: string }>;
     };
+    primaryKeywords: string[];
+    longTailKeywords: string[];
 }
 
 export const fetchSettings = async (): Promise<Settings> => {

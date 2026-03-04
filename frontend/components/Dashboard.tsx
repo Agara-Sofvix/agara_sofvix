@@ -1,15 +1,21 @@
 import React from 'react';
 import { UserStats, AppSettings } from '../App';
+import { updateProfilePic, setAvatar } from '../src/services/api';
+import { getUploadBaseUrl } from '../src/config/apiConfig';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
   stats: UserStats;
   settings: AppSettings;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
+  onUpdateStats?: (stats: Partial<UserStats>) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setSettings }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setSettings, onUpdateStats }) => {
   const [isGalleryOpen, setIsGalleryOpen] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [showAvatarPicker, setShowAvatarPicker] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const isEmpty = stats.history.length === 0;
 
   const toggleSetting = (key: keyof AppSettings) => {
@@ -19,20 +25,187 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
     }));
   };
 
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('File size must be less than 2MB');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      setIsUploading(true);
+      const result = await updateProfilePic(formData, token);
+      if (onUpdateStats) {
+        onUpdateStats({ profilePic: result.profilePic });
+      } else {
+        window.location.reload();
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to update profile picture');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSelectAvatar = async (path: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      setIsUploading(true);
+      const result = await setAvatar(path, token);
+      if (onUpdateStats) {
+        onUpdateStats({ profilePic: result.profilePic });
+      } else {
+        window.location.reload();
+      }
+    } catch (error: any) {
+      alert(error.message || 'Failed to update avatar');
+    } finally {
+      setIsUploading(false);
+      setShowAvatarPicker(false);
+    }
+  };
+
+  const predefinedAvatars = [
+    { gender: 'Male', items: ['male_1.png', 'male_2.png', 'male_3.png'] },
+    { gender: 'Female', items: ['female_1.png', 'female_2.png', 'female_3.png'] },
+  ];
+
+  const getFullUrl = (path: string) => {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const base = getUploadBaseUrl().replace(/\/$/, '');
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${base}${cleanPath}`;
+  };
+
+  const avatarUrl = stats.profilePic ? getFullUrl(stats.profilePic) : null;
+
   return (
     <div className="xs:text-xs text-sm sm:text-base flex flex-col gap-16 animate-in fade-in slide-in-from-bottom-4 duration-700 relative pb-10">
       {/* Background Blobs for Organic Feel - Removed background blobs for cleaner look */}
 
       {/* Profile Section */}
       <section className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-        <div className="relative">
-          <div className="w-40 h-40 sm:w-56 sm:h-56 md:w-72 lg:w-80 bg-cream-light/50 border border-slate-200 rounded-[30px] sm:rounded-[50px] md:rounded-[60px] p-2 sm:p-4 transition-all duration-700 shadow-inner overflow-visible z-10">
-            <img
-              alt="User Avatar"
-              className="w-full h-full object-cover rounded-[24px] sm:rounded-[48px]"
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${stats.displayName}`}
-            />
+        <div className="relative group/avatar cursor-pointer">
+          <div
+            className="w-40 h-40 sm:w-56 sm:h-56 md:w-72 lg:w-80 bg-cream-light/50 border border-slate-200 rounded-[30px] sm:rounded-[50px] md:rounded-[60px] p-2 sm:p-4 transition-all duration-700 shadow-inner overflow-visible z-10 relative flex items-center justify-center overflow-hidden"
+            onClick={() => setShowAvatarPicker(true)}
+          >
+            {avatarUrl ? (
+              <img
+                alt="User Avatar"
+                className="w-full h-full object-cover rounded-[24px] sm:rounded-[48px]"
+                src={avatarUrl}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
+                <span className="material-symbols-outlined text-5xl sm:text-7xl">person</span>
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No Avatar</span>
+              </div>
+            )}
+
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/40 rounded-[24px] sm:rounded-[48px] flex items-center justify-center z-20">
+                <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+
+            <div className="absolute inset-2 sm:inset-4 bg-black/20 opacity-0 group-hover/avatar:opacity-100 transition-opacity rounded-[24px] sm:rounded-[48px] flex flex-col items-center justify-center z-20 gap-2">
+              <span className="material-symbols-outlined text-white text-3xl sm:text-5xl">edit</span>
+              <span className="text-white text-[10px] font-black uppercase tracking-tighter">Change Avatar</span>
+            </div>
           </div>
+
+          {/* Avatar Picker Modal */}
+          {showAvatarPicker && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+              <div
+                className="bg-white rounded-[2.5rem] p-6 xs:p-8 max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-8">
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 leading-tight">CHOOSE AVATAR</h2>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Select from predefined or upload custom</p>
+                  </div>
+                  <button
+                    onClick={() => setShowAvatarPicker(false)}
+                    className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-slate-900">close</span>
+                  </button>
+                </div>
+
+                <div className="space-y-8">
+                  {predefinedAvatars.map((group) => (
+                    <div key={group.gender}>
+                      <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-3">
+                        {group.gender} MODELS
+                        <div className="h-px flex-1 bg-slate-100"></div>
+                      </h3>
+                      <div className="grid grid-cols-3 gap-4 sm:gap-6">
+                        {group.items.map((img) => (
+                          <button
+                            key={img}
+                            onClick={() => handleSelectAvatar(`/avatars/${img}`)}
+                            className="aspect-square rounded-2xl overflow-hidden border-2 border-slate-100 hover:border-header-brown transition-all hover:scale-105 active:scale-95 group/item relative"
+                          >
+                            <img
+                              src={getFullUrl(`/avatars/${img}`) || ''}
+                              alt={img}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-header-brown/0 group-hover/item:bg-header-brown/10 transition-colors"></div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="pt-6 border-t border-slate-100">
+                    <button
+                      onClick={handleAvatarClick}
+                      className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center gap-3 hover:bg-slate-50 transition-colors group/btn"
+                    >
+                      <span className="material-symbols-outlined text-slate-400 group-hover/btn:text-header-brown">upload</span>
+                      <span className="text-sm font-black text-slate-600 group-hover/btn:text-slate-900 uppercase tracking-widest">Upload Custom Photo</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-0 -z-10" onClick={() => setShowAvatarPicker(false)}></div>
+            </div>
+          )}
+
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleFileChange}
+          />
 
           {/* Mobile compact stats row (equal boxes) */}
           <div className="mt-4 sm:hidden flex w-full gap-3 justify-between px-2">
@@ -79,9 +252,6 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-4">
-            <div className="px-10 py-4 bg-black text-white rounded-full font-black text-sm tracking-widest uppercase shadow-xl hover:scale-105 transition-transform cursor-default">
-              Level {stats.level}
-            </div>
             {stats.tournamentBest > 0 && (
               <div className="px-8 py-4 bg-primary text-white rounded-full font-black text-sm tracking-widest uppercase shadow-xl flex items-center gap-3">
                 <span className="material-symbols-outlined text-lg">emoji_events</span>
@@ -171,11 +341,14 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
         )}
       </section>
 
-      {/* Bottom Grid: Timeline + Config + Trophies */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xs:gap-8 md:gap-10">
+      {/* Bottom Grid: Timeline Left + Trophy Shelf Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 xs:gap-8 md:gap-10 items-start">
+
         {/* Evolution Timeline */}
         <div className="space-y-8 relative pl-4">
-          <h3 className="text-2xl font-black tracking-tighter mb-8 text-slate-900">Evolution Timeline</h3>
+          <div className="flex justify-between items-center mb-8 pr-4 sm:pr-8">
+            <h3 className="text-2xl font-black tracking-tighter text-slate-900">Evolution Timeline</h3>
+          </div>
           <div className="absolute left-6 top-16 bottom-0 w-px bg-slate-200"></div>
 
           <div className="space-y-6">
@@ -209,56 +382,73 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
           </div>
         </div>
 
-        {/* Right Panel: Config and Trophies */}
-        <div className="flex flex-col gap-4 xs:gap-6">
+        {/* Trophy Shelf Card */}
+        <div className="bg-cream-light border border-slate-200/80 rounded-[28px] shadow-inner overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="pt-6 pb-4 px-6 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Trophy Shelf</p>
+          </div>
 
+          {/* 2x2 Trophy Grid */}
+          <div className="px-4 pb-2 grid grid-cols-2 gap-3 flex-1">
+            {(() => {
+              const allTrophySlots = [
+                { category: 'TROPHY RACE', locked: false },
+                { category: 'PRECISION MASTER', locked: false },
+                { category: 'TOURNAMENT GAME', locked: true },
+                { category: 'MASTER', locked: true },
+              ];
 
-          {/* Trophy Shelf */}
-          <div className="flex-1 bg-cream-light/50 border border-slate-200 p-4 sm:p-8 rounded-[40px] flex flex-col justify-between shadow-inner">
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-widest opacity-60 mb-6 text-center text-slate-900">Trophy Shelf</h3>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-16">
-                <div className={`flex flex-col items-center group ${stats.bestWpm < 40 ? 'opacity-20 grayscale' : ''}`}>
-                  <div className={`w-16 h-20 flex items-center justify-center shadow-lg group-hover:-translate-y-1 transition-transform ${stats.bestWpm >= 40 ? 'bg-primary' : 'bg-white/40 border-2 border-dashed border-black/20'}`} style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}>
-                    <span className="material-symbols-outlined text-white text-3xl">offline_bolt</span>
-                  </div>
-                  <div className="text-left">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40">Velocity Rank</h4>
-                    <p className="text-lg font-black text-slate-900 uppercase">Supersonic</p>
-                  </div>
-                </div>
-                <div className={`flex items-center gap-4 group ${stats.accuracy < 95 ? 'opacity-20 grayscale' : ''}`}>
-                  <div className={`w-16 h-20 flex items-center justify-center shadow-lg group-hover:-translate-y-1 transition-transform ${stats.accuracy >= 95 ? 'bg-slate-900' : 'bg-white/40 border-2 border-dashed border-black/20'}`} style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}>
-                    <span className={`material-symbols-outlined text-2xl ${stats.accuracy >= 95 ? 'text-white' : 'text-black'}`}>{stats.accuracy >= 95 ? 'verified' : 'lock'}</span>
-                  </div>
-                  <div className="text-left">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40">Precision Master</h4>
-                    <p className="text-lg font-black text-slate-900 uppercase">Flawless</p>
-                  </div>
-                </div>
-                <div className={`flex flex-col items-center group ${stats.tournamentBest < 40 ? 'opacity-20 grayscale' : ''}`}>
-                  <div className={`w-16 h-20 flex items-center justify-center shadow-lg group-hover:-translate-y-1 transition-transform ${stats.tournamentBest >= 40 ? 'bg-primary' : 'bg-white/40 border-2 border-dashed border-black/20'}`} style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}>
-                    <span className={`material-symbols-outlined text-2xl ${stats.tournamentBest >= 40 ? 'military_tech' : 'lock'}`}>{stats.tournamentBest >= 40 ? 'military_tech' : 'lock'}</span>
-                  </div>
-                  <p className="text-[8px] font-black mt-2 uppercase tracking-tighter text-slate-900">Tournament (40+)</p>
-                </div>
-                <div className="flex flex-col items-center group opacity-20 grayscale">
-                  <div className="w-16 h-20 bg-white/40 flex items-center justify-center border-2 border-dashed border-black/20" style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}>
-                    <span className="material-symbols-outlined text-black text-2xl">workspace_premium</span>
-                  </div>
-                  <p className="text-[8px] font-black mt-2 uppercase tracking-tighter text-slate-900">Master</p>
-                </div>
-              </div>
-            </div>
+              const earnedTrophies = stats.trophies || [];
+
+              return allTrophySlots.map((slot, i) => {
+                const trophy = earnedTrophies[i];
+
+                if (trophy) {
+                  // Earned trophy
+                  const iconBg =
+                    trophy.tier === 'Diamond' ? 'bg-cyan-400' :
+                      trophy.tier === 'Gold' ? 'bg-amber-400' :
+                        trophy.tier === 'Silver' ? 'bg-slate-300' :
+                          'bg-orange-400';
+
+                  return (
+                    <div key={trophy.id} className="bg-white/60 rounded-2xl p-4 flex flex-col items-center text-center gap-2 hover:bg-white/90 transition-colors">
+                      <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center shadow-sm`}>
+                        <span className="material-symbols-outlined text-white text-2xl">{trophy.icon}</span>
+                      </div>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight">{trophy.type} Race</p>
+                      <p className="text-xs font-black uppercase tracking-wider text-slate-800 leading-tight">{trophy.label}</p>
+                    </div>
+                  );
+                } else {
+                  // Locked slot
+                  return (
+                    <div key={`locked-${i}`} className="bg-white/30 rounded-2xl p-4 flex flex-col items-center text-center gap-2">
+                      <div className="w-12 h-12 rounded-xl bg-slate-200/60 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-slate-400 text-2xl">lock</span>
+                      </div>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight mt-1">{slot.category}</p>
+                    </div>
+                  );
+                }
+              });
+            })()}
+          </div>
+
+          {/* VIEW GALLERY Button */}
+          <div className="p-4 pt-3">
             <button
               onClick={() => setIsGalleryOpen(true)}
-              className="w-full mt-6 py-3 bg-primary text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-primary/90 transition-all active:scale-95 shadow-lg"
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all shadow-md"
             >
               View Gallery
             </button>
           </div>
         </div>
+
       </div>
+
 
       {/* 5x5 Gallery Popup */}
       {isGalleryOpen && (
@@ -280,26 +470,51 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
 
             {/* 5x5 Grid */}
             <div className="p-8 sm:p-10 max-h-[70vh] overflow-y-auto no-scrollbar">
-              <div className="grid grid-cols-5 gap-4 lg:gap-6">
-                {Array.from({ length: 25 }).map((_, i) => {
-                  const isUnlocked = i < 2; // Mocking first 2 as unlocked for demo
-                  return (
-                    <div key={i} className={`aspect-square rounded-2xl flex flex-col items-center justify-center transition-all duration-500 group relative ${isUnlocked ? 'bg-white shadow-xl scale-100' : 'bg-slate-100 opacity-30 grayscale'}`}>
-                      {/* Hexagon Shape */}
-                      <div
-                        className={`w-12 h-16 sm:w-16 sm:h-20 flex items-center justify-center transition-transform group-hover:-translate-y-1 ${isUnlocked ? 'bg-primary' : 'bg-slate-300'}`}
-                        style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}
-                      >
-                        <span className="material-symbols-outlined text-white text-xl sm:text-2xl">
-                          {isUnlocked ? (i === 0 ? 'offline_bolt' : 'verified') : 'lock'}
-                        </span>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
+                {(() => {
+                  const earnedTrophies = stats.trophies || [];
+                  const totalSlots = 25;
+                  const slots = [];
+
+                  // Render earned trophies
+                  earnedTrophies.forEach((trophy) => {
+                    slots.push(
+                      <div key={trophy.id} className="bg-white border border-slate-200 rounded-[32px] p-6 flex flex-col items-center text-center group hover:shadow-xl transition-all hover:-translate-y-1">
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110 ${trophy.tier === 'Diamond' ? 'bg-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.4)]' :
+                          trophy.tier === 'Gold' ? 'bg-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.4)]' :
+                            trophy.tier === 'Silver' ? 'bg-slate-300 shadow-[0_0_20px_rgba(148,163,184,0.4)]' :
+                              'bg-orange-400 shadow-[0_0_20px_rgba(251,146,60,0.4)]'
+                          }`}>
+                          <span className="material-symbols-outlined text-white text-3xl">{trophy.icon}</span>
+                        </div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{trophy.label}</h4>
+                        <p className="text-sm font-black text-slate-900">{trophy.value}</p>
+                        <div className={`mt-3 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter ${trophy.tier === 'Diamond' ? 'bg-cyan-100 text-cyan-600' :
+                          trophy.tier === 'Gold' ? 'bg-amber-100 text-amber-600' :
+                            trophy.tier === 'Silver' ? 'bg-slate-100 text-slate-600' :
+                              'bg-orange-100 text-orange-600'
+                          }`}>
+                          {trophy.tier} Tier
+                        </div>
                       </div>
-                      <div className="mt-3 text-center">
-                        <p className="text-[7px] font-black uppercase tracking-tighter opacity-40">Badge {i + 1}</p>
+                    );
+                  });
+
+                  // Render locked placeholders
+                  for (let i = slots.length; i < totalSlots; i++) {
+                    slots.push(
+                      <div key={`locked-${i}`} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[32px] p-6 flex flex-col items-center justify-center text-center opacity-40 group hover:opacity-60 transition-opacity">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center mb-4">
+                          <span className="material-symbols-outlined text-slate-400 text-3xl">lock</span>
+                        </div>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-300 mb-1">Locked</h4>
+                        <p className="text-[10px] font-bold text-slate-300">Milestone Pending</p>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  }
+
+                  return slots;
+                })()}
               </div>
             </div>
 

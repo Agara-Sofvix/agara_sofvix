@@ -233,7 +233,7 @@ const DashboardLayout = () => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0">
                 {/* Header */}
-                <header className="h-16 bg-[#1a1d21] border-b border-slate-800 flex items-center justify-between px-8">
+                <header className="h-14 bg-[#1a1d21] border-b border-slate-800 flex items-center justify-between px-8">
                     {/* Search */}
                     <div className="relative w-96">
                         <Search className={`absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${isSearching ? 'text-blue-500' : 'text-slate-500'}`} size={16} />
@@ -347,7 +347,11 @@ const DashboardLayout = () => {
                     <div className="flex items-center gap-4">
                         <div className="relative">
                             <button
-                                onClick={() => setShowNotifications(!showNotifications)}
+                                onClick={() => {
+                                    const nextState = !showNotifications;
+                                    setShowNotifications(nextState);
+                                    if (nextState) markAsRead();
+                                }}
                                 className={`text-slate-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800 ${showNotifications ? 'text-white bg-slate-800' : ''}`}
                             >
                                 <Bell size={18} />

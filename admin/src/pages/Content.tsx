@@ -118,6 +118,12 @@ const Content = () => {
             case 'cinema': return <Film size={16} />;
             case 'news': return <Newspaper size={16} />;
             case 'free-typing': return <Layers size={16} />;
+            case 'tournament': return <Layers size={16} />;
+            case 'general': return <Info size={16} />;
+            case 'history': return <BookOpen size={16} />;
+            case 'science': return <Info size={16} />;
+            case 'social': return <Newspaper size={16} />;
+            case 'election': return <Newspaper size={16} />;
             default: return <Layers size={16} />;
         }
     };
@@ -149,16 +155,16 @@ const Content = () => {
                                     onChange={(e) => setSelectedCategory(e.target.value)}
                                 >
                                     <option>All Categories</option>
-                                    <option value="tournament">Tournament</option>
-                                    <option value="literature">Literature</option>
-                                    <option value="cinema">Cinema</option>
-                                    <option value="news">News</option>
-                                    <option value="general">General Knowledge</option>
-                                    <option value="technical">Technical</option>
                                     <option value="free-typing">Free Typing</option>
+                                    <option value="general">General Knowledge</option>
+                                    <option value="literature">Literature</option>
                                     <option value="history">History</option>
                                     <option value="science">Science</option>
                                     <option value="social">Social Issues</option>
+                                    <option value="tournament">Tournament</option>
+                                    <option value="news">News</option>
+                                    <option value="cinema">Cinema</option>
+                                    <option value="election">Election</option>
                                 </select>
                             </div>
                         </div>
@@ -271,16 +277,16 @@ const Content = () => {
                             value={newCategory}
                             onChange={(e) => setNewCategory(e.target.value)}
                         >
-                            <option value="tournament">Tournament</option>
-                            <option value="literature">Literature</option>
-                            <option value="news">News</option>
-                            <option value="cinema">Cinema</option>
-                            <option value="general">General Knowledge</option>
-                            <option value="technical">Technical</option>
                             <option value="free-typing">Free Typing</option>
+                            <option value="general">General Knowledge</option>
+                            <option value="literature">Literature</option>
                             <option value="history">History</option>
                             <option value="science">Science</option>
                             <option value="social">Social Issues</option>
+                            <option value="tournament">Tournament</option>
+                            <option value="news">News</option>
+                            <option value="cinema">Cinema</option>
+                            <option value="election">Election</option>
                         </select>
                     </div>
 

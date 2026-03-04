@@ -523,12 +523,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
               const result = processTamilInput(partialInput, value, partialInput.length);
               const produced = result.text;
 
-              // Only allow ONE error character at a time
               const { lastInputStatus } = calculateDynamicTape(targetText, inputText + produced, inputHistory);
-              if (lastInputStatus === 'error' && feedbackStatus === 'error') {
-                setPartialInput("");
-                return;
-              }
 
               const newDisplayInput = inputText + produced;
               setInputText(newDisplayInput);
@@ -763,14 +758,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         // If this is Keyboard Practice, we match using the dynamic Space-Driven logic
         if (selectedCategoryId === 'keyboard_practice') {
           // Update only display input. inputHistory only updates on Space.
-          // LIMIT ACCUMULATION: If already in error state, don't append more wrong chars
           const { lastInputStatus } = calculateDynamicTape(targetText, inputText + produced, inputHistory);
-
-          if (lastInputStatus === 'error' && feedbackStatus === 'error') {
-            // Already showing an error, don't append another one
-            setPartialInput("");
-            return;
-          }
 
           const newDisplayInput = inputText + produced;
           setInputText(newDisplayInput);
@@ -810,23 +798,18 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
           return;
         }
 
-        // WRONG INPUT - Only allow ONE error character at a time to prevent repetition/noise
-        if (feedbackStatus !== 'error') {
-          setFeedbackStatus('error');
-          setPartialInput("");
-          const newInp = inputText + produced;
-          setInputText(newInp);
+        // WRONG INPUT - Allow all characters but mark as error
+        setFeedbackStatus('error');
+        setPartialInput("");
+        const newInp = inputText + produced;
+        setInputText(newInp);
 
-          const newPosEnd = newInp.length;
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPosEnd;
-            }
-          }, 0);
-        } else {
-          // Already in error state, don't append another wrong character
-          setPartialInput("");
-        }
+        const newPosEnd = newInp.length;
+        setTimeout(() => {
+          if (inputRef.current) {
+            inputRef.current.selectionStart = inputRef.current.selectionEnd = newPosEnd;
+          }
+        }, 0);
         return;
       }
     }
