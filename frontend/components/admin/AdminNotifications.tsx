@@ -28,7 +28,8 @@ const AdminNotifications: React.FC = () => {
         fetchEvents();
 
         // Socket.io connection with auth
-        const token = localStorage.getItem('adminToken');
+        const stored = localStorage.getItem('admin');
+        const token = stored ? JSON.parse(stored).token : null;
         const socket = io(SOCKET_ORIGIN, {
             auth: { token }
         });

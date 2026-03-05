@@ -34,9 +34,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             throw new Error('Login failed');
         }
 
-        const data = await response.json();
-        localStorage.setItem('admin', JSON.stringify(data));
-        setAdmin(data);
+        const result = await response.json();
+        const adminData = result.data || result; // Handle both {success, data} and flat response
+        localStorage.setItem('admin', JSON.stringify(adminData));
+        setAdmin(adminData);
     };
 
     const logout = () => {
