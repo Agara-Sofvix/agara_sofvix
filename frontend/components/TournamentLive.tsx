@@ -12,6 +12,9 @@ interface TournamentLiveProps {
     wrongChars: number;
     timeTaken: string;
     submissionType: 'Manual' | 'Auto';
+    rawTypedText: string;
+    durationMs: number;
+    testSessionId: string;
   }) => void;
   displayName: string;
   activeKeys?: Set<string>;
@@ -26,6 +29,7 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
   const [isFinished, setIsFinished] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [violations, setViolations] = useState(0);
+  const [testSessionId] = useState(() => crypto.randomUUID());
 
   const { fetchTexts, getRandomText, isLoading } = useTextStore();
 
@@ -222,6 +226,9 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
       wrongChars: errors,
       timeTaken: formatTime(timeTakenValue),
       submissionType: subType,
+      rawTypedText: inputText,
+      durationMs: timeTakenValue * 1000,
+      testSessionId: testSessionId,
     });
   };
 

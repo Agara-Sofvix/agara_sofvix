@@ -1,11 +1,26 @@
 import { Request, Response } from 'express';
 import TypingResult from '../models/TypingResult';
 import TournamentResult from '../models/TournamentResult';
+import Joi from 'joi';
 
 // @desc    Save typing test result
 // @route   POST /api/results
 // @access  Private
 export const saveResult = async (req: Request, res: Response): Promise<void> => {
+    const schema = Joi.object({
+        wpm: Joi.number().required(),
+        accuracy: Joi.number().required(),
+        mistakes: Joi.number().required(),
+        text: Joi.string().required(),
+        duration: Joi.number().required(),
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+        res.status(400).json({ success: false, message: error.details[0].message });
+        return;
+    }
+
     try {
         const { wpm, accuracy, mistakes, text, duration } = req.body;
 
@@ -18,7 +33,10 @@ export const saveResult = async (req: Request, res: Response): Promise<void> => 
             duration,
         });
 
-        res.status(201).json(result);
+        res.status(201).json({
+            success: true,
+            data: result
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -42,8 +60,17 @@ export const getUserResults = async (req: Request, res: Response): Promise<void>
             if (!r.tournament) return null;
 
             const tournamentId = (r.tournament as any)._id || r.tournament;
-            const allTournamentResults = await TournamentResult.find({ tournament: tournamentId }).sort({ wpm: -1, accuracy: -1 });
-            const rank = allTournamentResults.findIndex(entry => entry.user.toString() === userId.toString()) + 1;
+
+            // Find rank by counting how many users have a better score or same score with faster WPM
+            const rank = await TournamentResult.countDocuments({
+                tournament: tournamentId,
+                $or: [
+                    { score: { $gt: r.score } },
+                    { score: r.score, wpm: { $gt: r.wpm } },
+                    { score: r.score, wpm: r.wpm, accuracy: { $gt: r.accuracy } },
+                    // For ties, we could add createdAt or just treat as same rank
+                ]
+            }) + 1;
 
             return {
                 _id: r._id,
@@ -71,7 +98,10 @@ export const getUserResults = async (req: Request, res: Response): Promise<void>
             ...validTournamentResults
         ].sort((a, b) => new Date(b.createdAt as any).getTime() - new Date(a.createdAt as any).getTime());
 
-        res.json(history);
+        res.json({
+            success: true,
+            data: history
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

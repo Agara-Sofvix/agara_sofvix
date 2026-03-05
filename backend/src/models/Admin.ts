@@ -9,6 +9,7 @@ export interface IAdmin extends Document {
     lastLogin?: Date;
     createdAt: Date;
     updatedAt: Date;
+    tokenVersion: number;
     matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
 
@@ -16,12 +17,14 @@ const AdminSchema: Schema = new Schema({
     name: {
         type: String,
         required: true,
+        trim: true,
     },
     email: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
+        trim: true,
     },
     password: {
         type: String,
@@ -34,8 +37,20 @@ const AdminSchema: Schema = new Schema({
     lastLogin: {
         type: Date,
     },
+    tokenVersion: {
+        type: Number,
+        default: 1,
+    },
 }, {
     timestamps: true,
+    toJSON: {
+        transform: function (doc, ret) {
+            delete ret.password;
+            delete ret.tokenVersion;
+            delete ret.__v;
+            return ret;
+        }
+    }
 });
 
 // Hash password before saving

@@ -32,15 +32,17 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
   const testConfig = config || { duration: 60, module: 'general' };
   const [inputText, setInputText] = useState("");
   const [targetText, setTargetText] = useState("");
+  const [currentTextId, setCurrentTextId] = useState<string | undefined>(undefined);
   const [timeLeft, setTimeLeft] = useState(testConfig.duration);
   const [isTestActive, setIsTestActive] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
   const [lastResult, setLastResult] = useState<{ wpm: number; accuracy: number; errors: number; totalChars: number } | null>(null);
+  const [testSessionId] = useState(() => crypto.randomUUID());
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const targetDisplayRef = useRef<HTMLDivElement>(null);
 
-  const { fetchTexts, getRandomText, isLoading } = useTextStore();
+  const { fetchTexts, getRandomText, getRandomTextObject, isLoading } = useTextStore();
 
   useEffect(() => {
     fetchTexts();
@@ -55,9 +57,10 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
   const startTest = () => {
     const moduleId = testConfig.module;
     const category = testModules[moduleId]?.category || moduleId;
-    const randomText = getRandomText(category);
+    const textObj = getRandomTextObject(category);
 
-    setTargetText(randomText);
+    setTargetText(textObj?.content || "");
+    setCurrentTextId(textObj?._id);
     setInputText("");
     setTimeLeft(testConfig.duration);
     setIsTestActive(true);
@@ -72,9 +75,47 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
     }
   }, [isTestActive, isGameOver, targetText]);
 
+  // Bug 32: Pause timer when user switches tabs
+  const [isPaused, setIsPaused] = useState(false);
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && isTestActive && !isGameOver) {
+        setIsPaused(true);
+      } else {
+        setIsPaused(false);
+        // Re-focus input when returning
+        if (inputRef.current) inputRef.current.focus({ preventScroll: true });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [isTestActive, isGameOver]);
+
+  // Bug 31: Auto-save progress to sessionStorage for network disconnect recovery
+  useEffect(() => {
+    if (isTestActive && inputText.length > 0) {
+      sessionStorage.setItem('ezhuthidu_test_progress', JSON.stringify({
+        inputText,
+        targetText,
+        timeLeft,
+        testSessionId,
+        currentTextId,
+        module: testConfig.module,
+        savedAt: Date.now()
+      }));
+    }
+  }, [inputText, timeLeft]);
+
+  // Clear saved progress on test completion
+  useEffect(() => {
+    if (isGameOver) {
+      sessionStorage.removeItem('ezhuthidu_test_progress');
+    }
+  }, [isGameOver]);
+
   useEffect(() => {
     let timer: number;
-    if (isTestActive && timeLeft > 0 && targetText) {
+    if (isTestActive && !isPaused && timeLeft > 0 && targetText) {
       timer = window.setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -86,7 +127,7 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isTestActive, timeLeft, targetText]);
+  }, [isTestActive, isPaused, timeLeft, targetText]);
 
   // Sync target text display scroll with current progress
   useEffect(() => {
@@ -111,63 +152,33 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
 
   useEffect(() => {
     const handleMobileInput = (e: Event) => {
-      if (!isTestActive || isGameOver) return;
+      // Bug 33: try-catch guard to prevent crash from rapid mobile input
+      try {
+        if (!isTestActive || isGameOver || isPaused) return;
 
-      const customEvent = e as CustomEvent;
-      const { type, value, activeBase: isActiveBaseDelete } = customEvent.detail;
+        const customEvent = e as CustomEvent;
+        const { type, value, activeBase: isActiveBaseDelete } = customEvent.detail;
 
-      const start = inputRef.current?.selectionStart || inputText.length;
-      const end = inputRef.current?.selectionEnd || inputText.length;
+        const start = inputRef.current?.selectionStart || inputText.length;
+        const end = inputRef.current?.selectionEnd || inputText.length;
 
-      if (!startTime) setStartTime(Date.now());
+        if (!startTime) setStartTime(Date.now());
 
-      let newText = inputText;
+        let newText = inputText;
 
-      if (type === 'char') {
-        const char = value;
-        newText = inputText.slice(0, start) + char + inputText.slice(start);
-        setInputText(newText);
-        const newPos = start + char.length;
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-          }
-        }, 0);
-      } else if (type === 'phonetic') {
-        const key = value;
-        const result = processTamilInput(inputText, key, start);
-        newText = result.text;
-        setInputText(newText);
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
-          }
-        }, 0);
-      } else if (type === 'replace') {
-        const char = value;
-        const graphemes = getTamilGraphemes(inputText.slice(0, start));
-        const lastGrapheme = graphemes[graphemes.length - 1] || "";
-        const replaceLen = lastGrapheme.length;
-
-        newText = inputText.slice(0, start - replaceLen) + char + inputText.slice(start);
-        setInputText(newText);
-        const newPos = start - replaceLen + char.length;
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-          }
-        }, 0);
-      } else if (type === 'backspace') {
-        if (isActiveBaseDelete) {
-          newText = inputText.slice(0, start - 1) + inputText.slice(start);
+        if (type === 'char') {
+          const char = value;
+          newText = inputText.slice(0, start) + char + inputText.slice(start);
           setInputText(newText);
+          const newPos = start + char.length;
           setTimeout(() => {
             if (inputRef.current) {
-              inputRef.current.selectionStart = inputRef.current.selectionEnd = start - 1;
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
             }
           }, 0);
-        } else {
-          const result = handleTamilBackspace(inputText, start, end);
+        } else if (type === 'phonetic') {
+          const key = value;
+          const result = processTamilInput(inputText, key, start);
           newText = result.text;
           setInputText(newText);
           setTimeout(() => {
@@ -175,28 +186,63 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
               inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
             }
           }, 0);
-        }
-      }
+        } else if (type === 'replace') {
+          const char = value;
+          const graphemes = getTamilGraphemes(inputText.slice(0, start));
+          const lastGrapheme = graphemes[graphemes.length - 1] || "";
+          const replaceLen = lastGrapheme.length;
 
-      // Check for next paragraph
-      const inputGraphemesCount = getTamilGraphemes(newText).length;
-      const targetGraphemesCount = getTamilGraphemes(targetText).length;
-
-      if (inputGraphemesCount >= targetGraphemesCount) {
-        setTargetText(prev => {
-          const currentTargetGraphemesCount = getTamilGraphemes(prev).length;
-          if (inputGraphemesCount >= currentTargetGraphemesCount) {
-            const nextPara = getRandomText(testModules[testConfig.module].category, prev.split(' ').pop() || "");
-            return prev.trimEnd() + " " + nextPara;
+          newText = inputText.slice(0, start - replaceLen) + char + inputText.slice(start);
+          setInputText(newText);
+          const newPos = start - replaceLen + char.length;
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+            }
+          }, 0);
+        } else if (type === 'backspace') {
+          if (isActiveBaseDelete) {
+            newText = inputText.slice(0, start - 1) + inputText.slice(start);
+            setInputText(newText);
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.selectionStart = inputRef.current.selectionEnd = start - 1;
+              }
+            }, 0);
+          } else {
+            const result = handleTamilBackspace(inputText, start, end);
+            newText = result.text;
+            setInputText(newText);
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
+              }
+            }, 0);
           }
-          return prev;
-        });
+        }
+
+        // Check for next paragraph
+        const inputGraphemesCount = getTamilGraphemes(newText).length;
+        const targetGraphemesCount = getTamilGraphemes(targetText).length;
+
+        if (inputGraphemesCount >= targetGraphemesCount) {
+          setTargetText(prev => {
+            const currentTargetGraphemesCount = getTamilGraphemes(prev).length;
+            if (inputGraphemesCount >= currentTargetGraphemesCount) {
+              const nextPara = getRandomText(testModules[testConfig.module].category, prev.split(' ').pop() || "");
+              return prev.trimEnd() + " " + nextPara;
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        console.warn('Mobile input handler error:', err);
       }
     };
 
     window.addEventListener('mobile-keyboard-input', handleMobileInput);
     return () => window.removeEventListener('mobile-keyboard-input', handleMobileInput);
-  }, [inputText, startTime, isTestActive, isGameOver, targetText, testConfig.module]);
+  }, [inputText, startTime, isTestActive, isGameOver, isPaused, targetText, testConfig.module]);
 
   const endTest = () => {
     setIsTestActive(false);
@@ -234,7 +280,11 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
       wrongChars: errors,
       errors,
       wpm: finalScore,
-      accuracy
+      accuracy,
+      rawTypedText: inputText,
+      durationMs: timeInSeconds * 1000,
+      testSessionId: testSessionId,
+      textId: currentTextId
     });
   };
 
@@ -442,7 +492,15 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
             onChange={() => { }}
             onKeyDown={handleKeyDown}
             onPaste={(e) => e.preventDefault()}
-            placeholder={isTestActive ? "" : "Starting mission..."}
+            onDrop={(e) => e.preventDefault()}
+            placeholder={isTestActive ? (isPaused ? "⏸ Paused — return to this tab to continue" : "") : "Starting mission..."}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            data-form-type="other"
+            data-lpignore="true"
+            aria-autocomplete="none"
             className="w-full h-full border-none focus:ring-0 p-0 text-xl sm:text-2xl md:text-3xl font-tamil text-left resize-none bg-transparent text-slate-800 placeholder-slate-200 selection:bg-primary/10"
           // autoFocus handled by useEffect with preventScroll: true
           />

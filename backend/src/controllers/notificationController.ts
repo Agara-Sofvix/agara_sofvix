@@ -8,7 +8,10 @@ import User from '../models/User';
 export const getActiveNotifications = async (req: Request, res: Response): Promise<void> => {
     try {
         const notifications = await Notification.find({ isActive: true }).sort({ createdAt: -1 }).limit(10);
-        res.json(notifications);
+        res.json({
+            success: true,
+            data: notifications
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -26,7 +29,11 @@ export const markNotificationsAsRead = async (req: Request, res: Response): Prom
         );
 
         if (updatedUser) {
-            res.json({ message: 'Notifications marked as read', lastNotificationReadAt: updatedUser.lastNotificationReadAt });
+            res.json({
+                success: true,
+                message: 'Notifications marked as read',
+                data: { lastNotificationReadAt: updatedUser.lastNotificationReadAt }
+            });
         } else {
             res.status(404).json({ message: 'User not found' });
         }
@@ -44,7 +51,10 @@ export const getUnreadNotificationCount = async (req: Request, res: Response): P
             isActive: true,
             createdAt: { $gt: lastRead }
         });
-        res.json({ count });
+        res.json({
+            success: true,
+            data: { count }
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

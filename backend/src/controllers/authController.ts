@@ -11,32 +11,41 @@ import { sendResetEmail } from '../services/emailService';
 // @access  Public
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
     const schema = Joi.object({
-        name: Joi.string().required(),
-        username: Joi.string().required(),
-        email: Joi.string().email().required(),
-        password: Joi.string().min(6).required(),
+        name: Joi.string().trim().required(),
+        username: Joi.string().trim().required(),
+        email: Joi.string().trim().email().required(),
+        password: Joi.string()
+            .min(8)
+            .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+            .required()
+            .messages({
+                'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character'
+            }),
         dob: Joi.date().required()
     });
 
     const { error } = schema.validate(req.body);
     if (error) {
-        res.status(400).json({ message: error.details[0].message });
+        res.status(400).json({ success: false, message: error.details[0].message });
         return;
     }
 
-    const { name, username, email, password, dob } = req.body;
+    let { name, username, email, password, dob } = req.body;
+    name = name.trim();
+    username = username.trim().toLowerCase();
+    email = email.trim().toLowerCase();
 
     try {
         const userExists = await User.findOne({ username: username.toLowerCase() });
 
         if (userExists) {
-            res.status(400).json({ message: 'Username already taken.' });
+            res.status(400).json({ success: false, message: 'Username already taken.' });
             return;
         }
 
         const emailExists = await User.findOne({ email: email.toLowerCase() });
         if (emailExists) {
-            res.status(400).json({ message: 'Email already exists' });
+            res.status(400).json({ success: false, message: 'Email already exists' });
             return;
         }
 
@@ -64,17 +73,14 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             );
 
             res.status(201).json({
-                _id: user._id,
-                name: user.name,
-                username: user.username,
-                email: user.email,
-                dob: user.dob,
-                profilePic: user.profilePic,
-                lastNotificationReadAt: user.lastNotificationReadAt,
-                token: generateToken(user._id as any),
+                success: true,
+                data: {
+                    ...user.toJSON(),
+                    token: generateToken(user._id as any, user.tokenVersion)
+                }
             });
         } else {
-            res.status(400).json({ message: 'Invalid user data' });
+            res.status(400).json({ success: false, message: 'Invalid user data' });
         }
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -85,30 +91,89 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
 // @route   POST /api/auth/login
 // @access  Public
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
-    const { username, password } = req.body;
+    const schema = Joi.object({
+        username: Joi.string().trim().required(), // Frontend still sends this field
+        password: Joi.string().required()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+        res.status(400).json({ success: false, message: error.details[0].message });
+        return;
+    }
+
+    let { username: identifier, password } = req.body;
+    identifier = identifier.trim().toLowerCase();
 
     try {
-        const user = await User.findOne({ username: username.toLowerCase() });
+        // Find user by either username or email
+        const user = await User.findOne({
+            $or: [
+                { username: identifier.toLowerCase() },
+                { email: identifier.toLowerCase() }
+            ]
+        });
 
         if (!user) {
-            res.status(404).json({ message: 'User does not exist' });
+            res.status(404).json({ success: false, message: 'User does not exist' });
+            return;
+        }
+
+        // Check if user is banned
+        if (user.isBanned) {
+            res.status(403).json({ success: false, message: 'Your account has been banned. Please contact support.' });
+            return;
+        }
+
+        // Check if account is locked
+        if (user.lockUntil && user.lockUntil > new Date()) {
+            res.status(401).json({ success: false, message: `Account is locked. Try again after ${user.lockUntil.toLocaleTimeString()}` });
             return;
         }
 
         if (await user.matchPassword(password)) {
+            // Reset failed login attempts on success
+            user.loginAttempts = 0;
+            user.lockUntil = undefined;
+            await user.save({ validateBeforeSave: false });
+
             res.json({
-                _id: user._id,
-                name: user.name,
-                username: user.username,
-                email: user.email,
-                dob: user.dob,
-                profilePic: user.profilePic,
-                lastNotificationReadAt: user.lastNotificationReadAt,
-                token: generateToken(user._id as any),
+                success: true,
+                data: {
+                    ...user.toJSON(), // Convert Mongoose document to plain object
+                    token: generateToken(user._id as any, user.tokenVersion),
+                }
             });
         } else {
-            res.status(401).json({ message: 'Invalid password' });
+            // Increment failed login attempts
+            user.loginAttempts += 1;
+            if (user.loginAttempts >= 5) {
+                user.lockUntil = new Date(Date.now() + 60 * 60 * 1000); // Lock for 1 hour
+            }
+            await user.save({ validateBeforeSave: false });
+
+            res.status(401).json({
+                message: user.loginAttempts >= 5
+                    ? `Too many failed attempts. Account locked for 1 hour.`
+                    : 'Invalid password'
+            });
         }
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Logout user & invalidate token
+// @route   POST /api/auth/logout
+// @access  Private
+export const logoutUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const user = await User.findById((req as any).user._id);
+        if (user) {
+            user.tokenVersion += 1;
+            await user.save({ validateBeforeSave: false });
+        }
+        res.json({ success: true, message: 'Logged out successfully' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -122,12 +187,15 @@ export const getUserProfile = async (req: Request, res: Response): Promise<void>
 
     if (user) {
         res.json({
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            dob: user.dob,
-            profilePic: user.profilePic,
-            lastNotificationReadAt: user.lastNotificationReadAt,
+            success: true,
+            data: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                dob: user.dob,
+                profilePic: user.profilePic,
+                lastNotificationReadAt: user.lastNotificationReadAt,
+            }
         });
     } else {
         res.status(404).json({ message: 'User not found' });
@@ -164,8 +232,9 @@ export const updateProfilePic = async (req: Request, res: Response): Promise<voi
         }
 
         res.json({
+            success: true,
             message: 'Profile picture updated successfully',
-            profilePic: updatedUser.profilePic
+            data: { profilePic: updatedUser.profilePic }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -196,8 +265,9 @@ export const setPredefinedAvatar = async (req: Request, res: Response): Promise<
         }
 
         res.json({
+            success: true,
             message: 'Avatar updated successfully',
-            profilePic: updatedUser.profilePic
+            data: { profilePic: updatedUser.profilePic }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -208,6 +278,16 @@ export const setPredefinedAvatar = async (req: Request, res: Response): Promise<
 // @route   POST /api/auth/forgot-password
 // @access  Public
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    const schema = Joi.object({
+        email: Joi.string().trim().email().required()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+        res.status(400).json({ message: error.details[0].message });
+        return;
+    }
+
     const { email } = req.body;
 
     try {
@@ -236,7 +316,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
             { userId: user._id, email }
         );
 
-        res.json({ message: 'OTP sent to email' });
+        res.json({ success: true, message: 'OTP sent to email' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -246,6 +326,17 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 // @route   POST /api/auth/verify-otp
 // @access  Public
 export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
+    const schema = Joi.object({
+        email: Joi.string().trim().email().required(),
+        otp: Joi.number().required()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+        res.status(400).json({ message: error.details[0].message });
+        return;
+    }
+
     const { email, otp } = req.body;
 
     try {
@@ -260,7 +351,7 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        res.json({ message: 'OTP verified' });
+        res.json({ success: true, message: 'OTP verified' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -270,6 +361,20 @@ export const verifyOTP = async (req: Request, res: Response): Promise<void> => {
 // @route   POST /api/auth/reset-password
 // @access  Public
 export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+    const schema = Joi.object({
+        email: Joi.string().trim().email().required(),
+        password: Joi.string()
+            .min(8)
+            .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+            .required()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+        res.status(400).json({ message: error.details[0].message });
+        return;
+    }
+
     const { email, password } = req.body;
 
     try {
@@ -288,6 +393,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
         user.password = password;
         user.resetOTP = undefined;
         user.resetOTPExpire = undefined;
+        user.tokenVersion += 1; // Invalidate current tokens on password reset
 
         await user.save();
 
@@ -298,7 +404,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
             { userId: user._id, email }
         );
 
-        res.json({ message: 'Password reset successful' });
+        res.json({ success: true, message: 'Password reset successful' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

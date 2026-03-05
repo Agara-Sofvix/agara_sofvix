@@ -2,11 +2,23 @@ import { Request, Response } from 'express';
 import Admin from '../models/Admin';
 import AuditLog from '../models/AuditLog';
 import generateToken from '../utils/generateToken';
+import Joi from 'joi';
 
 // @desc    Admin login
 // @route   POST /api/admin/login
 // @access  Public
 export const adminLogin = async (req: Request, res: Response): Promise<void> => {
+    const schema = Joi.object({
+        email: Joi.string().trim().email().required(),
+        password: Joi.string().required()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) {
+        res.status(400).json({ message: error.details[0].message });
+        return;
+    }
+
     try {
         const { email, password } = req.body;
 
@@ -45,13 +57,14 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
         });
 
         // Generate token
-        const token = generateToken(admin._id as any);
+        const token = generateToken(admin._id as any, admin.tokenVersion);
 
         res.json({
-            _id: admin._id,
-            name: admin.name,
-            email: admin.email,
-            token,
+            success: true,
+            data: {
+                ...admin.toJSON(),
+                token: generateToken(admin._id as any, admin.tokenVersion)
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -70,7 +83,10 @@ export const getAdminProfile = async (req: Request, res: Response): Promise<void
             return;
         }
 
-        res.json(admin);
+        res.json({
+            success: true,
+            data: admin
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -94,10 +110,11 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
             const updatedAdmin = await admin.save();
 
             res.json({
-                _id: updatedAdmin._id,
-                name: updatedAdmin.name,
-                email: updatedAdmin.email,
-                token: generateToken(updatedAdmin._id),
+                success: true,
+                data: {
+                    ...updatedAdmin.toJSON(),
+                    token: generateToken(updatedAdmin._id as any, updatedAdmin.tokenVersion)
+                }
             });
         } else {
             res.status(404);
@@ -135,6 +152,12 @@ export const changeAdminPassword = async (req: Request, res: Response): Promise<
 // @access  Private (Admin)
 export const adminLogout = async (req: Request, res: Response): Promise<void> => {
     try {
+        const admin = await Admin.findById((req as any).admin._id);
+        if (admin) {
+            admin.tokenVersion += 1;
+            await admin.save();
+        }
+
         // Log the logout action
         await AuditLog.create({
             admin: (req as any).admin._id,

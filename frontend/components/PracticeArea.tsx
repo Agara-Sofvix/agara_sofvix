@@ -24,7 +24,12 @@ interface Category {
 }
 
 interface PracticeAreaProps {
-  onComplete?: (wpm: number, accuracy: number) => void;
+  onComplete?: (wpm: number, accuracy: number, extra: {
+    rawTypedText: string;
+    durationMs: number;
+    testSessionId: string;
+    textId?: string;
+  }) => void;
   settings?: AppSettings;
   activeKeys?: Set<string>;
   initialMode?: Mode;
@@ -236,6 +241,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   const [targetText, setTargetText] = useState(() => {
     return sessionStorage.getItem('ezhuthidu_custom_target') || "";
   });
+  const [currentTextId, setCurrentTextId] = useState<string | undefined>(undefined);
   const [inputText, setInputText] = useState("");
   const [inputHistory, setInputHistory] = useState(""); // Full history for tape calculation
   const [partialInput, setPartialInput] = useState(""); // Tracks intermediate typing (e.g. 'க்' for 'கா')
@@ -259,6 +265,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   }); // in seconds, null means no limit
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
+  const [testSessionId, setTestSessionId] = useState(() => crypto.randomUUID());
   const onCompleteCalled = useRef(false);
   const [showKeyboard, setShowKeyboard] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
@@ -370,6 +377,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     setTimeLeft(practiceDuration);
     setFeedbackStatus('neutral'); // Force neutral on reset to prevent stale success state
     setIsFinished(false);
+    setTestSessionId(crypto.randomUUID());
     onCompleteCalled.current = false;
     // Intentional focus after reset
     setTimeout(() => {
@@ -417,7 +425,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     resetPractice();
   };
 
-  const { fetchTexts, getRandomText, isLoading } = useTextStore();
+  const { fetchTexts, getRandomText, getRandomTextObject, isLoading } = useTextStore();
 
   useEffect(() => {
     if (mode === 'free') {
@@ -435,6 +443,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       if (selectedCategoryId === 'keyboard_practice') {
         const firstDrill = keyboardPracticeData[0]?.lessons[0]?.content || "";
         setTargetText(firstDrill);
+        setCurrentTextId(undefined); // No DB ID for local practice data
         resetPractice();
       } else {
         const category = categories.find(c => c.id === selectedCategoryId);
@@ -443,12 +452,15 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
           setCurrentLessonIndex(0);
           const firstChar = category.lessons[0].char;
           setTargetText(firstChar);
+          setCurrentTextId(undefined); // No DB ID
           resetPractice();
         }
       }
     } else if (mode === 'free') {
       setIsCustomSetup(false);
-      setTargetText(getRandomText('free-typing'));
+      const textObj = getRandomTextObject('free-typing');
+      setTargetText(textObj?.content || "");
+      setCurrentTextId(textObj?._id);
       resetPractice();
     } else if (mode === 'custom') {
       // Only set to setup mode if we don't have a persisted target text
@@ -480,155 +492,159 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
   useEffect(() => {
     const handleMobileInput = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const { type, value, activeBase: isActiveBaseDelete } = customEvent.detail;
+      try {
+        const customEvent = e as CustomEvent;
+        const { type, value, activeBase: isActiveBaseDelete } = customEvent.detail;
 
-      const start = inputRef.current?.selectionStart || inputText.length;
-      const end = inputRef.current?.selectionEnd || inputText.length;
+        const start = inputRef.current?.selectionStart || inputText.length;
+        const end = inputRef.current?.selectionEnd || inputText.length;
 
-      if (!startTime) setStartTime(Date.now());
+        if (!startTime) setStartTime(Date.now());
 
-      let newText = inputText;
+        let newText = inputText;
 
-      if (type === 'char') {
-        const char = value;
+        if (type === 'char') {
+          const char = value;
 
-        if (mode === 'lesson' && !isCustomSetup) {
-          const checkMatch = (produced: string) => {
-            if (produced === targetText) {
-              setFeedbackStatus('success');
-              setInputText(inputText + targetText);
-              setPartialInput("");
-            } else if (isPotentialMatch(produced, targetText)) {
-              // Only trigger error if not already in error state to prevent noise
-              if (feedbackStatus !== 'error') {
-                setFeedbackStatus('error');
-              }
-              setPartialInput(produced);
-            } else {
-              // Only trigger error if not already in error state
-              if (feedbackStatus !== 'error') {
-                setFeedbackStatus('error');
+          if (mode === 'lesson' && !isCustomSetup) {
+            const checkMatch = (produced: string) => {
+              if (produced === targetText) {
+                setFeedbackStatus('success');
+                setInputText(inputText + targetText);
                 setPartialInput("");
+              } else if (isPotentialMatch(produced, targetText)) {
+                // Only trigger error if not already in error state to prevent noise
+                if (feedbackStatus !== 'error') {
+                  setFeedbackStatus('error');
+                }
+                setPartialInput(produced);
+              } else {
+                // Only trigger error if not already in error state
+                if (feedbackStatus !== 'error') {
+                  setFeedbackStatus('error');
+                  setPartialInput("");
+                }
               }
-            }
-          };
+            };
 
-          if (type === 'char' || type === 'replace' || type === 'phonetic') {
-            const result = processTamilInput(partialInput, value, partialInput.length);
-            const produced = result.text;
-
-            // Keyboard Practice Infinite Logic for Virtual Keyboard
-            if (selectedCategoryId === 'keyboard_practice') {
+            if (type === 'char' || type === 'replace' || type === 'phonetic') {
               const result = processTamilInput(partialInput, value, partialInput.length);
               const produced = result.text;
 
-              const { lastInputStatus } = calculateDynamicTape(targetText, inputText + produced, inputHistory);
+              // Keyboard Practice Infinite Logic for Virtual Keyboard
+              if (selectedCategoryId === 'keyboard_practice') {
+                const result = processTamilInput(partialInput, value, partialInput.length);
+                const produced = result.text;
 
-              const newDisplayInput = inputText + produced;
-              setInputText(newDisplayInput);
-              setPartialInput("");
-              setFeedbackStatus(lastInputStatus);
+                const { lastInputStatus } = calculateDynamicTape(targetText, inputText + produced, inputHistory);
 
-              const newPos = newDisplayInput.length;
-              setTimeout(() => {
-                if (inputRef.current) {
-                  inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-                }
-              }, 0);
-              return;
+                const newDisplayInput = inputText + produced;
+                setInputText(newDisplayInput);
+                setPartialInput("");
+                setFeedbackStatus(lastInputStatus);
+
+                const newPos = newDisplayInput.length;
+                setTimeout(() => {
+                  if (inputRef.current) {
+                    inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+                  }
+                }, 0);
+                return;
+              }
+
+              checkMatch(produced);
             }
-
-            checkMatch(produced);
+            return;
           }
-          return;
-        }
 
-        newText = inputText.slice(0, start) + char + inputText.slice(start);
-        setInputText(newText);
-        const newPos = start + char.length;
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-          }
-        }, 0);
-      } else if (type === 'replace') {
-        const char = value;
-        const graphemes = getTamilGraphemes(inputText.slice(0, start));
-        const lastGrapheme = graphemes[graphemes.length - 1] || "";
-        const replaceLen = lastGrapheme.length;
-
-        newText = inputText.slice(0, start - replaceLen) + char + inputText.slice(start);
-        setInputText(newText);
-        const newPos = start - replaceLen + char.length;
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-          }
-        }, 0);
-      } else if (type === 'phonetic') {
-        const key = value;
-        const result = processTamilInput(inputText, key, start);
-        newText = result.text;
-        setInputText(newText);
-        setTimeout(() => {
-          if (inputRef.current) {
-            inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
-          }
-        }, 0);
-      } else if (type === 'backspace') {
-        const startForDelete = inputRef.current?.selectionStart || inputText.length;
-        const endForDelete = inputRef.current?.selectionEnd || inputText.length;
-
-        if (isActiveBaseDelete) {
-          const combinedForDelete = inputText + partialInput;
-          newText = combinedForDelete.slice(0, startForDelete - 1) + combinedForDelete.slice(startForDelete);
+          newText = inputText.slice(0, start) + char + inputText.slice(start);
           setInputText(newText);
-          setPartialInput("");
-          const newPos = startForDelete - 1;
+          const newPos = start + char.length;
           setTimeout(() => {
             if (inputRef.current) {
               inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
             }
           }, 0);
-        } else {
-          const result = handleTamilBackspace(inputText + partialInput, startForDelete, endForDelete);
+        } else if (type === 'replace') {
+          const char = value;
+          const graphemes = getTamilGraphemes(inputText.slice(0, start));
+          const lastGrapheme = graphemes[graphemes.length - 1] || "";
+          const replaceLen = lastGrapheme.length;
+
+          newText = inputText.slice(0, start - replaceLen) + char + inputText.slice(start);
+          setInputText(newText);
+          const newPos = start - replaceLen + char.length;
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+            }
+          }, 0);
+        } else if (type === 'phonetic') {
+          const key = value;
+          const result = processTamilInput(inputText, key, start);
           newText = result.text;
           setInputText(newText);
-          setPartialInput("");
           setTimeout(() => {
             if (inputRef.current) {
               inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
             }
           }, 0);
-        }
+        } else if (type === 'backspace') {
+          const startForDelete = inputRef.current?.selectionStart || inputText.length;
+          const endForDelete = inputRef.current?.selectionEnd || inputText.length;
 
-        // Reset feedback on backspace
-        if (mode === 'lesson') {
-          if (selectedCategoryId === 'keyboard_practice') {
-            const { lastInputStatus } = calculateDynamicTape(targetText, newText, inputHistory);
-            setFeedbackStatus(lastInputStatus);
-          } else if (newText === '' || targetText.startsWith(newText)) {
-            setFeedbackStatus('neutral');
+          if (isActiveBaseDelete) {
+            const combinedForDelete = inputText + partialInput;
+            newText = combinedForDelete.slice(0, startForDelete - 1) + combinedForDelete.slice(startForDelete);
+            setInputText(newText);
+            setPartialInput("");
+            const newPos = startForDelete - 1;
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+              }
+            }, 0);
+          } else {
+            const result = handleTamilBackspace(inputText + partialInput, startForDelete, endForDelete);
+            newText = result.text;
+            setInputText(newText);
+            setPartialInput("");
+            setTimeout(() => {
+              if (inputRef.current) {
+                inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
+              }
+            }, 0);
+          }
+
+          // Reset feedback on backspace
+          if (mode === 'lesson') {
+            if (selectedCategoryId === 'keyboard_practice') {
+              const { lastInputStatus } = calculateDynamicTape(targetText, newText, inputHistory);
+              setFeedbackStatus(lastInputStatus);
+            } else if (newText === '' || targetText.startsWith(newText)) {
+              setFeedbackStatus('neutral');
+            }
           }
         }
-      }
 
-      // Check for next paragraph
-      if (mode === 'free') {
-        const inputGraphemesCount = getTamilGraphemes(newText).length;
-        const targetGraphemesCount = getTamilGraphemes(targetText).length;
+        // Check for next paragraph
+        if (mode === 'free') {
+          const inputGraphemesCount = getTamilGraphemes(newText).length;
+          const targetGraphemesCount = getTamilGraphemes(targetText).length;
 
-        if (inputGraphemesCount >= targetGraphemesCount) {
-          setTargetText(prev => {
-            const currentGraphemesCount = getTamilGraphemes(prev).length;
-            if (inputGraphemesCount >= currentGraphemesCount) {
-              const nextPara = getRandomText('free-typing', prev.split(' ').pop() || "");
-              return prev.trimEnd() + " " + nextPara;
-            }
-            return prev;
-          });
+          if (inputGraphemesCount >= targetGraphemesCount) {
+            setTargetText(prev => {
+              const currentGraphemesCount = getTamilGraphemes(prev).length;
+              if (inputGraphemesCount >= currentGraphemesCount) {
+                const nextPara = getRandomText('free-typing', prev.split(' ').pop() || "");
+                return prev.trimEnd() + " " + nextPara;
+              }
+              return prev;
+            });
+          }
         }
+      } catch (err) {
+        console.warn('Mobile input handler error:', err);
       }
     };
 
@@ -729,7 +745,12 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
                 setCurrentPage(currentPage + 1);
               }
             } else {
-              if (onComplete) onComplete(stats.netWpm, stats.accuracy);
+              if (onComplete) onComplete(stats.netWpm, stats.accuracy, {
+                rawTypedText: inputHistory + inputText,
+                durationMs: elapsedTime * 1000,
+                testSessionId: testSessionId,
+                textId: currentTextId
+              });
               setCurrentLessonIndex(0);
               setCurrentPage(0); // Reset to first page
               setTargetText(category.lessons[0].char);
@@ -919,7 +940,12 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     if (mode === 'lesson' && inputText === targetText && inputText.length > 0 && !onCompleteCalled.current) {
       onCompleteCalled.current = true;
       setIsFinished(true);
-      if (onComplete) onComplete(finalScore, accuracy);
+      if (onComplete) onComplete(finalScore, accuracy, {
+        rawTypedText: inputText,
+        durationMs: (300 - (timeLeft || 300)) * 1000, // Estimate based on 300s default if no duration
+        testSessionId: testSessionId,
+        textId: currentTextId
+      });
     }
 
     setStats({
@@ -1309,8 +1335,17 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
                     value={inputText}
                     onChange={() => { }}
                     onKeyDown={handleKeyDown}
+                    onPaste={(e) => e.preventDefault()}
+                    onDrop={(e) => e.preventDefault()}
                     inputMode="text"
                     readOnly={isFinished}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-form-type="other"
+                    data-lpignore="true"
+                    aria-autocomplete="none"
                     className={`w-full h-full bg-white/95 rounded-[1.5rem] md:rounded-[2.5rem] border-2 md:border-4 border-primary/10 focus:border-primary focus:ring-0 ${mode === 'lesson' ? 'p-4' : 'p-3 sm:p-5'} text-xl sm:text-2xl md:text-3xl font-tamil ${mode === 'lesson' ? 'text-center' : 'text-left'} resize-none transition-all shadow-inner overflow-y-auto`}
                     placeholder={selectedCategoryId === 'keyboard_practice' ? `${activeChar} ... Press Space to Next.` : (mode === 'free' ? "Start typing to match the text above..." : "Start writing here...")}
                     autoFocus

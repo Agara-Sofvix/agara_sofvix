@@ -517,20 +517,22 @@ const AppInner: React.FC = () => {
     };
   };
 
-  const handleLogin = async (user: { name: string, token?: string, lastNotificationReadAt?: string, dob?: string }) => {
+  const handleLogin = async (user: { name: string, token?: string, lastNotificationReadAt?: string, dob?: string, profilePic?: string }) => {
+    // 1. Immediate data persistence
+    const token = user.token || localStorage.getItem('token');
+    if (user.token) {
+      localStorage.setItem('token', user.token);
+    }
+
+    // 2. Set authenticated state
+    setIsLoggedIn(true);
+
     if (user.lastNotificationReadAt) {
       setLastNotificationReadAt(user.lastNotificationReadAt);
     }
-    setIsLoggedIn(true);
-    let token = user.token;
-    if (token) {
-      localStorage.setItem('token', token);
-    } else {
-      token = localStorage.getItem('token') || undefined;
-    }
 
-    // Default stats
-    let newStats: UserStats = {
+    // 3. Initialize user stats
+    const initialStats: UserStats = {
       displayName: user.name || 'User',
       bestWpm: 0,
       avgWpm: 0,
@@ -538,36 +540,63 @@ const AppInner: React.FC = () => {
       streak: 0,
       tournamentBest: 0,
       dob: user.dob,
-      profilePic: (user as any).profilePic,
+      profilePic: user.profilePic,
       trophies: [],
       history: []
     };
+    setUserStats(initialStats);
 
+    // 4. FORCED Navigation - Bypass all checks and go to Dashboard (or pending view)
+    // We explicitly avoid 'Login' or 'Signup' as target views after login
+    let target: string = 'Dashboard';
+    if (pendingView && !['Login', 'Signup', 'ForgotPassword'].includes(pendingView)) {
+      target = pendingView;
+    }
+
+    setPendingView(null);
+    setCurrentView(target);
+
+    const targetPath = VIEW_TO_PATH[target] || '/dashboard';
+    // Use replaceState to clear the login entry from history if preferred, or pushState for standard nav
+    window.history.pushState({ view: target }, '', targetPath);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // 5. Background data fetching
     if (token) {
       try {
         const { getUserHistory } = await import('./src/services/api');
         const historyData = await getUserHistory(token!);
-        const { dob, profilePic } = await import('./src/services/api').then(m => m.getProfile(token!));
-        newStats = calculateStats(historyData, user.name || 'User');
-        newStats.dob = dob;
-        newStats.profilePic = profilePic;
+        const updatedStats = calculateStats(historyData, user.name || 'User');
+
+        setUserStats(prev => ({
+          ...prev,
+          ...updatedStats,
+          dob: user.dob || prev.dob,
+          profilePic: user.profilePic || prev.profilePic
+        }));
       } catch (err) {
-        console.error("Failed to load user history", err);
+        console.error("Failed to load user history in background", err);
       }
-    }
-
-    setUserStats(newStats);
-
-    const targetView = pendingView || 'Dashboard';
-    const targetPath = VIEW_TO_PATH[targetView] || '/dashboard';
-    setCurrentView(targetView);
-    setPendingView(null);
-    if (window.location.pathname !== targetPath) {
-      window.history.pushState({ view: targetView }, '', targetPath);
     }
   };
 
-  const recordSession = async (wpm: number, accuracy: number, type: string, extra?: Partial<TournamentScore>) => {
+  const recordSession = async (
+    wpm: number,
+    accuracy: number,
+    type: string,
+    extra?: {
+      errors?: number;
+      totalChars?: number;
+      correctChars?: number;
+      wrongChars?: number;
+      timeTaken?: string;
+      submissionType?: string;
+      rawTypedText?: string;
+      durationMs?: number;
+      testSessionId?: string;
+      textId?: string;
+    }
+  ) => {
     const isTournament = isTournamentActive || type === 'Tournament';
     const finalType = isTournament ? 'Tournament' : type;
     const token = localStorage.getItem('token');
@@ -604,19 +633,20 @@ const AppInner: React.FC = () => {
     });
 
     try {
-      if (token) {
+      if (token && extra?.testSessionId && extra?.rawTypedText && extra?.durationMs) {
         if (isTournament && activeTournamentId) {
           await submitTournamentResult(activeTournamentId, {
-            wpm,
-            accuracy,
-            score: wpm
+            typedText: extra.rawTypedText,
+            durationMs: extra.durationMs,
+            testSessionId: extra.testSessionId
           }, token);
         } else if (type === 'Test' || type === 'Practice') {
           await saveResult({
-            wpm,
-            accuracy,
-            mistakes: extra?.errors || 0,
-            duration: 60
+            typedText: extra.rawTypedText,
+            durationMs: extra.durationMs,
+            testSessionId: extra.testSessionId,
+            textId: extra.textId,
+            originalText: type === 'Practice' ? extra.rawTypedText : undefined
           }, token);
         }
 

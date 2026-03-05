@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import TamilText from '../models/TamilText';
 import AuditLog from '../models/AuditLog';
+import Joi from 'joi';
 
 // @desc    Get all Tamil texts
 // @route   GET /api/admin/texts
@@ -25,13 +26,16 @@ export const getTexts = async (req: Request, res: Response): Promise<void> => {
         const total = await TamilText.countDocuments(query);
 
         res.json({
-            texts,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-            },
+            success: true,
+            data: {
+                texts,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit),
+                },
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -61,7 +65,10 @@ export const addText = async (req: Request, res: Response): Promise<void> => {
             ipAddress: req.ip,
         });
 
-        res.status(201).json(text);
+        res.status(201).json({
+            success: true,
+            data: text
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -94,7 +101,10 @@ export const updateText = async (req: Request, res: Response): Promise<void> => 
             ipAddress: req.ip,
         });
 
-        res.json(text);
+        res.json({
+            success: true,
+            data: text
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -123,7 +133,7 @@ export const deleteText = async (req: Request, res: Response): Promise<void> => 
             ipAddress: req.ip,
         });
 
-        res.json({ message: 'Text deleted successfully' });
+        res.json({ success: true, message: 'Text deleted successfully' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

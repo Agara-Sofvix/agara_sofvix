@@ -3,40 +3,66 @@ import TypingResult from '../models/TypingResult';
 import Joi from 'joi';
 import { getIo } from '../socket';
 import { createEvent } from '../services/eventService';
+import { calculateScore } from '../utils/scoreCalculator';
+import TamilText from '../models/TamilText';
 
 // @desc    Save typing result
 // @route   POST /api/typing/save
 // @access  Private
 export const saveTypingResult = async (req: Request, res: Response): Promise<void> => {
     const schema = Joi.object({
-        wpm: Joi.number().required(),
-        accuracy: Joi.number().required(),
-        mistakes: Joi.number().required(),
-        text: Joi.string().allow('').optional(),
-        duration: Joi.number().required(),
+        textId: Joi.string().optional(),
+        originalText: Joi.string().optional(), // Fallback if no textId
+        typedText: Joi.string().required(),
+        durationMs: Joi.number().required(),
+        testSessionId: Joi.string().required(),
     });
 
     const { error } = schema.validate(req.body);
     if (error) {
-        res.status(400).json({ message: error.details[0].message });
+        res.status(400).json({ success: false, message: error.details[0].message });
         return;
     }
 
-    const { wpm, accuracy, mistakes, text, duration } = req.body;
+    const { textId, originalText, typedText, durationMs, testSessionId } = req.body;
 
     try {
+        // Idempotency check
+        const existingResult = await TypingResult.findOne({ testSessionId });
+        if (existingResult) {
+            res.status(200).json(existingResult); // Return existing result for repeats
+            return;
+        }
+
+        let targetText = originalText || "";
+        if (textId) {
+            const tamilText = await TamilText.findById(textId);
+            if (tamilText) {
+                targetText = tamilText.content;
+            }
+        }
+
+        if (!targetText) {
+            res.status(400).json({ message: 'Target text required for score calculation' });
+            return;
+        }
+
+        // Server-side calculation
+        const { wpm, accuracy, score, mistakes } = calculateScore({
+            targetText,
+            typedText,
+            durationMs
+        });
+
         const result = await TypingResult.create({
             user: (req as any).user._id,
             wpm,
             accuracy,
             mistakes,
-            text,
-            duration,
+            text: typedText.slice(0, 500), // Store snippet
+            duration: Math.round(durationMs / 1000),
+            testSessionId,
         });
-
-        // Emit new score event
-        // This catch block was misplaced, it should be part of the main try-catch for the function.
-        // The original code had an inner try-catch that was not correctly structured.
 
         // Trigger user test result event
         await createEvent(
@@ -46,7 +72,10 @@ export const saveTypingResult = async (req: Request, res: Response): Promise<voi
             { userId: (req as any).user._id, wpm, accuracy, mistakes }
         );
 
-        res.status(201).json(result);
+        res.status(201).json({
+            success: true,
+            data: result
+        });
     } catch (error: any) {
         console.error("Error saving typing result or emitting event:", error);
         res.status(500).json({ message: error.message });
@@ -68,9 +97,12 @@ export const getTypingHistory = async (req: Request, res: Response): Promise<voi
             .skip(pageSize * (page - 1));
 
         res.json({
-            history,
-            page,
-            pages: Math.ceil(count / pageSize),
+            success: true,
+            data: {
+                history,
+                page,
+                pages: Math.ceil(count / pageSize),
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -91,7 +123,10 @@ export const getLeaderboard = async (req: Request, res: Response): Promise<void>
             .limit(20)
             .populate('user', 'name');
 
-        res.json(leaderboard);
+        res.json({
+            success: true,
+            data: leaderboard
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

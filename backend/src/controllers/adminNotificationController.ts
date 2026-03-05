@@ -8,7 +8,10 @@ import AuditLog from '../models/AuditLog';
 export const getNotifications = async (req: Request, res: Response): Promise<void> => {
     try {
         const notifications = await Notification.find().sort({ createdAt: -1 });
-        res.json(notifications);
+        res.json({
+            success: true,
+            data: notifications
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -37,7 +40,10 @@ export const createNotification = async (req: Request, res: Response): Promise<v
             ipAddress: req.ip,
         });
 
-        res.status(201).json(notification);
+        res.status(201).json({
+            success: true,
+            data: notification
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -72,7 +78,10 @@ export const updateNotification = async (req: Request, res: Response): Promise<v
             ipAddress: req.ip,
         });
 
-        res.json(notification);
+        res.json({
+            success: true,
+            data: notification
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -101,7 +110,7 @@ export const deleteNotification = async (req: Request, res: Response): Promise<v
             ipAddress: req.ip,
         });
 
-        res.json({ message: 'Notification removed' });
+        res.json({ success: true, message: 'Notification removed' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

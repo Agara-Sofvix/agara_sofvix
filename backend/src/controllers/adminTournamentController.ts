@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import Tournament from '../models/Tournament';
 import TournamentResult from '../models/TournamentResult';
 import AuditLog from '../models/AuditLog';
+import Joi from 'joi';
 
 // @desc    Update tournament status
 // @route   PUT /api/admin/tournaments/:id/status
@@ -12,7 +13,7 @@ export const updateTournamentStatus = async (req: Request, res: Response): Promi
         const { status } = req.body;
 
         if (!['upcoming', 'live', 'completed'].includes(status)) {
-            res.status(400).json({ message: 'Invalid status' });
+            res.status(400).json({ success: false, message: 'Invalid status' });
             return;
         }
 
@@ -66,7 +67,7 @@ export const deleteTournament = async (req: Request, res: Response): Promise<voi
             ipAddress: req.ip,
         });
 
-        res.json({ message: 'Tournament deleted successfully' });
+        res.json({ success: true, message: 'Tournament deleted successfully' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -84,7 +85,10 @@ export const getTournamentParticipants = async (req: Request, res: Response): Pr
             return;
         }
 
-        res.json(tournament.participants);
+        res.json({
+            success: true,
+            data: tournament.participants
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -114,7 +118,7 @@ export const removeLeaderboardScore = async (req: Request, res: Response): Promi
             ipAddress: req.ip,
         });
 
-        res.json({ message: 'Score removed successfully' });
+        res.json({ success: true, message: 'Score removed successfully' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -166,8 +170,9 @@ export const resetLeaderboard = async (req: Request, res: Response): Promise<voi
         }
 
         res.json({
+            success: true,
             message: isGlobal ? 'All dashboard leaderboard data reset successfully' : 'Leaderboard reset successfully',
-            deletedCount: deleteResult.deletedCount
+            data: { deletedCount: deleteResult.deletedCount }
         });
     } catch (error: any) {
         console.error('[Admin] CRITICAL ERROR resetting leaderboard:', error);
@@ -328,13 +333,16 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
         const total = await AuditLog.countDocuments();
 
         res.json({
-            logs,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-            },
+            success: true,
+            data: {
+                logs,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit),
+                },
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -368,7 +376,10 @@ export const createTournament = async (req: Request, res: Response): Promise<voi
             ipAddress: req.ip,
         });
 
-        res.status(201).json(tournament);
+        res.status(201).json({
+            success: true,
+            data: tournament
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -406,7 +417,10 @@ export const updateTournament = async (req: Request, res: Response): Promise<voi
             ipAddress: req.ip,
         });
 
-        res.json(tournament);
+        res.json({
+            success: true,
+            data: tournament
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -441,7 +455,10 @@ export const getLeaderboard = async (req: Request, res: Response): Promise<void>
             if (uniqueLeaderboard.length >= Number(limit)) break;
         }
 
-        res.json(uniqueLeaderboard);
+        res.json({
+            success: true,
+            data: uniqueLeaderboard
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

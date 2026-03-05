@@ -4,6 +4,7 @@ import User from '../models/User';
 
 interface JwtPayload {
     id: string;
+    tokenVersion: number;
 }
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
@@ -18,7 +19,14 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 
-            (req as any).user = await User.findById(decoded.id).select('-password');
+            const user = await User.findById(decoded.id).select('-password');
+
+            if (!user || user.tokenVersion !== decoded.tokenVersion) {
+                res.status(401).json({ message: 'Not authorized, token invalidated' });
+                return;
+            }
+
+            (req as any).user = user;
 
             next();
         } catch (error) {

@@ -10,7 +10,10 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
     try {
         const query = req.query.q as string;
         if (!query || query.length < 2) {
-            res.json({ users: [], tournaments: [], logs: [] });
+            res.json({
+                success: true,
+                data: { users: [], tournaments: [], logs: [] }
+            });
             return;
         }
 
@@ -51,9 +54,12 @@ export const globalSearch = async (req: Request, res: Response): Promise<void> =
         ]);
 
         res.json({
-            users,
-            tournaments,
-            logs
+            success: true,
+            data: {
+                users,
+                tournaments,
+                logs
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: 'Search failed', error: error.message });

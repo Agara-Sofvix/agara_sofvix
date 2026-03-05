@@ -12,6 +12,9 @@ export interface IUser extends Document {
     profilePic?: string;
     resetOTP?: number;
     resetOTPExpire?: Date;
+    loginAttempts: number;
+    lockUntil?: Date;
+    tokenVersion: number;
     matchPassword: (enteredPassword: string) => Promise<boolean>;
 }
 
@@ -19,18 +22,21 @@ const UserSchema: Schema = new Schema({
     name: {
         type: String,
         required: true,
+        trim: true,
     },
     username: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
+        trim: true,
     },
     email: {
         type: String,
         required: true,
         unique: true,
         lowercase: true,
+        trim: true,
     },
     password: {
         type: String,
@@ -58,8 +64,29 @@ const UserSchema: Schema = new Schema({
     resetOTPExpire: {
         type: Date,
     },
+    loginAttempts: {
+        type: Number,
+        default: 0,
+    },
+    lockUntil: {
+        type: Date,
+    },
+    tokenVersion: {
+        type: Number,
+        default: 1,
+    },
 }, {
     timestamps: true,
+    toJSON: {
+        transform: function (doc, ret) {
+            delete ret.password;
+            delete ret.resetOTP;
+            delete ret.resetOTPExpire;
+            delete ret.tokenVersion;
+            delete ret.__v;
+            return ret;
+        }
+    }
 });
 
 UserSchema.pre<IUser>('save', async function (next) {

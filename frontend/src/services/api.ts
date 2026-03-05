@@ -35,8 +35,8 @@ export const loginUser = async (userData: { username: string; password: string }
     return response.json();
 };
 
-export const saveResult = async (resultData: { wpm: number; accuracy: number; mistakes: number; text?: string; duration: number }, token: string) => {
-    const response = await fetch(`${API_URL}/results`, {
+export const saveResult = async (resultData: { textId?: string; originalText?: string; typedText: string; durationMs: number; testSessionId: string }, token: string) => {
+    const response = await fetch(`${API_URL}/typing/save`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export const saveResult = async (resultData: { wpm: number; accuracy: number; mi
     return response.json();
 };
 
-export const submitTournamentResult = async (tournamentId: string, resultData: { wpm: number; accuracy: number; score?: number }, token: string) => {
+export const submitTournamentResult = async (tournamentId: string, resultData: { typedText: string; durationMs: number; testSessionId: string }, token: string) => {
     const response = await fetch(`${API_URL}/tournaments/${tournamentId}/submit`, {
         method: 'POST',
         headers: {

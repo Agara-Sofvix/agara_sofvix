@@ -3,6 +3,7 @@ import User from '../models/User';
 import TournamentResult from '../models/TournamentResult';
 import TypingResult from '../models/TypingResult';
 import AuditLog from '../models/AuditLog';
+import Joi from 'joi';
 
 // @desc    Get all users with pagination and search
 // @route   GET /api/admin/users
@@ -42,13 +43,16 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
         const total = await User.countDocuments(query);
 
         res.json({
-            users,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-            },
+            success: true,
+            data: {
+                users,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit),
+                },
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -82,10 +86,13 @@ export const getUserStats = async (req: Request, res: Response): Promise<void> =
         const newThisWeek = await User.countDocuments({ createdAt: { $gte: startOfWeek } });
 
         res.json({
-            totalUsers,
-            activeToday,
-            newThisWeek,
-            reportedIssues: 0, // Placeholder for now
+            success: true,
+            data: {
+                totalUsers,
+                activeToday,
+                newThisWeek,
+                reportedIssues: 0, // Placeholder for now
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -115,9 +122,12 @@ export const getUserDetails = async (req: Request, res: Response): Promise<void>
             .limit(20);
 
         res.json({
-            user,
-            tournamentResults,
-            typingResults
+            success: true,
+            data: {
+                user, // This will be sanitized via toJSON during JSON.stringify
+                tournamentResults,
+                typingResults
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -148,7 +158,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
             ipAddress: req.ip,
         });
 
-        res.json({ message: 'User deleted successfully' });
+        res.json({ success: true, message: 'User deleted successfully' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -180,8 +190,9 @@ export const toggleUserBan = async (req: Request, res: Response): Promise<void> 
         });
 
         res.json({
+            success: true,
             message: `User ${user.isBanned ? 'banned' : 'unbanned'} successfully`,
-            user: {
+            data: {
                 _id: user._id,
                 username: user.username,
                 isBanned: user.isBanned,

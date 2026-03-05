@@ -37,9 +37,12 @@ export const generatePDFController = async (req: Request, res: Response): Promis
         });
 
         res.status(201).json({
+            success: true,
             message: 'PDF generated successfully',
-            pdfUrl,
-            id: pdfDoc._id
+            data: {
+                pdfUrl,
+                id: pdfDoc._id
+            }
         });
 
     } catch (error: any) {

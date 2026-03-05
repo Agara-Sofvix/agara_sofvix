@@ -4,6 +4,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import compression from 'compression';
+import { sanitize } from './middlewares/sanitizeMiddleware';
 import { createServer } from 'http';
 import path from 'path';
 import fs from 'fs';
@@ -25,6 +27,7 @@ import { maintenanceMode } from './middlewares/maintenanceMiddleware';
 import { seedAdmin } from './seedAdmin';
 import { getRobotsTxt, getSitemapXml } from './controllers/settingsController';
 import { seoMiddleware } from './middlewares/seoMiddleware';
+import { notFound, errorHandler } from './middlewares/errorMiddleware';
 
 dotenv.config({ override: true });
 
@@ -69,15 +72,21 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
 }));
-app.use(express.json());
+app.use(compression());
+app.use(express.json({ limit: '10kb' }));
+app.use(sanitize);
 app.use(morgan('dev'));
 
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 1000, // Limit each IP to 1000 requests per windowMs (Increased for dev)
+    max: 500, // Limit each IP to 500 requests per windowMs
     standardHeaders: true,
     legacyHeaders: false,
+    message: {
+        success: false,
+        message: 'Too many requests from this IP, please try again after 15 minutes'
+    }
 });
 app.use(limiter);
 
@@ -135,8 +144,12 @@ if (fs.existsSync(frontendDist)) {
     app.use(express.static(frontendDist, { index: false })); // index:false so SEO middleware handles HTML
 }
 
-// SSR meta-injection: catch all frontend routes and inject correct SEO tags
+// SSR meta-injection
 app.get(/.*/, seoMiddleware);
+
+// Error Handling
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
 

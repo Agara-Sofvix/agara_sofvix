@@ -19,13 +19,16 @@ export const getAdvertisements = async (req: Request, res: Response): Promise<vo
         const total = await Advertisement.countDocuments();
 
         res.json({
-            advertisements,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit),
-            },
+            success: true,
+            data: {
+                advertisements,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit),
+                },
+            }
         });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -61,7 +64,10 @@ export const addAdvertisement = async (req: Request, res: Response): Promise<voi
             });
         }
 
-        res.status(201).json(advertisement);
+        res.status(201).json({
+            success: true,
+            data: advertisement
+        });
     } catch (error: any) {
         console.error('Add Advertisement Error:', error);
         res.status(400).json({ message: error.message });
@@ -105,7 +111,10 @@ export const updateAdvertisement = async (req: Request, res: Response): Promise<
             });
         }
 
-        res.json(advertisement);
+        res.json({
+            success: true,
+            data: advertisement
+        });
     } catch (error: any) {
         console.error('Update Advertisement Error:', error);
         res.status(400).json({ message: error.message });
@@ -137,7 +146,7 @@ export const deleteAdvertisement = async (req: Request, res: Response): Promise<
             });
         }
 
-        res.json({ message: 'Advertisement deleted successfully' });
+        res.json({ success: true, message: 'Advertisement deleted successfully' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -167,7 +176,10 @@ export const getActiveAdvertisements = async (req: Request, res: Response): Prom
             ]
         }).sort({ createdAt: -1 });
 
-        res.json(advertisements);
+        res.json({
+            success: true,
+            data: advertisements
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

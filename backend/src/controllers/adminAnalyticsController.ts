@@ -3,12 +3,20 @@ import Tournament from '../models/Tournament';
 import TournamentResult from '../models/TournamentResult';
 import User from '../models/User';
 import AuditLog from '../models/AuditLog';
+import { cache } from '../utils/cache';
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/dashboard/stats
 // @access  Private (Admin)
 export const getDashboardStats = async (req: Request, res: Response): Promise<void> => {
     try {
+        const cacheKey = 'admin:dashboard:stats';
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            res.json({ success: true, data: cached });
+            return;
+        }
+
         // Total users
         const totalUsers = await User.countDocuments();
         const bannedUsers = await User.countDocuments({ isBanned: true });
@@ -31,7 +39,7 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
             .sort({ createdAt: -1 })
             .limit(10);
 
-        res.json({
+        const data = {
             stats: {
                 totalUsers,
                 activeUsers: totalUsers - bannedUsers,
@@ -41,7 +49,12 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
                 avgWpm,
             },
             recentUsers,
-        });
+        };
+
+        // Cache for 60 seconds
+        cache.set(cacheKey, data, 60);
+
+        res.json({ success: true, data });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -67,7 +80,10 @@ export const getUserAnalytics = async (req: Request, res: Response): Promise<voi
             { $sort: { _id: 1 } },
         ]);
 
-        res.json(userGrowth);
+        res.json({
+            success: true,
+            data: userGrowth
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -95,7 +111,10 @@ export const getPerformanceAnalytics = async (req: Request, res: Response): Prom
             { $sort: { _id: 1 } },
         ]);
 
-        res.json(performanceTrends);
+        res.json({
+            success: true,
+            data: performanceTrends
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

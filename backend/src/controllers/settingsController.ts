@@ -60,9 +60,12 @@ export const getSettings = async (req: Request, res: Response): Promise<void> =>
             });
         }
 
-        res.json(settings);
+        res.json({
+            success: true,
+            data: settings
+        });
     } catch (error: any) {
-        res.status(500).json({ message: 'Error fetching settings', error: error.message });
+        res.status(500).json({ success: false, message: 'Error fetching settings', error: error.message });
     }
 };
 
@@ -148,9 +151,13 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
             { adminId: (req as any).admin._id, adminName: (req as any).admin.name }
         );
 
-        res.json({ message: 'Settings updated successfully', settings });
+        res.json({
+            success: true,
+            message: 'Settings updated successfully',
+            data: settings
+        });
     } catch (error: any) {
-        res.status(500).json({ message: 'Error updating settings', error: error.message });
+        res.status(500).json({ success: false, message: 'Error updating settings', error: error.message });
     }
 };
 
@@ -160,7 +167,7 @@ export const generateApiKey = async (req: Request, res: Response): Promise<void>
         const { name } = req.body;
 
         if (!name) {
-            res.status(400).json({ message: 'API key name is required' });
+            res.status(400).json({ success: false, message: 'API key name is required' });
             return;
         }
 
@@ -183,7 +190,11 @@ export const generateApiKey = async (req: Request, res: Response): Promise<void>
 
         await settings.save();
 
-        res.json({ message: 'API key generated successfully', key, name });
+        res.json({
+            success: true,
+            message: 'API key generated successfully',
+            data: { key, name }
+        });
     } catch (error: any) {
         res.status(500).json({ message: 'Error generating API key', error: error.message });
     }
@@ -196,7 +207,7 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
 
         let settings = await Settings.findOne();
         if (!settings) {
-            res.status(404).json({ message: 'Settings not found' });
+            res.status(404).json({ success: false, message: 'Settings not found' });
             return;
         }
 
@@ -213,7 +224,7 @@ export const revokeApiKey = async (req: Request, res: Response): Promise<void> =
 
         await settings.save();
 
-        res.json({ message: 'API key revoked successfully' });
+        res.json({ success: true, message: 'API key revoked successfully' });
     } catch (error: any) {
         res.status(500).json({ message: 'Error revoking API key', error: error.message });
     }
@@ -341,7 +352,10 @@ export const getPublicSettings = async (req: Request, res: Response): Promise<vo
             pagesSeo: settings.pagesSeo || []
         };
 
-        res.json(responseData);
+        res.json({
+            success: true,
+            data: responseData
+        });
     } catch (error: any) {
         res.status(500).json({ message: 'Error fetching public settings', error: error.message });
     }
