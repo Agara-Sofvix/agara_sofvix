@@ -24,8 +24,9 @@ const Login = () => {
                 password
             });
 
-            // Assuming response contains { _id, name, email, token }
-            login(response.data);
+            // API returns { success: true, data: { _id, name, email, token } }
+            const userData = response.data.data || response.data;
+            login(userData);
             navigate('/');
         } catch (err: any) {
             console.error("Login failed", err);
