@@ -48,8 +48,8 @@ const TournamentResultSchema: Schema = new Schema({
     timestamps: true,
 });
 
-// Index for efficient leaderboard queries (rankings)
-TournamentResultSchema.index({ tournament: 1, score: -1 });
+// Index for efficient leaderboard queries (rankings) - Matches sort order in getLeaderboard
+TournamentResultSchema.index({ tournament: 1, score: -1, wpm: -1, accuracy: -1 });
 
 // Index for created_at as requested
 TournamentResultSchema.index({ createdAt: 1 });

@@ -95,17 +95,17 @@ export interface Settings {
 
 export const fetchSettings = async (): Promise<Settings> => {
     const response = await api.get('/settings');
-    return response.data;
+    return response.data?.data;
 };
 
 export const updateSettings = async (settings: Partial<Settings>): Promise<Settings> => {
     const response = await api.put('/settings', settings);
-    return response.data.settings;
+    return response.data?.data;
 };
 
 export const generateApiKey = async (name: string): Promise<{ key: string; name: string }> => {
     const response = await api.post('/settings/api-keys', { name });
-    return response.data;
+    return response.data?.data;
 };
 
 export const revokeApiKey = async (key: string): Promise<void> => {
@@ -115,10 +115,10 @@ export const revokeApiKey = async (key: string): Promise<void> => {
 export const uploadLogo = async (file: File): Promise<{ logoUrl: string }> => {
     const formData = new FormData();
     formData.append('logo', file);
-    const response = await api.post('/settings/logo', formData, {
+    const result = await api.post('/settings/logo', formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }
     });
-    return response.data;
+    return result.data.data;
 };

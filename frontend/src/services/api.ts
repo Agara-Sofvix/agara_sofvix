@@ -10,12 +10,11 @@ export const registerUser = async (userData: { name: string; username: string; e
         body: JSON.stringify(userData),
     });
 
+    const result = await response.json();
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
+        throw new Error(result.message || 'Registration failed');
     }
-
-    return response.json();
+    return result.data;
 };
 
 export const loginUser = async (userData: { username: string; password: string }) => {
@@ -27,12 +26,11 @@ export const loginUser = async (userData: { username: string; password: string }
         body: JSON.stringify(userData),
     });
 
+    const result = await response.json();
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
+        throw new Error(result.message || 'Login failed');
     }
-
-    return response.json();
+    return result.data;
 };
 
 export const saveResult = async (resultData: { textId?: string; originalText?: string; typedText: string; durationMs: number; testSessionId: string }, token: string) => {
@@ -45,11 +43,8 @@ export const saveResult = async (resultData: { textId?: string; originalText?: s
         body: JSON.stringify(resultData),
     });
 
-    if (!response.ok) {
-        throw new Error('Failed to save result');
-    }
-
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 export const submitTournamentResult = async (tournamentId: string, resultData: { typedText: string; durationMs: number; testSessionId: string }, token: string) => {
@@ -62,21 +57,57 @@ export const submitTournamentResult = async (tournamentId: string, resultData: {
         body: JSON.stringify({ ...resultData, tournamentId }),
     });
 
-    if (!response.ok) {
-        throw new Error('Failed to submit tournament result');
-    }
-
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
-export const getTournamentLeaderboard = async (tournamentId: string) => {
-    const response = await fetch(`${API_URL}/tournaments/${tournamentId}/leaderboard`);
+export const getTournamentLeaderboard = async (tournamentId: string, token?: string) => {
+    const headers: any = {};
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_URL}/tournaments/${tournamentId}/leaderboard`, {
+        headers
+    });
 
     if (!response.ok) {
         throw new Error('Failed to fetch leaderboard');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
+};
+
+export const joinTournament = async (tournamentId: string, token: string) => {
+    const response = await fetch(`${API_URL}/tournaments/${tournamentId}/join`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || 'Failed to join tournament');
+    }
+
+    return await response.json();
+};
+
+export const getRegistrationStatus = async (tournamentId: string, token: string) => {
+    const response = await fetch(`${API_URL}/tournaments/${tournamentId}/registration-status`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch registration status');
+    }
+
+    const result = await response.json();
+    return result.data.isRegistered;
 };
 
 export const getProfile = async (token: string) => {
@@ -93,7 +124,8 @@ export const getProfile = async (token: string) => {
         throw err;
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
 }
 
 export const getUserHistory = async (token: string) => {
@@ -110,7 +142,8 @@ export const getUserHistory = async (token: string) => {
         throw err;
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 export const checkTournamentRegistration = async (tournamentId: string, token: string) => {
@@ -125,7 +158,8 @@ export const checkTournamentRegistration = async (tournamentId: string, token: s
         throw new Error('Failed to check registration status');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 export const getActiveTournament = async () => {
@@ -135,7 +169,8 @@ export const getActiveTournament = async () => {
         throw new Error('Failed to fetch active tournament');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 
@@ -147,7 +182,19 @@ export const getTamilTexts = async (category?: string) => {
         throw new Error('Failed to fetch Tamil texts');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
+};
+
+export const getTamilTextById = async (id: string) => {
+    const response = await fetch(`${API_URL}/texts/${id}`);
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch Tamil text');
+    }
+
+    const result = await response.json();
+    return result.data;
 };
 
 export const getNotifications = async () => {
@@ -157,7 +204,8 @@ export const getNotifications = async () => {
         throw new Error('Failed to fetch notifications');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 export const markNotificationsAsRead = async (token: string) => {
@@ -172,7 +220,8 @@ export const markNotificationsAsRead = async (token: string) => {
         throw new Error('Failed to mark notifications as read');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 export const getUnreadNotificationCount = async (token: string) => {
@@ -187,7 +236,8 @@ export const getUnreadNotificationCount = async (token: string) => {
         throw new Error('Failed to fetch unread notification count');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data?.count || 0;
 };
 
 export const getActiveAdvertisements = async () => {
@@ -197,7 +247,8 @@ export const getActiveAdvertisements = async () => {
         throw new Error('Failed to fetch advertisements');
     }
 
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 export const updateProfilePic = async (formData: FormData, token: string) => {
     const response = await fetch(`${API_URL}/auth/update-profile-pic`, {
@@ -208,12 +259,8 @@ export const updateProfilePic = async (formData: FormData, token: string) => {
         body: formData,
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update profile picture');
-    }
-
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 export const setAvatar = async (avatarPath: string, token: string) => {
@@ -226,12 +273,8 @@ export const setAvatar = async (avatarPath: string, token: string) => {
         body: JSON.stringify({ avatarPath }),
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update avatar');
-    }
-
-    return response.json();
+    const result = await response.json();
+    return result.data;
 };
 
 export const forgotPassword = async (email: string) => {

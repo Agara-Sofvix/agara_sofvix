@@ -137,7 +137,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
         // Socket.io connection for real-time updates
         const userToken = localStorage.getItem('token');
-        const adminStored = localStorage.getItem('admin');
+        const adminStored = localStorage.getItem('adminUser');
         const adminToken = adminStored ? JSON.parse(adminStored).token : null;
         const token = userToken || adminToken;
         const socket = io(SOCKET_ORIGIN, {

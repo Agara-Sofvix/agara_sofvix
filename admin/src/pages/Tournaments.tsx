@@ -71,8 +71,8 @@ const Tournaments = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Handle both direct array and paginated response
-            const textsArray = Array.isArray(response.data) ? response.data : response.data.texts || [];
-            setTextContents(textsArray);
+            const textsArray = response.data?.data || [];
+            setTextContents(Array.isArray(textsArray) ? textsArray : (textsArray.texts || []));
         } catch (error) {
             console.error('Error fetching texts:', error);
         }
@@ -81,7 +81,7 @@ const Tournaments = () => {
     const fetchTournaments = async () => {
         try {
             const response = await axios.get(`${PUBLIC_API_URL}/tournaments`);
-            setTournaments(response.data);
+            setTournaments(response.data?.data || []);
         } catch (error) {
             console.error('Error fetching tournaments:', error);
         } finally {

@@ -54,7 +54,13 @@ initCronJobs();
 // Middleware
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginOpenerPolicy: { policy: "unsafe-none" }
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+    contentSecurityPolicy: {
+        directives: {
+            ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+            "img-src": ["'self'", "data:", "*"], // Allow all images (simplest for cross-origin assets)
+        },
+    },
 }));
 const allowedOrigins = [
     'http://localhost:3000',
@@ -86,7 +92,7 @@ app.use(morgan('dev'));
 // Rate Limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 500, // Limit each IP to 500 requests per windowMs
+    max: 1000000, // Increased to 1,000,000 to handle high-volume bursts (10k+ concurrent)
     standardHeaders: true,
     legacyHeaders: false,
     message: {
@@ -123,21 +129,22 @@ app.use('/api/admin', adminRoutes);
 // Serve Static Uploads
 const resolvePublicPath = (targetSubPath: string) => {
     const root = process.cwd();
+    // Use targetSubPath but also try removing 'public/' prefix if we are already in/near it
+    const subWithoutPublic = targetSubPath.replace(/^public\//, '');
+
     const candidates = [
         path.join(root, targetSubPath),
-        path.join(root, 'public', targetSubPath.split('/').pop() || ''),
-        path.join(root, 'backend', targetSubPath),
-        path.join(__dirname, '..', '..', targetSubPath)
+        path.join(root, '..', targetSubPath), // If in src/
+        path.join(root, subWithoutPublic),
+        path.join(root, '..', 'public', subWithoutPublic),
+        path.join(__dirname, '..', '..', targetSubPath),
+        path.join(__dirname, '..', 'public', subWithoutPublic)
     ];
 
     for (const p of candidates) {
         if (fs.existsSync(p)) return p;
     }
-    // Final fallback: if in backend folder, try public/
-    const simplePublic = path.join(root, targetSubPath.replace('public/', ''));
-    if (fs.existsSync(simplePublic)) return simplePublic;
-
-    return candidates[0];
+    return path.join(root, '..', targetSubPath); // Default fallback
 };
 
 app.use('/uploads', express.static(resolvePublicPath('public/uploads')));

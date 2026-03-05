@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTextStore } from '../src/store/useTextStore';
 
 interface TestSelectionProps {
     onStart: (config: { duration: number; module: string }) => void;
@@ -7,28 +8,72 @@ interface TestSelectionProps {
     onOpenLoginRequired?: () => void;
 }
 
-const testModules = [
-    { id: 'literature', label: 'Literature', icon: 'auto_stories', color: 'text-purple-500', bg: 'bg-purple-50', desc: 'Classical and modern Tamil literary excerpts.' },
-    { id: 'news', label: 'News', icon: 'newspaper', color: 'text-cyan-600', bg: 'bg-cyan-50', desc: 'Stay updated while improving your typing with latest news.' },
-    { id: 'election', label: 'Election', icon: 'how_to_vote', color: 'text-red-600', bg: 'bg-red-50', desc: 'Political discourse and election-related Tamil content.' },
-    { id: 'social', label: 'Social Issues', icon: 'forum', color: 'text-rose-500', bg: 'bg-rose-50', desc: 'Current affairs and social commentary in Tamil.' },
-];
+const MODULE_METADATA: Record<string, { label: string; icon: string; color: string; bg: string; desc: string }> = {
+    'literature': { label: 'Literature', icon: 'auto_stories', color: 'text-purple-500', bg: 'bg-purple-50', desc: 'Classical and modern Tamil literary excerpts.' },
+    'general': { label: 'General', icon: 'public', color: 'text-blue-600', bg: 'bg-blue-50', desc: 'General knowledge and miscellaneous Tamil content.' },
+    'news': { label: 'News', icon: 'newspaper', color: 'text-cyan-600', bg: 'bg-cyan-50', desc: 'Stay updated while improving your typing with latest news.' },
+    'social': { label: 'Social', icon: 'forum', color: 'text-rose-500', bg: 'bg-rose-50', desc: 'Current affairs and social commentary in Tamil.' },
+    'election': { label: 'Election', icon: 'how_to_vote', color: 'text-red-600', bg: 'bg-red-50', desc: 'Political discourse and election-related Tamil content.' },
+};
 
 const TestSelection: React.FC<TestSelectionProps> = ({ onStart, defaultDuration = '1m', isLoggedIn, onOpenLoginRequired }) => {
-    const [selectedModule, setSelectedModule] = useState('literature');
+    const { getCategories, fetchTexts, isLoading } = useTextStore();
+    const [selectedModule, setSelectedModule] = useState('');
     const [duration, setDuration] = useState(defaultDuration);
+
+    const categories = getCategories();
+
+    React.useEffect(() => {
+        fetchTexts();
+    }, [fetchTexts]);
+
+    React.useEffect(() => {
+        if (categories.length > 0 && !selectedModule) {
+            setSelectedModule(categories[0]);
+        }
+    }, [categories, selectedModule]);
+
+    const displayModules = categories
+        .filter(cat => Object.keys(MODULE_METADATA).includes(cat))
+        .map(cat => ({
+            id: cat,
+            ...MODULE_METADATA[cat]
+        }));
 
     const handleStart = () => {
         if (!isLoggedIn) {
             onOpenLoginRequired?.();
             return;
         }
+        if (!selectedModule) return;
+
         const mins = parseInt(duration) || 1;
         onStart({
             duration: mins * 60,
             module: selectedModule
         });
     };
+
+    if (isLoading && categories.length === 0) {
+        return (
+            <div className="w-full max-w-6xl mx-auto flex flex-col items-center py-20">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="mt-4 font-bold opacity-60">Loading modules...</p>
+            </div>
+        );
+    }
+
+    if (!isLoading && categories.length === 0) {
+        return (
+            <div className="w-full max-w-6xl mx-auto flex flex-col items-center py-20">
+                <div className="text-center space-y-4">
+                    <span className="material-symbols-outlined text-6xl text-slate-300">block</span>
+                    <h2 className="text-2xl font-black">No Content Available</h2>
+                    <p className="text-slate-500">Wait for the admin to provide content in the admin panel.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center py-8 animate-in fade-in zoom-in duration-700">
@@ -46,7 +91,7 @@ const TestSelection: React.FC<TestSelectionProps> = ({ onStart, defaultDuration 
                 <div className="space-y-4">
                     <h2 className="text-xs font-black uppercase tracking-[0.3em] ml-2 text-slate-500">01. Select Topic Module</h2>
                     <div className="grid grid-cols-1 gap-4">
-                        {testModules.map((m) => (
+                        {displayModules.map((m) => (
                             <button
                                 key={m.id}
                                 onClick={() => setSelectedModule(m.id)}
@@ -105,7 +150,7 @@ const TestSelection: React.FC<TestSelectionProps> = ({ onStart, defaultDuration 
                                     <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Mission Summary</span>
                                 </div>
                                 <p className="text-sm font-bold opacity-80 text-slate-600">
-                                    You are about to start a <span className="text-primary">{duration}</span> test on <span className="text-primary">{testModules.find(m => m.id === selectedModule)?.label}</span>.
+                                    You are about to start a <span className="text-primary">{duration}</span> test on <span className="text-primary">{displayModules.find(m => m.id === selectedModule)?.label}</span>.
                                     Your performance will be logged to your elite dashboard.
                                 </p>
                             </div>

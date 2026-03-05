@@ -48,7 +48,7 @@ const Content = () => {
             const response = await axios.get(`${ADMIN_API_URL}/texts?limit=100`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setTexts(response.data.texts);
+            setTexts(response.data?.data?.texts || []);
         } catch (error) {
             console.error('Error fetching texts:', error);
         } finally {

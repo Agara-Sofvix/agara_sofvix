@@ -31,9 +31,10 @@ export const useAdminNotifications = () => {
                 }
             });
             if (response.ok) {
-                const data = await response.json();
-                setEvents(data);
-                setUnreadCount(data.filter((e: SystemEvent) => !e.read).length);
+                const json = await response.json();
+                const eventsData = json.data || [];
+                setEvents(eventsData);
+                setUnreadCount(eventsData.filter((e: SystemEvent) => !e.read).length);
             }
         } catch (error) {
             console.error('Failed to fetch admin events:', error);

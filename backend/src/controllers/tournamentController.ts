@@ -101,6 +101,9 @@ export const joinTournament = async (req: Request, res: Response): Promise<void>
             { tournamentId: tournament._id, tournamentName: tournament.name, userId }
         );
 
+        // Invalidate leaderboard cache so next fetch gets fresh data including this participant
+        cache.invalidate(`leaderboard:${tournament._id}`);
+
         res.json({ success: true, message: 'Joined tournament successfully' });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -121,18 +124,13 @@ export const submitResult = async (req: Request, res: Response): Promise<void> =
         return;
     }
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
         const { tournamentId, typedText, durationMs, testSessionId } = req.body;
         const userId = (req as any).user._id;
 
-        // Idempotency check inside transaction
-        const existingSession = await TournamentResult.findOne({ testSessionId }).session(session);
+        // Idempotency check
+        const existingSession = await TournamentResult.findOne({ testSessionId });
         if (existingSession) {
-            await session.abortTransaction();
-            session.endSession();
             res.status(200).json({
                 success: true,
                 data: existingSession
@@ -140,18 +138,14 @@ export const submitResult = async (req: Request, res: Response): Promise<void> =
             return;
         }
 
-        const tournament = await Tournament.findById(tournamentId).populate('textContent').session(session);
+        const tournament = await Tournament.findById(tournamentId).populate('textContent');
         if (!tournament) {
-            await session.abortTransaction();
-            session.endSession();
             res.status(404).json({ success: false, message: 'Tournament not found' });
             return;
         }
 
         const targetText = (tournament.textContent as any)?.content;
         if (!targetText) {
-            await session.abortTransaction();
-            session.endSession();
             res.status(400).json({ success: false, message: 'Tournament text content not found' });
             return;
         }
@@ -172,29 +166,22 @@ export const submitResult = async (req: Request, res: Response): Promise<void> =
                     score: score
                 },
                 $set: {
-                    accuracy: accuracy, // We'll keep the latest accuracy or could do average logic if needed, but atomic average is harder without pre-calc
+                    accuracy: accuracy,
                     timestamp: new Date(),
                     testSessionId: testSessionId
                 }
             },
             {
                 upsert: true,
-                new: true,
-                session: session
+                new: true
             }
         );
 
-        // Trigger tournament leaderboard update event
-        await createEvent(
-            'TOURNAMENT_LEADERBOARD_UPDATE',
-            'Tournament Leaderboard Update',
-            `New result submitted for tournament. Current Score: ${result.score}`,
-            { tournamentId, score: result.score, wpm: result.wpm, userId },
-            session
+        // Ensure user is in the participants list (even if they skipped the Join step)
+        await Tournament.updateOne(
+            { _id: tournamentId },
+            { $addToSet: { participants: userId } }
         );
-
-        await session.commitTransaction();
-        session.endSession();
 
         // Invalidate leaderboard cache so next fetch gets fresh data
         cache.invalidate(`leaderboard:${tournamentId}`);
@@ -204,8 +191,6 @@ export const submitResult = async (req: Request, res: Response): Promise<void> =
             data: result
         });
     } catch (error: any) {
-        await session.abortTransaction();
-        session.endSession();
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -213,7 +198,8 @@ export const submitResult = async (req: Request, res: Response): Promise<void> =
 export const getLeaderboard = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params; // Tournament ID
-        const cacheKey = `leaderboard:${id}`;
+        const userId = (req as any).user?._id;
+        const cacheKey = `leaderboard:${id}${userId ? `:${userId}` : ''}`;
 
         // Check cache first (30s TTL)
         const cached = cache.get(cacheKey);
@@ -222,21 +208,73 @@ export const getLeaderboard = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        // Get all results for the tournament, sorted by performance
-        // Uniqueness is now guaranteed by the unique index on { user, tournament }
-        const results = await TournamentResult.find({
-            tournament: id
-        })
+        // 1. Get Top 50 results directly from DB
+        const results = await TournamentResult.find({ tournament: id })
             .sort({ score: -1, wpm: -1, accuracy: -1 })
-            .populate('user', 'name username')
-            .limit(50);
+            .limit(50)
+            .populate('user', 'name username profilePic');
+
+        // 2. Efficiently find current user's result and rank if they are logged in
+        let userResult = null;
+        let userRank = -1;
+
+        if (userId) {
+            userResult = await TournamentResult.findOne({
+                tournament: id,
+                user: userId
+            }).populate('user', 'name username profilePic');
+
+            if (userResult) {
+                // Approximate rank using countDocuments on indexed fields
+                userRank = await TournamentResult.countDocuments({
+                    tournament: id,
+                    $or: [
+                        { score: { $gt: userResult.score } },
+                        {
+                            score: userResult.score,
+                            wpm: { $gt: userResult.wpm }
+                        },
+                        {
+                            score: userResult.score,
+                            wpm: userResult.wpm,
+                            accuracy: { $gt: userResult.accuracy }
+                        }
+                    ]
+                }) + 1;
+            } else {
+                // If no result, check if registered to return a placeholder in "Persona Standing"
+                const tournament = await Tournament.findById(id).select('participants');
+                const isRegistered = tournament?.participants.some(p => p.toString() === userId.toString());
+                if (isRegistered) {
+                    userResult = {
+                        user: { _id: userId, name: (req as any).user.name || 'You', username: (req as any).user.username },
+                        wpm: 0,
+                        accuracy: 0,
+                        score: 0,
+                        isPlaceholder: true
+                    };
+                    userRank = 0; // Means registered but no score yet
+                }
+            }
+        }
+
+        // 3. Get total participant count for the tournament
+        const tournament = await Tournament.findById(id).select('participants');
+        const totalParticipants = tournament?.participants?.length || 0;
+
+        const data = {
+            leaderboard: results,
+            userEntry: userResult,
+            userRank: userRank,
+            totalParticipants: totalParticipants
+        };
 
         // Cache for 30 seconds
-        cache.set(cacheKey, results, 30);
+        cache.set(cacheKey, data, 30);
 
         res.json({
             success: true,
-            data: results
+            data
         });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });

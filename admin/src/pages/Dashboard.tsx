@@ -97,13 +97,14 @@ const Dashboard = () => {
                     axios.get(`${PUBLIC_API_URL}/tournaments`)
                 ]);
 
-                if (statsRes.data?.stats) {
-                    setStats(statsRes.data.stats);
-                    setRecentUsers(statsRes.data.recentUsers || []);
+                if (statsRes.data?.data?.stats) {
+                    setStats(statsRes.data.data.stats);
+                    setRecentUsers(statsRes.data.data.recentUsers || []);
                 }
 
                 // Format chart data with safety
-                const formattedChartData = (analyticsRes.data || []).map((item: ChartData) => {
+                const analyticsData = analyticsRes.data?.data || [];
+                const formattedChartData = (Array.isArray(analyticsData) ? analyticsData : []).map((item: ChartData) => {
                     try {
                         return {
                             name: item._id ? format(new Date(item._id), 'MMM d') : 'N/A',
@@ -116,7 +117,8 @@ const Dashboard = () => {
                 setChartData(formattedChartData);
 
                 // Filter for live tournaments for the dashboard table
-                const liveTournaments = (tournamentsRes.data || []).filter((t: any) => t.status === 'live');
+                const tournamentsData = tournamentsRes.data?.data || [];
+                const liveTournaments = (Array.isArray(tournamentsData) ? tournamentsData : []).filter((t: any) => t.status === 'live');
                 setActiveTournamentsList(liveTournaments);
 
             } catch (err: any) {

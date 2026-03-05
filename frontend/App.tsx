@@ -122,7 +122,7 @@ const AppInner: React.FC = () => {
     handleMarkNotificationsAsRead();
   };
   const [testConfig, setTestConfig] = useState<{ duration: number, module: string } | null>(null);
-  const [activeTournamentId, setActiveTournamentId] = useState<string | null>(null);
+  const [activeTournament, setActiveTournament] = useState<any | null>(null);
   const [isLoginRequiredModalOpen, setIsLoginRequiredModalOpen] = useState(false);
   const [pendingView, setPendingView] = useState<string | null>(null);
   const [latestEarnedTrophy, setLatestEarnedTrophy] = useState<any | null>(null);
@@ -238,9 +238,9 @@ const AppInner: React.FC = () => {
     }
   }, []);
   useEffect(() => {
-    // Fetch active tournament ID
+    // Fetch active tournament
     getActiveTournament()
-      .then(t => setActiveTournamentId(t._id))
+      .then(t => setActiveTournament(t))
       .catch(err => console.error("No active tournament found", err));
   }, []);
 
@@ -634,12 +634,25 @@ const AppInner: React.FC = () => {
 
     try {
       if (token && extra?.testSessionId && extra?.rawTypedText && extra?.durationMs) {
-        if (isTournament && activeTournamentId) {
-          await submitTournamentResult(activeTournamentId, {
-            typedText: extra.rawTypedText,
-            durationMs: extra.durationMs,
-            testSessionId: extra.testSessionId
-          }, token);
+        if (isTournament) {
+          let tId = activeTournament?._id;
+          if (!tId) {
+            try {
+              const t = await getActiveTournament();
+              tId = t._id;
+              setActiveTournament(t);
+            } catch (err) {
+              console.error("Could not fetch active tournament even during submission", err);
+            }
+          }
+
+          if (tId) {
+            await submitTournamentResult(tId, {
+              typedText: extra.rawTypedText,
+              durationMs: extra.durationMs,
+              testSessionId: extra.testSessionId
+            }, token);
+          }
         } else if (type === 'Test' || type === 'Practice') {
           await saveResult({
             typedText: extra.rawTypedText,
@@ -758,13 +771,14 @@ const AppInner: React.FC = () => {
                 onUpdateStats={updateUserStats}
               />
             ) : currentView === 'TournamentArena' ? (
-              <TournamentArena onNavigate={handleNavigate} stats={userStats} />
+              <TournamentArena onNavigate={handleNavigate} stats={userStats} activeTournament={activeTournament} />
             ) : currentView === 'TournamentLive' ? (
               <TournamentLive
                 onComplete={(wpm, acc, extra) => recordSession(wpm, acc, 'Tournament', extra)}
                 displayName={userStats.displayName}
                 activeKeys={activeKeys}
                 settings={appUiSettings}
+                activeTournament={activeTournament}
               />
             ) : currentView === 'TournamentResult' ? (
               <TournamentResult

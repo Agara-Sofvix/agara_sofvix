@@ -27,7 +27,12 @@ const Login: React.FC<LoginProps> = ({ onNavigate, onSignupNavigate, onForgotPas
         password: formData.password
       });
 
-      onNavigate({ name: data.name, token: data.token, profilePic: data.profilePic });
+      onNavigate({
+        name: data.name,
+        token: data.token,
+        profilePic: data.profilePic,
+        lastNotificationReadAt: data.lastNotificationReadAt
+      });
     } catch (err: any) {
       setError(err.message);
     }

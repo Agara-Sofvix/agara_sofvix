@@ -39,8 +39,9 @@ router.post('/logo', adminAuth, logoUpload.single('logo'), async (req, res) => {
         await settings.save();
 
         res.json({
+            success: true,
             message: 'Logo uploaded successfully',
-            logoUrl
+            data: { logoUrl }
         });
     } catch (error: any) {
         res.status(500).json({ message: 'Error uploading logo', error: error.message });

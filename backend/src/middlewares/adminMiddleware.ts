@@ -21,8 +21,8 @@ export const adminAuth = async (req: Request, res: Response, next: NextFunction)
         // Get admin from token
         const admin = await Admin.findById(decoded.id).select('-password');
 
-        if (!admin) {
-            res.status(401).json({ success: false, message: 'Not authorized - admin not found' });
+        if (!admin || admin.tokenVersion !== decoded.tokenVersion) {
+            res.status(401).json({ success: false, message: 'Not authorized - session invalidated' });
             return;
         }
 

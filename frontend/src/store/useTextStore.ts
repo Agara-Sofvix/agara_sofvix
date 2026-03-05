@@ -14,6 +14,7 @@ interface TextState {
     fetchTexts: (category?: string) => Promise<void>;
     getRandomText: (category: string, excludeText?: string) => string;
     getRandomTextObject: (category: string, excludeText?: string) => TamilText | null;
+    getCategories: () => string[];
 }
 
 export const useTextStore = create<TextState>((set, get) => ({
@@ -26,13 +27,17 @@ export const useTextStore = create<TextState>((set, get) => ({
         try {
             console.log('[useTextStore] Fetching texts, category:', category);
             const data = await getTamilTexts(category);
-            console.log('[useTextStore] Received data:', data);
-            console.log('[useTextStore] Data length:', data?.length);
-            set({ texts: data, isLoading: false });
+            set({ texts: data || [], isLoading: false });
         } catch (err: any) {
             console.error('[useTextStore] Error fetching texts:', err);
             set({ error: err.message, isLoading: false });
         }
+    },
+
+    getCategories: () => {
+        const { texts } = get();
+        const cats = Array.from(new Set(texts.map(t => t.category)));
+        return cats.filter(c => !!c);
     },
 
     getRandomText: (category: string, excludeText?: string) => {
@@ -51,7 +56,7 @@ export const useTextStore = create<TextState>((set, get) => ({
         do {
             const randomIndex = Math.floor(Math.random() * categoryTexts.length);
             selected = categoryTexts[randomIndex];
-        } while (selected.content === excludeText && categoryTexts.length > 1);
+        } while (selected && selected.content === excludeText && categoryTexts.length > 1);
 
         return selected;
     }

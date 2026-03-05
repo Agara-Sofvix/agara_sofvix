@@ -1,6 +1,6 @@
 import express from 'express';
 import { createTournament, getTournaments, joinTournament, submitResult, getLeaderboard, getRegistrationStatus, getActiveTournament } from '../controllers/tournamentController';
-import { protect } from '../middlewares/authMiddleware';
+import { protect, optionalProtect } from '../middlewares/authMiddleware';
 
 const router = express.Router();
 
@@ -10,6 +10,6 @@ router.get('/', getTournaments);
 router.post('/:id/join', protect, joinTournament);
 router.get('/:id/registration-status', protect, getRegistrationStatus);
 router.post('/:id/submit', protect, submitResult);
-router.get('/:id/leaderboard', getLeaderboard);
+router.get('/:id/leaderboard', optionalProtect, getLeaderboard);
 
 export default router;

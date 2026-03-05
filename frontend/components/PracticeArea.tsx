@@ -182,14 +182,10 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
   // Sync mode with initialMode prop changes
   useEffect(() => {
-    if (initialMode) {
-      setMode(initialMode);
-      const hash = MODE_TO_HASH[initialMode];
-      if (window.location.hash !== hash) {
-        window.history.replaceState({ mode: initialMode }, '', window.location.pathname + hash);
-      }
+    if (initialMode && initialMode !== mode) {
+      updateModeWithHistory(initialMode);
     }
-  }, [initialMode]);
+  }, [initialMode, mode]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
@@ -238,9 +234,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(0); // Track which page of 8 lessons to show
   const LESSONS_PER_PAGE = 8;
-  const [targetText, setTargetText] = useState(() => {
-    return sessionStorage.getItem('ezhuthidu_custom_target') || "";
-  });
+  const [targetText, setTargetText] = useState("");
   const [currentTextId, setCurrentTextId] = useState<string | undefined>(undefined);
   const [inputText, setInputText] = useState("");
   const [inputHistory, setInputHistory] = useState(""); // Full history for tape calculation
@@ -267,6 +261,8 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   const [isFinished, setIsFinished] = useState(false);
   const [testSessionId, setTestSessionId] = useState(() => crypto.randomUUID());
   const onCompleteCalled = useRef(false);
+  const { getCategories, fetchTexts, getRandomText, getRandomTextObject, isLoading } = useTextStore();
+  const [selectedFreeCategory, setSelectedFreeCategory] = useState('free-typing');
   const [showKeyboard, setShowKeyboard] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
   const inputAreaRef = useRef<HTMLDivElement>(null);
@@ -425,13 +421,11 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     resetPractice();
   };
 
-  const { fetchTexts, getRandomText, getRandomTextObject, isLoading } = useTextStore();
-
   useEffect(() => {
     if (mode === 'free') {
-      fetchTexts('free-typing');
+      fetchTexts(selectedFreeCategory);
     }
-  }, [mode, fetchTexts]);
+  }, [mode, fetchTexts, selectedFreeCategory]);
 
   // showLessonGrid removed - grid is always visible now
 
@@ -458,7 +452,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       }
     } else if (mode === 'free') {
       setIsCustomSetup(false);
-      const textObj = getRandomTextObject('free-typing');
+      const textObj = getRandomTextObject(selectedFreeCategory);
       setTargetText(textObj?.content || "");
       setCurrentTextId(textObj?._id);
       resetPractice();
@@ -1158,6 +1152,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
           </div>
         ) : (
           <>
+            {/* Free Typing mode is now a completely clean experience with no header */}
             {mode === 'lesson' && (
               <div className="shrink-0 w-full animate-in fade-in duration-500">
                 <div className="bg-cream-light/50 rounded-2xl p-6 shadow-even border border-slate-100 flex flex-col gap-6">

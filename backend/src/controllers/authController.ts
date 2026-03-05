@@ -115,7 +115,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         });
 
         if (!user) {
-            res.status(404).json({ success: false, message: 'User does not exist' });
+            res.status(404).json({ success: false, message: 'User does not exist.' });
             return;
         }
 
@@ -153,9 +153,10 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             await user.save({ validateBeforeSave: false });
 
             res.status(401).json({
+                success: false,
                 message: user.loginAttempts >= 5
                     ? `Too many failed attempts. Account locked for 1 hour.`
-                    : 'Invalid password'
+                    : 'Incorrect password.'
             });
         }
     } catch (error: any) {

@@ -58,7 +58,7 @@ const Advertisements = () => {
             const response = await axios.get(`${ADMIN_API_URL}/advertisements`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setAdvertisements(response.data.advertisements);
+            setAdvertisements(response.data?.data?.advertisements || []);
         } catch (error) {
             console.error('Error fetching advertisements:', error);
         } finally {

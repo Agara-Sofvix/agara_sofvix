@@ -23,7 +23,7 @@ export const useNotifications = (isLoggedIn: boolean, lastReadAt?: string | Date
             if (isLoggedIn) {
                 const token = localStorage.getItem('token');
                 if (token) {
-                    const { count } = await getUnreadNotificationCount(token);
+                    const count = await getUnreadNotificationCount(token);
                     setUnreadCount(count);
                 }
             } else {

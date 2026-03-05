@@ -17,7 +17,8 @@ export const getDashboardStats = async () => {
     const res = await fetch(`${API_BASE}/dashboard/stats`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 // Users
@@ -26,7 +27,8 @@ export const getUsers = async (params: any = {}) => {
     const res = await fetch(`${API_BASE}/users?${query}`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 export const deleteUser = async (id: string) => {
@@ -69,7 +71,8 @@ export const getTexts = async (params: any = {}) => {
     const res = await fetch(`${API_BASE}/texts?${query}`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 export const addText = async (data: any) => {
@@ -94,14 +97,16 @@ export const getUserAnalytics = async (days = 30) => {
     const res = await fetch(`${API_BASE}/analytics/users?days=${days}`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 export const getPerformanceAnalytics = async (days = 30) => {
     const res = await fetch(`${API_BASE}/analytics/performance?days=${days}`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 // Logs
@@ -110,7 +115,8 @@ export const getAuditLogs = async (params: any = {}) => {
     const res = await fetch(`${API_BASE}/logs?${query}`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 // System Events
@@ -118,7 +124,8 @@ export const getSystemEvents = async () => {
     const res = await fetch(`${API_BASE}/events`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 // Notifications
@@ -126,7 +133,8 @@ export const getNotifications = async () => {
     const res = await fetch(`${API_BASE}/notifications`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 export const createNotification = async (data: any) => {
@@ -161,7 +169,8 @@ export const getAdvertisements = async (params: any = {}) => {
     const res = await fetch(`${API_BASE}/advertisements?${query}`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 export const addAdvertisement = async (data: any) => {
@@ -195,7 +204,8 @@ export const getSettings = async () => {
     const res = await fetch(`${API_BASE}/settings`, {
         headers: getAuthHeaders(),
     });
-    return res.json();
+    const data = await res.json();
+    return data.data;
 };
 
 export const updateSettings = async (data: any) => {

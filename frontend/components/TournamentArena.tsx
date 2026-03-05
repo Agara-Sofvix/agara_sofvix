@@ -5,9 +5,10 @@ import { UserStats } from '../App';
 interface TournamentArenaProps {
   onNavigate: (view: string) => void;
   stats: UserStats;
+  activeTournament?: any;
 }
 
-import { getTournamentLeaderboard, getActiveTournament } from '@/src/services/api';
+import { getTournamentLeaderboard, getActiveTournament, getRegistrationStatus, joinTournament } from '@/src/services/api';
 
 interface LeaderboardEntry {
   wpm: number;
@@ -18,19 +19,43 @@ interface LeaderboardEntry {
   };
 }
 
-const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) => {
+const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, activeTournament: propTournament }) => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [activeTournament, setActiveTournament] = useState<any | null>(null);
+  const [userEntry, setUserEntry] = useState<LeaderboardEntry | null>(null);
+  const [userRank, setUserRank] = useState<number>(-1);
+  const [activeTournament, setActiveTournament] = useState<any>(propTournament || null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRegistered, setIsRegistered] = useState<boolean>(false);
+  const [isRegistering, setIsRegistering] = useState<boolean>(false);
+  const [competitorCount, setCompetitorCount] = useState<number>(0);
 
   useEffect(() => {
     const fetchArenaData = async () => {
       try {
-        const tournament = await getActiveTournament();
-        setActiveTournament(tournament);
-        if (tournament?._id) {
-          const data = await getTournamentLeaderboard(tournament._id);
-          setLeaderboard(data);
+        let currentTournament = propTournament;
+        if (!currentTournament) {
+          currentTournament = await getActiveTournament();
+          setActiveTournament(currentTournament);
+        } else {
+          setActiveTournament(propTournament);
+        }
+
+        if (currentTournament?._id) {
+          const tournamentId = String(currentTournament._id);
+          const token = localStorage.getItem('token');
+          const response = await getTournamentLeaderboard(tournamentId, token || undefined);
+
+          // Handle new object structure { leaderboard, userEntry, userRank, totalParticipants }
+          setLeaderboard(response.leaderboard || []);
+          setUserEntry(response.userEntry || null);
+          setUserRank(response.userRank ?? -1);
+          setCompetitorCount(response.totalParticipants || 0);
+
+          // Check registration status if token exists
+          if (token) {
+            const registered = await getRegistrationStatus(currentTournament._id, token);
+            setIsRegistered(registered);
+          }
         }
         setIsLoading(false);
       } catch (err) {
@@ -40,7 +65,50 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
     };
 
     fetchArenaData();
-  }, []);
+  }, [propTournament]);
+
+  const handleRegister = async () => {
+    if (!activeTournament?._id) return;
+    const token = localStorage.getItem('token');
+    if (!token) {
+      onNavigate('Login');
+      return;
+    }
+
+    setIsRegistering(true);
+    try {
+      await joinTournament(activeTournament._id, token);
+      setIsRegistered(true);
+      setCompetitorCount(prev => prev + 1);
+
+      // Locally update user entry for immediate feedback
+      const newUserEntryRow: LeaderboardEntry = {
+        wpm: 0,
+        accuracy: 0,
+        user: {
+          username: stats.displayName,
+          name: stats.displayName
+        }
+      };
+
+      setUserEntry(newUserEntryRow);
+      setUserRank(0); // Registered but no score
+
+      setLeaderboard(prev => {
+        // Only add to Top 50 if it's empty or has space (simplification for UI feedback)
+        const alreadyIn = prev.some(e => e.user.username === stats.displayName || e.user.name === stats.displayName);
+        if (!alreadyIn && prev.length < 50) {
+          return [...prev, newUserEntryRow];
+        }
+        return prev;
+      });
+    } catch (err: any) {
+      console.error("Failed to register for tournament", err);
+      alert(err.message || "Registration failed. Please try again.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   return (
     <div className="animate-in fade-in duration-1000">
@@ -180,13 +248,18 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
             {/* Left Column: GLOBAL LEADERBOARD + PERSONAL STANDING (lg+) */}
             <section className="flex flex-col gap-12 animate-in slide-in-from-left-8 duration-700 lg:col-start-1 order-3 lg:order-1">
               <div>
-                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 text-black opacity-60">Tournament Leaderboard</h2>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-black opacity-60">Tournament Leaderboard</h2>
+                  <div className="bg-black/5 px-2 py-1 rounded text-[8px] font-black tracking-widest uppercase opacity-40">
+                    {competitorCount} Registered
+                  </div>
+                </div>
                 <div className="space-y-1">
                   {isLoading ? (
                     <p className="text-xs opacity-50">Loading leaderboard...</p>
                   ) : leaderboard.length > 0 ? (
                     <>
-                      {leaderboard.slice(0, 5).map((entry, i) => (
+                      {leaderboard.slice(0, 3).map((entry, i) => (
                         <div key={i} className={`rank-item ${(entry.user.username === stats.displayName || entry.user.name === stats.displayName) ? 'bg-primary/5 rounded-xl px-2 border-l-2 border-primary' : ''}`}>
                           <div className="flex items-center gap-4">
                             <span className="text-xl font-black italic text-slate-400">0{i + 1}</span>
@@ -199,11 +272,12 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
                         </div>
                       ))}
 
-                      {/* Show current user if not in Top 5 */}
+                      {/* Show current user if not in Top 3 or if registered but no score yet */}
                       {(() => {
-                        const userRankIndex = leaderboard.findIndex(e => e.user.username === stats.displayName || e.user.name === stats.displayName);
-                        if (userRankIndex >= 5) {
-                          const userEntry = leaderboard[userRankIndex];
+                        const isNoScore = userRank === 0 && userEntry;
+                        const isNotInTop3 = userRank > 3 && userEntry;
+
+                        if (isNoScore || isNotInTop3) {
                           return (
                             <>
                               <div className="py-2 flex justify-center opacity-30">
@@ -211,10 +285,14 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
                               </div>
                               <div className="rank-item border-2 border-dashed border-primary/20 bg-primary/5 rounded-xl px-2">
                                 <div className="flex items-center gap-4">
-                                  <span className="text-xl font-black italic text-primary/40">{(userRankIndex + 1).toString().padStart(2, '0')}</span>
+                                  <span className="text-xl font-black italic text-primary/40">
+                                    {userRank > 0 ? userRank.toString().padStart(2, '0') : '--'}
+                                  </span>
                                   <div className="flex flex-col">
                                     <span className="text-xs font-bold">{userEntry.user.username || userEntry.user.name} (You)</span>
-                                    <span className="text-[8px] opacity-60 uppercase tracking-wider">{userEntry.accuracy}% Accuracy</span>
+                                    <span className="text-[8px] opacity-60 uppercase tracking-wider">
+                                      {isNoScore ? 'Registered' : `${userEntry.accuracy}% Accuracy`}
+                                    </span>
                                   </div>
                                 </div>
                                 <span className="text-lg font-black text-primary">{userEntry.wpm} WPM</span>
@@ -237,11 +315,13 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
                   <span className="material-symbols-outlined text-4xl mb-3 opacity-20">leaderboard</span>
                   <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">Ranking</p>
                   <p className="text-xl font-black">
-                    {isLoading ? '...' : (() => {
-                      const rank = leaderboard.findIndex(e => e.user.username === stats.displayName || e.user.name === stats.displayName) + 1;
-                      return rank > 0 ? `#${rank}` : 'Not Ranked';
-                    })()}
+                    {isLoading ? '...' : (userRank > 0 ? `#${userRank}` : (isRegistered ? 'Registered' : 'Not Ranked'))}
                   </p>
+                  {!isLoading && isRegistered && (
+                    <p className="text-[8px] font-bold uppercase tracking-[0.2em] opacity-30 mt-2">
+                      Out of {competitorCount} Registered Users
+                    </p>
+                  )}
                 </div>
               </div>
             </section>
@@ -260,15 +340,28 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
                   {activeTournament ? activeTournament.name : 'Elite Sprint'}
                 </h1>
                 <p className="text-xs font-bold opacity-70 max-w-[280px] mb-8 leading-relaxed text-center mx-auto text-slate-600">
-                  {activeTournament ? activeTournament.description : 'The pinnacle of Tamil typing proficiency. Prove your digital legacy.'}
+                  {activeTournament ? (activeTournament.subheading || activeTournament.description) : 'The pinnacle of Tamil typing proficiency. Prove your digital legacy.'}
                 </p>
-                <button
-                  className="group relative w-64 h-16 rounded-full bg-[#92450f] text-white overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl"
-                  onClick={() => onNavigate('TournamentStart')}
-                >
-                  <span className="relative z-10 text-lg font-black tracking-widest uppercase">Start</span>
-                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
-                </button>
+                {isRegistered ? (
+                  <button
+                    className="group relative w-64 h-16 rounded-full bg-[#92450f] text-white overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl"
+                    onClick={() => onNavigate('TournamentStart')}
+                  >
+                    <span className="relative z-10 text-lg font-black tracking-widest uppercase">Start</span>
+                    <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                  </button>
+                ) : (
+                  <button
+                    className={`group relative w-64 h-16 rounded-full ${isRegistering ? 'bg-slate-400' : 'bg-red-600'} text-white overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl`}
+                    onClick={handleRegister}
+                    disabled={isRegistering}
+                  >
+                    <span className="relative z-10 text-sm font-black tracking-widest uppercase">
+                      {isRegistering ? 'Registering...' : 'Register to Compete'}
+                    </span>
+                    <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                  </button>
+                )}
                 <div className="mt-6 flex items-center gap-2 opacity-40">
                   <span className="material-symbols-outlined text-sm">lock</span>
                   <span className="text-[10px] font-bold uppercase tracking-widest">Secure Protocol Enabled</span>
@@ -281,7 +374,7 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats }) 
                     <span className="material-symbols-outlined text-[#92450f]">groups</span>
                   </div>
                   <div>
-                    <p className="text-2xl font-black leading-none">{leaderboard.length.toLocaleString()}</p>
+                    <p className="text-2xl font-black leading-none">{competitorCount.toLocaleString()}</p>
                     <p className="text-[10px] font-bold uppercase opacity-50">Competitors</p>
                   </div>
                 </div>

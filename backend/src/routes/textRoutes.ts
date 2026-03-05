@@ -9,9 +9,28 @@ router.get('/', async (req, res) => {
         const { category } = req.query;
         const query = category ? { category: category as string } : {};
         const texts = await TamilText.find(query);
-        res.json(texts);
+        res.json({
+            success: true,
+            data: texts
+        });
     } catch (error: any) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Get a single text by ID
+router.get('/:id', async (req, res) => {
+    try {
+        const text = await TamilText.findById(req.params.id);
+        if (!text) {
+            return res.status(404).json({ success: false, message: 'Text not found' });
+        }
+        res.json({
+            success: true,
+            data: text
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 

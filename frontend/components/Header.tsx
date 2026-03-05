@@ -82,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
           >
             {settings?.branding?.logoUrl ? (
               <img
-                src={slashToUrl(settings.branding.logoUrl)}
+                src={`${getUploadBaseUrl().replace(/\/$/, '')}${settings.branding.logoUrl.startsWith('/') ? settings.branding.logoUrl : `/${settings.branding.logoUrl}`}`}
                 alt="Logo"
                 className="h-6 xs:h-8 w-auto object-contain"
                 onError={(e) => {

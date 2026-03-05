@@ -46,7 +46,7 @@ const Notifications = () => {
             const response = await axios.get(`${ADMIN_API_URL}/notifications`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setNotifications(response.data);
+            setNotifications(response.data?.data || []);
         } catch (error) {
             console.error('Error fetching notifications:', error);
         } finally {

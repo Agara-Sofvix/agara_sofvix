@@ -21,12 +21,24 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
   const panelRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
+  const [shouldRender, setShouldRender] = useState(isOpen);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShouldRender(true);
+    } else {
+      // Small delay to allow fade-out/slide-out animation before unmounting
+      const timer = setTimeout(() => setShouldRender(false), 700);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
       loadNotifications();
     }
   }, [isOpen]);
+
 
   const loadNotifications = async () => {
     setLoading(true);
@@ -78,6 +90,8 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
       default: return 'bg-slate-900 text-white shadow-slate-500/30';
     }
   };
+
+  if (!shouldRender && !isOpen) return null;
 
   return (
     <>

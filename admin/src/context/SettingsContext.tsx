@@ -44,8 +44,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         loadSettings();
 
         // Socket.io connection for real-time updates
+        const adminUser = localStorage.getItem('adminUser');
+        const token = adminUser ? JSON.parse(adminUser).token : null;
+
         const socket = io(SOCKET_ORIGIN, {
-            transports: ['websocket', 'polling']
+            transports: ['websocket', 'polling'],
+            auth: { token }
         });
 
         socket.on('MAINTENANCE_TOGGLE', (data: { enabled: boolean }) => {

@@ -78,7 +78,7 @@ const DashboardLayout = () => {
                         const response = await axios.get(`${ADMIN_API_URL}/search?q=${searchQuery}`, {
                             headers: { Authorization: `Bearer ${user.token}` }
                         });
-                        setSearchResults(response.data);
+                        setSearchResults(response.data?.data || null);
                         setShowSearchResults(true);
                     }
                 } catch (error) {

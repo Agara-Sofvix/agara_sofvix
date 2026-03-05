@@ -442,11 +442,44 @@ export const getLeaderboard = async (req: Request, res: Response): Promise<void>
             .populate('tournament', 'name')
             .sort({ wpm: -1, accuracy: -1 });
 
-        // Filter duplicates to ensure only one result per user is shown
+        // If it's a specific tournament, we also want to show registered participants who haven't typed yet
+        let combinedResults: any[] = [...results];
+
+        if (tournamentId && tournamentId !== 'global') {
+            const tournament = await Tournament.findById(tournamentId).populate('participants', 'name username email');
+            if (tournament && tournament.participants) {
+                const resultsMap = new Map();
+                results.forEach(r => {
+                    const userId = r.user ? (r.user as any)._id.toString() : null;
+                    if (userId) resultsMap.set(userId, r);
+                });
+
+                tournament.participants.forEach((participant: any) => {
+                    const participantId = participant._id.toString();
+                    if (!resultsMap.has(participantId)) {
+                        combinedResults.push({
+                            _id: participant._id, // Add ID for React key
+                            user: participant,
+                            tournament: { name: tournament.name },
+                            wpm: 0,
+                            accuracy: 0,
+                            score: 0,
+                            createdAt: new Date(),
+                            isPlaceholder: true
+                        });
+                    }
+                });
+
+                // Re-sort combined results
+                combinedResults.sort((a, b) => (b.wpm || 0) - (a.wpm || 0) || (b.accuracy || 0) - (a.accuracy || 0));
+            }
+        }
+
+        // Filter duplicates and apply limit
         const uniqueLeaderboard: any[] = [];
         const seenUsers = new Set();
 
-        for (const res of results) {
+        for (const res of combinedResults) {
             const userId = res.user ? (res.user as any)._id.toString() : null;
             if (userId && !seenUsers.has(userId)) {
                 uniqueLeaderboard.push(res);

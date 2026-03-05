@@ -39,5 +39,5 @@ export interface PublicSettings {
 
 export const fetchPublicSettings = async (): Promise<PublicSettings> => {
     const response = await axios.get(`${API_URL}/settings/public`);
-    return response.data;
+    return response.data?.data;
 };

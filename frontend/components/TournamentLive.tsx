@@ -19,11 +19,13 @@ interface TournamentLiveProps {
   displayName: string;
   activeKeys?: Set<string>;
   settings?: AppSettings;
+  activeTournament?: any;
 }
 
-const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName, activeKeys, settings }) => {
+const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName, activeKeys, settings, activeTournament }) => {
   const [inputText, setInputText] = useState("");
   const [targetText, setTargetText] = useState("");
+  const [originalTargetText, setOriginalTargetText] = useState("");
   const [timeLeft, setTimeLeft] = useState(300);
   const [isStarted, setIsStarted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -32,16 +34,40 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
   const [testSessionId] = useState(() => crypto.randomUUID());
 
   const { fetchTexts, getRandomText, isLoading } = useTextStore();
+  const [isFetchingText, setIsFetchingText] = useState(false);
 
   useEffect(() => {
-    fetchTexts('tournament');
-  }, []);
+    const loadTournamentText = async () => {
+      if (activeTournament?.textContent) {
+        setIsFetchingText(true);
+        try {
+          const { getTamilTextById } = await import('../src/services/api');
+          const textObj = await getTamilTextById(activeTournament.textContent);
 
-  useEffect(() => {
-    if (!isLoading && !targetText) {
-      setTargetText(getRandomText('tournament'));
-    }
-  }, [isLoading, targetText]);
+          if (textObj && textObj.content) {
+            setTargetText(textObj.content);
+            setOriginalTargetText(textObj.content);
+          } else {
+            console.error("Fetched text object is invalid or empty");
+            setTargetText("");
+          }
+        } catch (err) {
+          console.error("Failed to fetch tournament text by ID", err);
+          setTargetText("");
+        } finally {
+          setIsFetchingText(false);
+        }
+      } else {
+        // No explicit textContent, leave as empty which will show the "No Content" state
+        setTargetText("");
+      }
+    };
+
+    loadTournamentText();
+  }, [activeTournament]);
+
+  // NO LONGER falling back to random tournament texts below
+
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const targetDisplayRef = useRef<HTMLDivElement>(null);
@@ -106,8 +132,8 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
         setTargetText(prev => {
           const currentTargetGraphemes = getTamilGraphemes(prev);
           if (inputGraphemesCount >= currentTargetGraphemes.length) {
-            const nextPara = getRandomText('tournament', prev.split(' ').pop() || "");
-            return prev.trimEnd() + " " + nextPara;
+            // Loop the original text continuously until time ends
+            return prev.trimEnd() + " " + originalTargetText.trim();
           }
           return prev;
         });
@@ -283,8 +309,8 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
         setTargetText(prev => {
           const currentTargetGraphemesCount = getTamilGraphemes(prev).length;
           if (inputGraphemesCount >= currentTargetGraphemesCount) {
-            const nextPara = getRandomText('tournament', prev.split(' ').pop() || "");
-            return prev.trimEnd() + " " + nextPara;
+            // Loop the original text continuously until time ends
+            return prev.trimEnd() + " " + originalTargetText.trim();
           }
           return prev;
         });
@@ -319,12 +345,22 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
     >
       <header className="bg-header-brown border-b border-black/5 xs:px-4 px-6 sm:px-12 py-2 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-md rounded-t-3xl transition-all">
         <div className="flex flex-col">
-          <h1 className="xs:text-[9px] text-xs sm:text-lg lg:text-xl font-black text-white uppercase tracking-widest leading-none">Elite Championship</h1>
-          <span className="xs:text-[8px] text-[10px] sm:text-xs lg:text-sm font-bold text-white/50 uppercase mt-1">Official Competition Sprint</span>
+          <h1 className="xs:text-[9px] text-xs sm:text-lg lg:text-xl font-black text-white uppercase tracking-widest leading-none">{activeTournament?.name || "Elite Championship"}</h1>
+          <span className="xs:text-[8px] text-[10px] sm:text-xs lg:text-sm font-bold text-white/50 uppercase mt-1">{activeTournament?.subheading || "Official Competition Sprint"}</span>
         </div>
 
-        <div className={`mr-6 xs:mr-3 xs:text-base text-2xl sm:text-3xl lg:text-5xl font-black tabular-nums transition-colors duration-300 text-white ${timeLeft < 20 ? 'text-red-300' : ''}`}>
-          {formatTime(timeLeft)}
+        <div className="flex flex-col items-center gap-2">
+          <div className={`xs:text-base text-2xl sm:text-3xl lg:text-5xl font-black tabular-nums transition-colors duration-300 text-white ${timeLeft < 20 ? 'text-red-300' : ''}`}>
+            {formatTime(timeLeft)}
+          </div>
+          {isStarted && !isFinished && (
+            <button
+              onClick={() => handleFinish('Manual')}
+              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-widest text-white transition-all active:scale-95 no-print"
+            >
+              Finish & Submit
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-6 text-right text-white">
@@ -346,16 +382,20 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
             className="w-full bg-cream-light rounded-[1.5rem] sm:rounded-[2.5rem] p-3 sm:p-4 md:p-5 paper-shadow border border-slate-100 font-tamil h-[80px] md:h-[110px] overflow-y-auto scroll-smooth animate-in slide-in-from-top-4 duration-700"
           >
             <p className="text-lg sm:text-xl md:text-2xl font-tamil leading-relaxed sm:leading-[1.6] md:leading-[2.0] tracking-wide text-justify">
-              {targetGraphemes.map((char, i) => {
-                if (char === '\n') return <br key={i} />;
-                let className = "inline ";
-                if (i < inputGraphemes.length) {
-                  className += inputGraphemes[i] === char ? "text-[#15803d]" : "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
-                } else if (i === inputGraphemes.length) {
-                  className += "char-current bg-header-brown/10 border-b-2 border-header-brown";
-                }
-                return <span key={i} className={className}>{char}</span>;
-              })}
+              {!targetText && !isFetchingText ? (
+                <span className="text-slate-400 font-bold opacity-60">No tournament content provided by admin. Please wait for an update.</span>
+              ) : (
+                targetGraphemes.map((char, i) => {
+                  if (char === '\n') return <br key={i} />;
+                  let className = "inline ";
+                  if (i < inputGraphemes.length) {
+                    className += inputGraphemes[i] === char ? "text-[#15803d]" : "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
+                  } else if (i === inputGraphemes.length) {
+                    className += "char-current bg-header-brown/10 border-b-2 border-header-brown";
+                  }
+                  return <span key={i} className={className}>{char}</span>;
+                })
+              )}
             </p>
           </div>
 
@@ -370,9 +410,9 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
                 onPaste={(e) => e.preventDefault()}
                 onContextMenu={(e) => e.preventDefault()}
                 onKeyDown={handleKeyDown}
-                readOnly={isFinished}
+                readOnly={isFinished || !targetText}
                 value={inputText}
-                placeholder={isStarted ? "" : "Start typing to begin the tournament..."}
+                placeholder={isStarted ? "" : !targetText ? "Waiting for content..." : "Start typing to begin the tournament..."}
                 className="w-full h-full border-none focus:ring-0 p-0 text-xl sm:text-2xl md:text-3xl font-tamil text-left resize-none bg-transparent text-slate-800 placeholder-slate-200 selection:bg-primary/10"
               />
               <div className="absolute bottom-2 sm:bottom-4 left-1/2 -translate-x-1/2 text-[8px] sm:text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] pointer-events-none transition-opacity opacity-50">Continuous typing mode active</div>

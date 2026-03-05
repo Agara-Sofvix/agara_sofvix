@@ -52,7 +52,7 @@ const Leaderboards = () => {
         try {
             // Fetch all tournaments for the filter dropdown
             const response = await axios.get(`${PUBLIC_API_URL}/tournaments`);
-            setTournaments(response.data);
+            setTournaments(response.data?.data || []);
         } catch (error) {
             console.error('Error fetching tournaments:', error);
         }
@@ -73,7 +73,7 @@ const Leaderboards = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setLeaderboard(response.data);
+            setLeaderboard(response.data?.data || []);
         } catch (error) {
             console.error('Error fetching leaderboard:', error);
             setLeaderboard([]);

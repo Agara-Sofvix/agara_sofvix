@@ -7,7 +7,7 @@ import SystemEvent from '../models/SystemEvent';
 export const getSystemEvents = async (req: Request, res: Response): Promise<void> => {
     try {
         const events = await SystemEvent.find().sort({ createdAt: -1 }).limit(100);
-        res.json(events);
+        res.json({ success: true, data: events });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
@@ -30,7 +30,7 @@ export const markEventsAsRead = async (req: Request, res: Response): Promise<voi
 export const getUnreadEventsCount = async (req: Request, res: Response): Promise<void> => {
     try {
         const count = await SystemEvent.countDocuments({ read: false });
-        res.json({ count });
+        res.json({ success: true, data: { count } });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

@@ -37,7 +37,12 @@ const Signup: React.FC<SignupProps> = ({ onNavigate, onLoginNavigate }) => {
         dob: formData.dob
       });
 
-      onNavigate({ name: data.name, token: data.token, dob: data.dob, profilePic: data.profilePic });
+      onNavigate({
+        name: data.name,
+        token: data.token,
+        dob: data.dob,
+        profilePic: data.profilePic
+      });
     } catch (err: any) {
       setError(err.message);
     }

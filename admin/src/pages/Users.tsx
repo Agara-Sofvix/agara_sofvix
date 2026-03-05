@@ -67,8 +67,9 @@ const Users = () => {
             const response = await axios.get(`${ADMIN_API_URL}/users/stats`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setStats(response.data);
-            setTotalUsers(response.data.totalUsers);
+            const statsData = response.data?.data || {};
+            setStats(statsData);
+            setTotalUsers(statsData.totalUsers || 0);
         } catch (error) {
             console.error('Error fetching user stats:', error);
         }
@@ -84,8 +85,9 @@ const Users = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setUsers(response.data.users);
-            setTotalPages(response.data.pagination.pages);
+            const usersData = response.data?.data || {};
+            setUsers(usersData.users || []);
+            setTotalPages(usersData.pagination?.pages || 1);
         } catch (error) {
             console.error('Error fetching users:', error);
         } finally {

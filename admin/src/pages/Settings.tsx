@@ -15,6 +15,7 @@ import {
     Trash2
 } from 'lucide-react';
 import { fetchSettings, updateSettings, generateApiKey, revokeApiKey, uploadLogo } from '../services/settingsApi';
+import { getUploadBaseUrl } from '../config/apiConfig';
 
 const Settings = () => {
     const [loading, setLoading] = useState(true);
@@ -41,7 +42,7 @@ const Settings = () => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        return `${window.location.origin}${cleanPath}`;
+        return `${getUploadBaseUrl()}${cleanPath}`;
     };
 
     // Apply theme color real-time
