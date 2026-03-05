@@ -31,6 +31,12 @@ import { notFound, errorHandler } from './middlewares/errorMiddleware';
 
 dotenv.config({ override: true });
 
+// Bug #2: Fail fast if JWT_SECRET is missing
+if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set. Server cannot start securely.');
+    process.exit(1);
+}
+
 connectDB().then(() => {
     seedAdmin();
 });
@@ -92,6 +98,11 @@ app.use(limiter);
 
 // Maintenance Mode Check (before routes)
 app.use(maintenanceMode);
+
+// Bug #15: Health check endpoint for load balancers
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);

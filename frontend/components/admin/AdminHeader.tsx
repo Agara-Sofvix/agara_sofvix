@@ -41,7 +41,10 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ title }) => {
 
         fetchEvents();
 
-        const socket = io(SOCKET_ORIGIN);
+        const token = localStorage.getItem('adminToken');
+        const socket = io(SOCKET_ORIGIN, {
+            auth: { token }
+        });
         socket.emit('join_admin');
 
         socket.on('system_event', (newEvent: SystemEvent) => {

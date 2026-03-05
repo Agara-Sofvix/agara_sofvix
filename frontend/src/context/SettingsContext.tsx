@@ -136,8 +136,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         loadSettings();
 
         // Socket.io connection for real-time updates
+        const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
         const socket = io(SOCKET_ORIGIN, {
-            transports: ['websocket', 'polling']
+            transports: ['websocket', 'polling'],
+            auth: { token }
         });
 
         socket.on('MAINTENANCE_TOGGLE', (data: { enabled: boolean }) => {
