@@ -724,7 +724,7 @@ const AppInner: React.FC = () => {
 
       <main className={`
         ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-12 xs:pt-14'} 
-        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-screen overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow overflow-x-hidden'}
+        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-screen overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow'}
       `}>
         <div className={`
           grid w-full mx-auto
@@ -734,7 +734,7 @@ const AppInner: React.FC = () => {
           ${currentView !== 'TournamentArena' ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
         `}>
           {currentView !== 'TournamentArena' && (
-            <div className="hidden xl:block sticky top-20 h-[calc(100vh-80px)] overflow-hidden border-r border-slate-100/50 z-10">
+            <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45]">
               <SideAds position="left" />
             </div>
           )}
@@ -743,7 +743,7 @@ const AppInner: React.FC = () => {
             w-full flex flex-col
             ${isTournamentResult || currentView === 'TournamentArena' ? 'xl:col-span-3' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
-            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full !px-0 !max-w-none' : `${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0`}
+            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full !px-0 !max-w-none' : `${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0 overflow-x-hidden`}
           `}>
             {!isTournamentLive && !isTournamentResult && (
               <div className="w-full mx-auto px-4 xs:px-6 lg:px-10">
@@ -853,7 +853,7 @@ const AppInner: React.FC = () => {
           </div>
 
           {currentView !== 'TournamentArena' && (
-            <div className="hidden xl:block sticky top-20 h-[calc(100vh-80px)] overflow-hidden border-l border-slate-100/50 z-10">
+            <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-l border-slate-100/50 z-[45]">
               <SideAds position="right" />
             </div>
           )}
