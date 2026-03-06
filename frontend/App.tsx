@@ -727,10 +727,10 @@ const AppInner: React.FC = () => {
         ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-screen overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow overflow-x-hidden'}
       `}>
         <div className={`flex flex-row w-full ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full justify-center' : 'min-h-full justify-center'} max-w-screen-4xl mx-auto`}>
-          <SideAds position="left" />
+          {currentView !== 'TournamentArena' && <SideAds position="left" />}
 
           <div className={`
-            ${isTournamentResult ? 'w-full' : (currentView === 'TournamentArena' ? 'w-full xl:w-[85%] px-2 xs:px-4 md:px-6 lg:px-10' : 'w-full xl:w-[70%] px-2 xs:px-4 md:px-6 lg:px-10')}
+            ${isTournamentResult || currentView === 'TournamentArena' ? 'w-full' : 'w-full xl:w-[70%] px-2 xs:px-4 md:px-6 lg:px-10'}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
             ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full flex flex-col !px-0 !max-w-none' : `flex flex-col ${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0`}
           `}>
