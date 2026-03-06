@@ -109,10 +109,13 @@ function buildMetaTags(seo: any, pageSeo: any, baseUrl: string, reqPath: string)
     const ogImg = seo?.ogImage || '';
     const twHand = seo?.twitterHandle || '';
     const gscId = seo?.googleSearchConsoleId || '';
+    const favicon = seo?.favicon || '';
     const canonicalUrl = `${baseUrl}${reqPath}`;
 
     const lines: string[] = [
         `<title>${escapeHtml(title)}</title>`,
+        favicon ? `<link rel="icon" href="${escapeHtml(favicon)}" />` : '',
+        favicon ? `<link rel="apple-touch-icon" href="${escapeHtml(favicon)}" />` : '',
         `<meta name="description" content="${escapeHtml(desc)}" />`,
         kw ? `<meta name="keywords" content="${escapeHtml(kw)}" />` : '',
         `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`,

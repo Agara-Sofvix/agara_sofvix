@@ -27,8 +27,19 @@ const Sidebar = () => {
     return (
         <aside className="w-64 flex-shrink-0 flex flex-col bg-white dark:bg-card-dark border-r border-slate-200 dark:border-slate-800">
             <div className="p-6 flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary flex items-center justify-center rounded-lg shadow-lg shadow-primary/20 transition-all duration-500">
-                    <Keyboard className="text-white w-6 h-6" />
+                <div className="w-10 h-10 flex items-center justify-center rounded-lg overflow-hidden transition-all duration-500">
+                    {settings?.branding?.logoUrl ? (
+                        <img 
+                           src={settings.branding.logoUrl} 
+                           alt="Logo" 
+                           className="w-full h-full object-cover" 
+                           onError={(e) => (e.currentTarget.style.display = 'none')}
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-primary flex items-center justify-center">
+                            <Keyboard className="text-white w-6 h-6" />
+                        </div>
+                    )}
                 </div>
                 <div>
                     <h1 className="text-sm font-bold tracking-tight uppercase text-primary transition-colors duration-500">

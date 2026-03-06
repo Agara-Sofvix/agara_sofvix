@@ -163,20 +163,25 @@ export const deleteAdvertisement = async (req: Request, res: Response): Promise<
 // @access  Public
 export const getActiveAdvertisements = async (req: Request, res: Response): Promise<void> => {
     try {
-        const now = new Date();
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const endOfToday = new Date();
+        endOfToday.setHours(23, 59, 59, 999);
+
         const advertisements = await Advertisement.find({
             isActive: true,
             $and: [
                 {
                     $or: [
                         { startDate: { $exists: false } },
-                        { startDate: { $lte: new Date(now.setHours(23, 59, 59, 999)) } }
+                        { startDate: { $lte: endOfToday } }
                     ]
                 },
                 {
                     $or: [
                         { endDate: { $exists: false } },
-                        { endDate: { $gte: new Date(now.setHours(0, 0, 0, 0)) } }
+                        { endDate: { $gte: startOfToday } }
                     ]
                 }
             ]
