@@ -33,6 +33,7 @@ const Content = () => {
     const [newContent, setNewContent] = useState('');
     const [newCategory, setNewCategory] = useState('tournament');
     const [newDifficulty, setNewDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
@@ -65,26 +66,50 @@ const Content = () => {
             const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
             const token = user.token;
 
-            await axios.post(`${ADMIN_API_URL}/texts`, {
-                content: newContent,
-                category: newCategory,
-                difficulty: newDifficulty
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            if (editingId) {
+                await axios.put(`${ADMIN_API_URL}/texts/${editingId}`, {
+                    content: newContent,
+                    category: newCategory,
+                    difficulty: newDifficulty
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                alert('Content updated successfully!');
+            } else {
+                await axios.post(`${ADMIN_API_URL}/texts`, {
+                    content: newContent,
+                    category: newCategory,
+                    difficulty: newDifficulty
+                }, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                alert('Content added successfully!');
+            }
 
             // Reset form and refresh list
-            setNewContent('');
-            setNewCategory('tournament');
-            setNewDifficulty('medium');
+            resetForm();
             fetchTexts();
-            alert('Content added successfully!');
         } catch (error) {
-            console.error('Error adding content:', error);
-            alert('Failed to add content.');
+            console.error('Error saving content:', error);
+            alert('Failed to save content.');
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleEdit = (text: TextContent) => {
+        setEditingId(text._id);
+        setNewContent(text.content);
+        setNewCategory(text.category);
+        setNewDifficulty(text.difficulty);
+        // Scroll to form on mobile/small screens if needed
+    };
+
+    const resetForm = () => {
+        setEditingId(null);
+        setNewContent('');
+        setNewCategory('tournament');
+        setNewDifficulty('medium');
     };
 
     const handleDelete = async (id: string) => {
@@ -197,7 +222,10 @@ const Content = () => {
                                             </span>
                                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 {/* Edit functionality can be added later */}
-                                                <button className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-blue-500 transition-all">
+                                                <button
+                                                    onClick={() => handleEdit(text)}
+                                                    className={`p-1.5 rounded-lg transition-all ${editingId === text._id ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 text-slate-500 hover:text-blue-500'}`}
+                                                >
                                                     <Edit size={16} />
                                                 </button>
                                                 <button
@@ -248,10 +276,10 @@ const Content = () => {
             <aside className="w-80 bg-[#1a1d21] border-l border-slate-800 p-6 overflow-y-auto custom-scrollbar shadow-xl z-10">
                 <div className="mb-6">
                     <h3 className="text-sm font-bold uppercase tracking-widest text-blue-500 flex items-center gap-2">
-                        <Plus size={16} />
-                        Quick Add
+                        {editingId ? <Edit size={16} /> : <Plus size={16} />}
+                        {editingId ? 'Edit Content' : 'Quick Add'}
                     </h3>
-                    <p className="text-xs text-slate-500 mt-1">Paste new Tamil content below to add it to the library.</p>
+                    <p className="text-xs text-slate-500 mt-1">{editingId ? 'Modify the selected content snippet.' : 'Paste new Tamil content below to add it to the library.'}</p>
                 </div>
 
                 <form onSubmit={handleAddContent} className="space-y-6">
@@ -309,18 +337,29 @@ const Content = () => {
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isSubmitting ? 'Saving...' : (
-                            <>
-                                <Save size={16} />
-                                Save to Library
-                            </>
+                    <div className="flex gap-3">
+                        {editingId && (
+                            <button
+                                type="button"
+                                onClick={resetForm}
+                                className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-widest rounded-lg transition-all"
+                            >
+                                Cancel
+                            </button>
                         )}
-                    </button>
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className={`${editingId ? 'flex-[2]' : 'w-full'} py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-widest rounded-lg transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            {isSubmitting ? 'Saving...' : (
+                                <>
+                                    <Save size={16} />
+                                    {editingId ? 'Update Library' : 'Save to Library'}
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </form>
 
                 <div className="mt-8 pt-8 border-t border-slate-800">

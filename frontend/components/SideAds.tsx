@@ -38,7 +38,7 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
     return (
         <aside className="hidden xl:block xl:w-[15%] shrink-0 h-full relative">
             {(!loading && ads.length > 0) && (
-                <div className={`fixed top-20 bottom-0 ${position === 'left' ? 'left-0 pl-1 pr-6' : 'right-0 pr-1 pl-6'} w-[15%] flex flex-col items-center justify-start py-8 gap-6 overflow-y-auto no-scrollbar z-10`}>
+                <div className={`sticky top-24 bottom-8 ${position === 'left' ? 'pl-1 pr-6' : 'pr-1 pl-6'} w-full flex flex-col items-center justify-start py-8 gap-6 overflow-y-auto no-scrollbar z-20`}>
                     {ads.map((ad) => (
                         <div key={ad._id} className="relative group cursor-pointer w-full flex-shrink-0">
                             <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="block w-full">
