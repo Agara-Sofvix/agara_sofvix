@@ -19,6 +19,7 @@ import { ADMIN_API_URL } from '../config/apiConfig';
 interface Advertisement {
     _id: string;
     title: string;
+    description?: string;
     imageUrl: string;
     linkUrl: string;
     position: 'left-side' | 'right-side';
@@ -38,6 +39,7 @@ const Advertisements = () => {
     // Form State
     const [formData, setFormData] = useState({
         title: '',
+        description: '',
         imageUrl: '',
         linkUrl: '',
         position: 'left-side' as const,
@@ -115,6 +117,7 @@ const Advertisements = () => {
         setEditingId(ad._id);
         setFormData({
             title: ad.title,
+            description: ad.description || '',
             imageUrl: ad.imageUrl,
             linkUrl: ad.linkUrl,
             position: ad.position as any,
@@ -128,6 +131,7 @@ const Advertisements = () => {
         setEditingId(null);
         setFormData({
             title: '',
+            description: '',
             imageUrl: '',
             linkUrl: '',
             position: 'left-side',
@@ -279,6 +283,16 @@ const Advertisements = () => {
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Description</label>
+                        <textarea
+                            className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-sm text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500 transition-all min-h-[80px]"
+                            placeholder="Ad textual content..."
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         />
                     </div>
 

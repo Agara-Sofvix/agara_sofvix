@@ -4,6 +4,7 @@ import { getActiveAdvertisements } from '../src/services/api';
 interface Advertisement {
     _id: string;
     title: string;
+    description?: string;
     imageUrl: string;
     linkUrl: string;
     position: 'left-side' | 'right-side';
@@ -59,22 +60,27 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                             </div>
 
                             <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="block">
-                                <div className="p-1">
-                                    <div className="overflow-hidden rounded-lg">
+                                <div className="p-2 pb-0">
+                                    <div className="overflow-hidden rounded-lg bg-slate-100">
                                         <img
                                             src={ad.imageUrl}
                                             alt={ad.title}
-                                            className="w-full object-cover aspect-[3/4] group-hover:scale-105 transition-transform duration-500 grayscale-[20%] group-hover:grayscale-0"
+                                            className="w-full object-cover aspect-[16/10] group-hover:scale-105 transition-transform duration-500 grayscale-[20%] group-hover:grayscale-0"
                                         />
                                     </div>
                                 </div>
-                                <div className="px-3 py-3 border-t border-slate-100">
-                                    <h4 className="text-[13px] font-bold text-slate-800 leading-tight line-clamp-2">
+                                <div className="px-3 py-3">
+                                    <h4 className="text-[14px] font-black text-slate-800 leading-tight">
                                         {ad.title}
                                     </h4>
-                                    <div className="mt-2 flex items-center gap-1">
-                                        <span className="text-[10px] font-bold text-primary uppercase">Read More</span>
-                                        <div className="h-[1px] flex-grow bg-slate-100"></div>
+                                    {ad.description && (
+                                        <p className="mt-2 text-[12px] font-medium text-slate-500 leading-relaxed line-clamp-3">
+                                            {ad.description}
+                                        </p>
+                                    )}
+                                    <div className="mt-4 flex items-center justify-between">
+                                        <span className="text-[10px] font-black text-primary uppercase tracking-wider group-hover:translate-x-1 transition-transform">Read Full Story →</span>
+                                        <div className="h-[2px] w-8 bg-slate-100 group-hover:w-12 transition-all"></div>
                                     </div>
                                 </div>
                             </a>

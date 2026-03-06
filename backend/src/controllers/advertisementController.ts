@@ -40,10 +40,11 @@ export const getAdvertisements = async (req: Request, res: Response): Promise<vo
 // @access  Private (Admin)
 export const addAdvertisement = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { title, imageUrl, linkUrl, position, isActive, startDate, endDate } = req.body;
+        const { title, description, imageUrl, linkUrl, position, isActive, startDate, endDate } = req.body;
 
         const advertisement = await Advertisement.create({
             title,
+            description,
             imageUrl,
             linkUrl,
             position,
@@ -79,12 +80,13 @@ export const addAdvertisement = async (req: Request, res: Response): Promise<voi
 // @access  Private (Admin)
 export const updateAdvertisement = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { title, imageUrl, linkUrl, position, isActive, startDate, endDate } = req.body;
+        const { title, description, imageUrl, linkUrl, position, isActive, startDate, endDate } = req.body;
 
         const advertisement = await Advertisement.findByIdAndUpdate(
             req.params.id,
             {
                 title,
+                description,
                 imageUrl,
                 linkUrl,
                 position,
