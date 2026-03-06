@@ -9,6 +9,7 @@ interface Advertisement {
     imageUrl?: string;
     linkUrl: string;
     position: 'left-side' | 'right-side';
+    themeIndex?: number;
 }
 
 interface SideAdsProps {
@@ -21,6 +22,7 @@ interface GeneratedPosterProps {
     ctaText?: string;
     imageUrl?: string;
     adId: string;
+    themeIndex?: number;
 }
 
 const THEMES = [
@@ -54,10 +56,13 @@ const THEMES = [
     }
 ];
 
-const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, ctaText, imageUrl, adId }) => {
-    // Deterministically pick a theme based on adId
-    const themeIndex = adId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % THEMES.length;
-    const theme = THEMES[themeIndex];
+const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, ctaText, imageUrl, adId, themeIndex }) => {
+    // Use saved themeIndex if available, otherwise fallback to deterministic (for legacy ads)
+    const activeThemeIndex = typeof themeIndex === 'number'
+        ? themeIndex % THEMES.length
+        : adId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % THEMES.length;
+
+    const theme = THEMES[activeThemeIndex];
 
     return (
         <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-6 md:p-8 text-center relative group`}>
@@ -164,6 +169,7 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                                 ctaText={currentAd.ctaText}
                                 imageUrl={currentAd.imageUrl}
                                 adId={currentAd._id}
+                                themeIndex={currentAd.themeIndex}
                             />
                         </div>
                     </a>

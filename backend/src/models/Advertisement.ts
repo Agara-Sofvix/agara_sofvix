@@ -10,6 +10,7 @@ export interface IAdvertisement extends Document {
     isActive: boolean;
     startDate?: Date;
     endDate?: Date;
+    themeIndex: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -28,6 +29,7 @@ const AdvertisementSchema: Schema = new Schema({
     isActive: { type: Boolean, default: true },
     startDate: { type: Date },
     endDate: { type: Date },
+    themeIndex: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 }, {

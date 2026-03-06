@@ -27,6 +27,7 @@ interface Advertisement {
     isActive: boolean;
     startDate?: string;
     endDate?: string;
+    themeIndex?: number;
     createdAt: string;
 }
 
@@ -37,8 +38,8 @@ const PREVIEW_THEMES = [
     { name: 'Cyan', bg: 'from-[#083344] via-[#155e75] to-[#0f172a]', accent: 'bg-cyan-500', glow: 'bg-cyan-500/20', button: 'bg-cyan-600' }
 ];
 
-const PosterPreview = ({ formData }: { formData: any }) => {
-    const [themeIdx, setThemeIdx] = useState(0);
+const PosterPreview = ({ formData, setFormData }: { formData: any, setFormData: any }) => {
+    const themeIdx = formData.themeIndex || 0;
     const theme = PREVIEW_THEMES[themeIdx];
 
     return (
@@ -50,7 +51,7 @@ const PosterPreview = ({ formData }: { formData: any }) => {
                         <button
                             key={i}
                             type="button"
-                            onClick={() => setThemeIdx(i)}
+                            onClick={() => setFormData((prev: any) => ({ ...prev, themeIndex: i }))}
                             className={`w-3 h-3 rounded-full border border-white/20 transition-all ${PREVIEW_THEMES[i].accent} ${themeIdx === i ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-[#1a1d21] scale-125' : 'opacity-40 hover:opacity-100'}`}
                         />
                     ))}
@@ -120,6 +121,7 @@ const Advertisements = () => {
         isActive: true,
         startDate: '',
         endDate: '',
+        themeIndex: 0,
     });
 
     useEffect(() => {
@@ -199,7 +201,9 @@ const Advertisements = () => {
             isActive: ad.isActive,
             startDate: ad.startDate ? format(new Date(ad.startDate), 'yyyy-MM-dd') : '',
             endDate: ad.endDate ? format(new Date(ad.endDate), 'yyyy-MM-dd') : '',
+            themeIndex: ad.themeIndex || 0,
         });
+        setEditingId(ad._id);
     };
 
     const resetForm = () => {
@@ -214,6 +218,7 @@ const Advertisements = () => {
             isActive: true,
             startDate: '',
             endDate: '',
+            themeIndex: 0,
         });
     };
 
@@ -461,7 +466,7 @@ const Advertisements = () => {
                     </div>
 
                     <div className="py-2 border-t border-slate-800/50 mt-4">
-                        <PosterPreview formData={formData} />
+                        <PosterPreview formData={formData} setFormData={setFormData} />
                     </div>
 
                     <div className="flex gap-3 pt-4">

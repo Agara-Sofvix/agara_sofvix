@@ -40,7 +40,7 @@ export const getAdvertisements = async (req: Request, res: Response): Promise<vo
 // @access  Private (Admin)
 export const addAdvertisement = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { title, description, ctaText, imageUrl, linkUrl, position, isActive, startDate, endDate } = req.body;
+        const { title, description, ctaText, imageUrl, linkUrl, position, isActive, startDate, endDate, themeIndex } = req.body;
 
         const advertisement = await Advertisement.create({
             title,
@@ -51,7 +51,8 @@ export const addAdvertisement = async (req: Request, res: Response): Promise<voi
             position,
             isActive,
             startDate: startDate || undefined,
-            endDate: endDate || undefined
+            endDate: endDate || undefined,
+            themeIndex
         });
 
         // Log the action
@@ -81,7 +82,7 @@ export const addAdvertisement = async (req: Request, res: Response): Promise<voi
 // @access  Private (Admin)
 export const updateAdvertisement = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { title, description, ctaText, imageUrl, linkUrl, position, isActive, startDate, endDate } = req.body;
+        const { title, description, ctaText, imageUrl, linkUrl, position, isActive, startDate, endDate, themeIndex } = req.body;
 
         const advertisement = await Advertisement.findByIdAndUpdate(
             req.params.id,
@@ -94,7 +95,8 @@ export const updateAdvertisement = async (req: Request, res: Response): Promise<
                 position,
                 isActive,
                 startDate: startDate || undefined,
-                endDate: endDate || undefined
+                endDate: endDate || undefined,
+                themeIndex
             },
             { new: true, runValidators: true }
         );
