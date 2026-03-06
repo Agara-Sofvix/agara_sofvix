@@ -724,14 +724,14 @@ const AppInner: React.FC = () => {
 
       <main className={`
         ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-12 xs:pt-14'} 
-        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'min-h-[calc(100vh-72px)] pb-0' : 'pb-8 xs:pb-12 flex-grow'}
+        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-[calc(100vh-72px)] overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow'}
       `}>
         <div className={`
           grid w-full mx-auto
           ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
           max-w-screen-4xl
           grid-cols-1 md:grid-cols-1 lg:grid-cols-1
-          ${currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
+          ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup') ? 'xl:grid-cols-[20%_60%_20%]' : 'grid-cols-1'}
         `}>
           {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
             <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
@@ -743,7 +743,7 @@ const AppInner: React.FC = () => {
 
           <div className={`
             w-full flex flex-col
-            ${isTournamentResult ? 'xl:col-span-3' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
+            ${isTournamentResult ? 'xl:col-span-3' : (currentView === 'Ezhuthidu' || isTournamentLive) ? '!px-0' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
             ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'flex-1 shrink-0 overflow-x-hidden' : 'shrink-0 overflow-x-hidden gap-4 xs:gap-6'}
           `}>
