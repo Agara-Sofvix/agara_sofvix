@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
 import { getActiveAdvertisements } from '../src/services/api';
+import { getUploadBaseUrl } from '../src/config/apiConfig';
 
 interface Advertisement {
     _id: string;
@@ -84,6 +84,27 @@ const THEMES = [
     }
 ];
 
+const SAMPLE_ADS: Advertisement[] = [
+    {
+        _id: 'default-1',
+        title: 'Master Tamil Typing',
+        description: 'Join the most advanced Tamil typing tournament and win exciting prizes!',
+        ctaText: 'Start Now',
+        position: 'left-side',
+        themeIndex: 0,
+        linkUrl: '/practice'
+    },
+    {
+        _id: 'default-2',
+        title: 'Join Tournament',
+        description: 'New competition starts in 2 days. Register now to participate and climb the leaderboard.',
+        ctaText: 'Register',
+        position: 'right-side',
+        themeIndex: 1,
+        linkUrl: '/tournaments'
+    }
+];
+
 const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, ctaText, imageUrl, adId, themeIndex }) => {
     // Use saved themeIndex if available, otherwise fallback to deterministic (for legacy ads)
     const activeThemeIndex = typeof themeIndex === 'number'
@@ -91,6 +112,13 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
         : adId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % THEMES.length;
 
     const theme = THEMES[activeThemeIndex];
+
+    const resolvedImageUrl = (() => {
+        if (!imageUrl) return '';
+        if (imageUrl.startsWith('http')) return imageUrl;
+        const baseUrl = getUploadBaseUrl().replace(/\/$/, '');
+        return `${baseUrl}${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+    })();
 
     return (
         <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-6 md:p-8 text-center relative group`}>
@@ -120,7 +148,7 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
                         <div className={`absolute inset-0 ${theme.glow} rounded-2xl blur-xl animate-pulse`}></div>
                         <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-all duration-500">
                             <img
-                                src={imageUrl}
+                                src={resolvedImageUrl}
                                 alt={title}
                                 className="max-w-full max-h-full object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-110"
                             />
@@ -155,10 +183,18 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
         const fetchAds = async () => {
             try {
                 const allAds = await getActiveAdvertisements();
-                const sideAds = allAds.filter((ad: Advertisement) => ad.position === `${position}-side`);
-                setAds(sideAds);
+                const filtered = allAds.filter((ad: Advertisement) => ad.position === `${position}-side`);
+
+                if (filtered.length > 0) {
+                    setAds(filtered);
+                } else {
+                    // Fallback to sample ads if no ads found in DB for this side
+                    setAds(SAMPLE_ADS.filter(ad => ad.position === `${position}-side`));
+                }
             } catch (error) {
                 console.error('Failed to fetch side advertisements:', error);
+                // Fallback to sample ads on error
+                setAds(SAMPLE_ADS.filter(ad => ad.position === `${position}-side`));
             } finally {
                 setLoading(false);
             }

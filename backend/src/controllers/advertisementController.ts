@@ -163,11 +163,12 @@ export const deleteAdvertisement = async (req: Request, res: Response): Promise<
 // @access  Public
 export const getActiveAdvertisements = async (req: Request, res: Response): Promise<void> => {
     try {
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999);
+        const now = new Date();
+        // Be extremely lenient with dates to account for any timezone or server drift
+        // Look for ads that started anytime up to 2 days in the future (for servers behind local time)
+        // and haven't ended more than 2 days ago.
+        const startCheck = new Date(now.getTime() + 48 * 60 * 60 * 1000); // +2 days
+        const endCheck = new Date(now.getTime() - 48 * 60 * 60 * 1000);  // -2 days
 
         const advertisements = await Advertisement.find({
             isActive: true,
@@ -175,13 +176,13 @@ export const getActiveAdvertisements = async (req: Request, res: Response): Prom
                 {
                     $or: [
                         { startDate: { $exists: false } },
-                        { startDate: { $lte: endOfToday } }
+                        { startDate: { $lte: startCheck } }
                     ]
                 },
                 {
                     $or: [
                         { endDate: { $exists: false } },
-                        { endDate: { $gte: startOfToday } }
+                        { endDate: { $gte: endCheck } }
                     ]
                 }
             ]
