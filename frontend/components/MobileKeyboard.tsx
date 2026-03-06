@@ -67,6 +67,7 @@ const MobileKeyboard: React.FC = () => {
   const getDynamicColor = (k: KeySpec) => {
     if (k.kind !== 'char' || !k.phonetic) return 'bg-gradient-to-b from-[#fafaf9] to-[#e7e5e4] border-[#d6d3d1]';
     const char = (isShifted && k.shiftPhonetic) ? k.shiftPhonetic : k.phonetic;
+    if (!char) return 'bg-gradient-to-b from-[#fafaf9] to-[#e7e5e4] border-[#d6d3d1]';
     const entry = TAMIL_PHONETIC_MAP[char.toLowerCase()];
     if (!entry) return 'bg-gradient-to-b from-[#fafaf9] to-[#e7e5e4] border-[#d6d3d1]';
 

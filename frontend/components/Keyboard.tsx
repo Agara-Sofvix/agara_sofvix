@@ -11,6 +11,7 @@ interface KeyboardProps {
 
 const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, settings }) => {
     const isKeyActive = (key: string) => {
+        if (!key) return false;
         const k = key.toLowerCase();
         if (k === 'meta' || k === 'command') return activeKeys.has('meta') || activeKeys.has('os') || activeKeys.has('command');
         if (k === 'alt' || k === 'option') return activeKeys.has('alt');
@@ -20,7 +21,7 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, settings }) => {
     };
 
     const isGuidanceKey = (key: string) => {
-        if (!settings?.handGuidance) return false;
+        if (!settings?.handGuidance || !key) return false;
         return activeKeys.has(`${key.toLowerCase()}_guide`);
     };
 
@@ -72,7 +73,7 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, settings }) => {
         }
 
         // Number keys or symbol keys (2 labels)
-        if (ta && en && !shiftTa && !TAMIL_PHONETIC_MAP[en.toLowerCase()]) {
+        if (ta && en && !shiftTa && !TAMIL_PHONETIC_MAP[en?.toLowerCase()]) {
             return (
                 <button type="button" onClick={handleClick} className={baseClasses}>
                     {/* Match the Tamil-letter key layout:

@@ -151,6 +151,7 @@ export function processTamilInput(
 
   // Rule 5.2: Uyirmei (க) + Uyir (a) -> Updated Uyirmei (கா)
   if (isBaseConsonant(lastChar) && entry.type === 'uyir') {
+    if (!key) return null;
     if (key.toLowerCase() === 'a') {
       const updatedLeft = leftPart + 'ா';
       return { text: updatedLeft + rightPart, newCursorPos: updatedLeft.length };

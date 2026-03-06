@@ -210,14 +210,16 @@ const AppInner: React.FC = () => {
         filename: event.filename,
         lineno: event.lineno,
         colno: event.colno,
-        error: event.error?.stack || event.error
+        error: event.error?.stack || event.error,
+        originalEvent: event
       });
     };
 
     const handleRejection = (event: PromiseRejectionEvent) => {
       console.error('[EZH-GLOBAL-REJECTION]', {
         reason: event.reason?.message || event.reason,
-        stack: event.reason?.stack
+        stack: event.reason?.stack,
+        originalReason: event.reason
       });
     };
 

@@ -151,7 +151,7 @@ const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, 
                 <div
                   key={notif._id}
                   onClick={() => {
-                    if (notif.tag === 'Exam' || notif.title.toLowerCase().includes('tournament') || notif.description.toLowerCase().includes('tournament')) {
+                    if (notif.tag === 'Exam' || notif.title?.toLowerCase().includes('tournament') || notif.description?.toLowerCase().includes('tournament')) {
                       onNavigate('TournamentArena');
                     } else if (notif.tag === 'New') {
                       onNavigate('Practice');
