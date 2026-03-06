@@ -202,8 +202,8 @@ const Ezhuthidu: React.FC<EzhuthiduProps> = ({ settings, activeKeys }) => {
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
 
-      const html2pdfModule = await import('https://esm.sh/html2pdf.js');
-      const html2pdf = html2pdfModule.default;
+      // @ts-ignore
+      const html2pdf = (await import('html2pdf.js')).default;
 
       await html2pdf().set(opt).from(element).save();
     } catch (error) {

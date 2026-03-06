@@ -67,8 +67,7 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
       };
 
       // @ts-ignore
-      const html2pdfModule = await import('https://esm.sh/html2pdf.js');
-      const html2pdf = html2pdfModule.default;
+      const html2pdf = (await import('html2pdf.js')).default;
       await html2pdf().set(opt).from(element).save();
     } catch (error) {
       console.error('PDF generation failed', error);
