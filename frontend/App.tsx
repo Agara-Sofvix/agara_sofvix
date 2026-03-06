@@ -731,9 +731,9 @@ const AppInner: React.FC = () => {
           ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
           max-w-screen-4xl
           grid-cols-1 md:grid-cols-1 lg:grid-cols-1
-          ${currentView !== 'TournamentArena' ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
+          ${(currentView !== 'TournamentArena' || currentView === 'TournamentArena') ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
         `}>
-          {currentView !== 'TournamentArena' && (
+          {currentView !== 'TournamentLive' && currentView !== 'TournamentResult' && (
             <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45]">
               <SideAds position="left" />
             </div>
@@ -741,7 +741,7 @@ const AppInner: React.FC = () => {
 
           <div className={`
             w-full flex flex-col
-            ${isTournamentResult || currentView === 'TournamentArena' ? 'xl:col-span-3' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
+            ${isTournamentResult ? 'xl:col-span-3' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
             ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full !px-0 !max-w-none' : `${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0 overflow-x-hidden`}
           `}>
@@ -852,7 +852,7 @@ const AppInner: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'TournamentArena' && (
+          {currentView !== 'TournamentLive' && currentView !== 'TournamentResult' && (
             <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-l border-slate-100/50 z-[45]">
               <SideAds position="right" />
             </div>
