@@ -724,16 +724,16 @@ const AppInner: React.FC = () => {
 
       <main className={`
         ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-12 xs:pt-14'} 
-        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-screen overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow'}
+        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'min-h-[calc(100vh-72px)] pb-0' : 'pb-8 xs:pb-12 flex-grow'}
       `}>
         <div className={`
           grid w-full mx-auto
           ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
           max-w-screen-4xl
           grid-cols-1 md:grid-cols-1 lg:grid-cols-1
-          ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult') ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
+          ${currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
         `}>
-          {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Ezhuthidu' && (
+          {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
             <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="left" />
@@ -745,7 +745,7 @@ const AppInner: React.FC = () => {
             w-full flex flex-col
             ${isTournamentResult ? 'xl:col-span-3' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
-            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full !px-0 !max-w-none' : `${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0 overflow-x-hidden`}
+            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'flex-1 shrink-0 overflow-x-hidden' : 'shrink-0 overflow-x-hidden gap-4 xs:gap-6'}
           `}>
             {!isTournamentLive && !isTournamentResult && (
               <div className="w-full mx-auto px-4 xs:px-6 lg:px-10">
@@ -854,7 +854,7 @@ const AppInner: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Ezhuthidu' && (
+          {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
             <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-l border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="right" />
