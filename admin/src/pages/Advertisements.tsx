@@ -35,7 +35,11 @@ const PREVIEW_THEMES = [
     { name: 'Emerald', bg: 'from-[#064e3b] via-[#065f46] to-[#0f172a]', accent: 'bg-emerald-500', glow: 'bg-emerald-500/20', button: 'bg-emerald-600' },
     { name: 'Indigo', bg: 'from-[#1e1b4b] via-[#312e81] to-[#0f172a]', accent: 'bg-indigo-500', glow: 'bg-indigo-500/20', button: 'bg-indigo-600' },
     { name: 'Rose', bg: 'from-[#4c0519] via-[#881337] to-[#0f172a]', accent: 'bg-rose-500', glow: 'bg-rose-500/20', button: 'bg-rose-600' },
-    { name: 'Cyan', bg: 'from-[#083344] via-[#155e75] to-[#0f172a]', accent: 'bg-cyan-500', glow: 'bg-cyan-500/20', button: 'bg-cyan-600' }
+    { name: 'Cyan', bg: 'from-[#083344] via-[#155e75] to-[#0f172a]', accent: 'bg-cyan-500', glow: 'bg-cyan-500/20', button: 'bg-cyan-600' },
+    { name: 'Amber', bg: 'from-[#451a03] via-[#78350f] to-[#0f172a]', accent: 'bg-amber-500', glow: 'bg-amber-500/20', button: 'bg-amber-600' },
+    { name: 'Violet', bg: 'from-[#2e1065] via-[#4c1d95] to-[#0f172a]', accent: 'bg-violet-500', glow: 'bg-violet-500/20', button: 'bg-violet-600' },
+    { name: 'Orange', bg: 'from-[#431407] via-[#9a3412] to-[#0f172a]', accent: 'bg-orange-600', glow: 'bg-orange-600/20', button: 'bg-orange-700' },
+    { name: 'Lime', bg: 'from-[#1a2e05] via-[#3f6212] to-[#0f172a]', accent: 'bg-lime-500', glow: 'bg-lime-500/20', button: 'bg-lime-600' }
 ];
 
 const PosterPreview = ({ formData, setFormData }: { formData: any, setFormData: any }) => {

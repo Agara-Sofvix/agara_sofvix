@@ -53,6 +53,34 @@ const THEMES = [
         glow: 'bg-cyan-500/20',
         button: 'bg-cyan-600 hover:bg-cyan-500',
         buttonText: 'text-white'
+    },
+    {
+        bg: 'from-[#451a03] via-[#78350f] to-[#0f172a]',
+        accent: 'bg-amber-500',
+        glow: 'bg-amber-500/20',
+        button: 'bg-amber-600 hover:bg-amber-500',
+        buttonText: 'text-white'
+    },
+    {
+        bg: 'from-[#2e1065] via-[#4c1d95] to-[#0f172a]',
+        accent: 'bg-violet-500',
+        glow: 'bg-violet-500/20',
+        button: 'bg-violet-600 hover:bg-violet-500',
+        buttonText: 'text-white'
+    },
+    {
+        bg: 'from-[#431407] via-[#9a3412] to-[#0f172a]',
+        accent: 'bg-orange-600',
+        glow: 'bg-orange-600/20',
+        button: 'bg-orange-700 hover:bg-orange-600',
+        buttonText: 'text-white'
+    },
+    {
+        bg: 'from-[#1a2e05] via-[#3f6212] to-[#0f172a]',
+        accent: 'bg-lime-500',
+        glow: 'bg-lime-500/20',
+        button: 'bg-lime-600 hover:bg-lime-500',
+        buttonText: 'text-white'
     }
 ];
 
@@ -145,7 +173,7 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
 
         const interval = setInterval(() => {
             setCurrentIndex((prev) => (prev + 1) % ads.length);
-        }, 20000);
+        }, 15000);
 
         return () => clearInterval(interval);
     }, [ads.length]);
@@ -179,7 +207,7 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                         <div className="absolute top-0 left-0 w-full h-1 bg-black/5 z-20">
                             <div
                                 key={currentIndex}
-                                className="h-full bg-white/20 origin-left"
+                                className={`h-full ${THEMES[(typeof currentAd.themeIndex === 'number' ? currentAd.themeIndex : currentIndex) % THEMES.length].accent} opacity-40 origin-left`}
                                 style={{
                                     animation: `progress 20000ms linear`
                                 }}
