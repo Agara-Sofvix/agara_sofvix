@@ -186,7 +186,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     if (initialMode && initialMode !== mode) {
       updateModeWithHistory(initialMode);
     }
-  }, [initialMode, mode]);
+  }, [initialMode]);
 
   // Handle browser back/forward navigation
   useEffect(() => {
