@@ -7,6 +7,8 @@ export const adminAuth = async (req: Request, res: Response, next: NextFunction)
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1];
+    } else if (req.query.token) {
+        token = req.query.token as string;
     }
 
     if (!token) {
