@@ -66,7 +66,7 @@ const PosterPreview = ({ formData }: { formData: any }) => {
                 </div>
 
                 <div className="z-10 flex flex-col items-center gap-4 py-4 w-full h-full justify-center">
-                    <h4 className="text-white text-xl font-black leading-tight uppercase drop-shadow-xl line-clamp-3">
+                    <h4 className="text-white text-xl font-black leading-tight uppercase drop-shadow-xl line-clamp-3 break-words">
                         {formData.title || 'Your Campaign Title'}
                     </h4>
 
@@ -85,7 +85,7 @@ const PosterPreview = ({ formData }: { formData: any }) => {
                     )}
 
                     {formData.description && (
-                        <p className="text-white/50 text-[10px] font-medium leading-relaxed line-clamp-3 px-2">
+                        <p className="text-white/50 text-[10px] font-medium leading-relaxed line-clamp-3 px-2 break-words">
                             {formData.description}
                         </p>
                     )}
@@ -289,9 +289,9 @@ const Advertisements = () => {
                                                             href={ad.linkUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-0.5"
+                                                            className="text-xs text-blue-500 hover:underline flex items-center gap-1 mt-0.5 break-all"
                                                         >
-                                                            {ad.linkUrl} <ExternalLink size={10} />
+                                                            {ad.linkUrl} <ExternalLink size={10} className="flex-shrink-0" />
                                                         </a>
                                                     </div>
                                                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">

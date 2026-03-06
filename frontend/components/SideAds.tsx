@@ -65,7 +65,7 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
             <div className={`absolute top-[-10%] left-[-10%] w-64 h-64 ${theme.accent}/10 rounded-full blur-[100px] animate-pulse`}></div>
             <div className={`absolute bottom-[-5%] right-[-5%] w-56 h-56 ${theme.accent}/5 rounded-full blur-[80px]`}></div>
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
-            
+
             <div className="z-10 mt-6">
                 <div className="flex items-center gap-2 justify-center mb-6 opacity-40">
                     <div className="w-5 h-5 bg-white/20 rounded-md flex items-center justify-center">
@@ -77,7 +77,7 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
 
             <div className="z-10 flex flex-col items-center gap-8 w-full h-full justify-center py-6">
                 {/* Headline always first */}
-                <h3 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight uppercase px-4 drop-shadow-2xl mb-2">
+                <h3 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight uppercase px-4 drop-shadow-2xl mb-2 break-words">
                     {title}
                 </h3>
 
@@ -86,17 +86,17 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
                     <div className="w-full aspect-square max-w-[240px] relative">
                         <div className={`absolute inset-0 ${theme.glow} rounded-3xl blur-2xl animate-pulse`}></div>
                         <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-3xl p-6 overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-all duration-500">
-                            <img 
-                                src={imageUrl} 
-                                alt={title} 
+                            <img
+                                src={imageUrl}
+                                alt={title}
                                 className="max-w-full max-h-full object-contain drop-shadow-2xl transition-transform duration-700 group-hover:scale-110"
                             />
                         </div>
                     </div>
                 )}
-                
+
                 {description && (
-                    <p className="text-white/60 text-sm font-medium leading-relaxed max-w-[260px] line-clamp-4 px-4">
+                    <p className="text-white/60 text-sm font-medium leading-relaxed max-w-[260px] line-clamp-4 px-4 break-words">
                         {description}
                     </p>
                 )}
@@ -158,7 +158,7 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                         className="block w-full h-full"
                     >
                         <div className="w-full h-full overflow-hidden">
-                            <GeneratedPoster 
+                            <GeneratedPoster
                                 title={currentAd.title}
                                 description={currentAd.description}
                                 ctaText={currentAd.ctaText}
