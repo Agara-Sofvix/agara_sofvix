@@ -6,9 +6,11 @@ export const ADMIN_API_URL = `${API_BASE_URL}/admin`;
 export const PUBLIC_API_URL = API_BASE_URL;
 export const SOCKET_ORIGIN = _v === '' ? (typeof window !== 'undefined' ? window.location.origin : '') : (_v ? _v.replace(/\/api\/?$/, '') : '');
 
-/** Base URL for serving uploaded assets. Ensure it uses origin if using relative API paths. */
+/** Base URL for serving uploaded assets. Ensure it uses origin if using relative API paths or empty strings to prevent sub-path (e.g. /admin/) resolution issues. */
 export const getUploadBaseUrl = () => {
-    return (_v && _v !== '') ? _v.replace(/\/api\/?$/, '') : (typeof window !== 'undefined' ? window.location.origin : '');
+    const rawBase = (_v && _v !== '') ? _v.replace(/\/api\/?$/, '') : '';
+    // If we have a hardcoded base (like a different domain/port) use it, otherwise use current origin
+    return rawBase || (typeof window !== 'undefined' ? window.location.origin : '');
 };
 
 export default API_BASE_URL;

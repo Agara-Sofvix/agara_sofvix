@@ -95,7 +95,6 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
 
         const wasMaintenanceMode = settings.maintenanceMode;
 
-        // Update fields individually to avoid overwriting nested objects
         if (siteName !== undefined) settings.siteName = siteName;
         if (marqueeText !== undefined) settings.marqueeText = marqueeText;
         if (contactEmail !== undefined) settings.contactEmail = contactEmail;
@@ -108,7 +107,6 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
         }
 
         if (branding !== undefined) {
-            // Merge branding instead of overwriting
             settings.branding = {
                 ...settings.branding,
                 ...branding
@@ -131,16 +129,20 @@ export const updateSettings = async (req: Request, res: Response): Promise<void>
 
         await settings.save();
 
-        // Invalidate maintenance cache if it changed
-        if (maintenanceMode !== undefined && wasMaintenanceMode !== maintenanceMode) {
-            console.log(`Maintenance mode changed to ${maintenanceMode}. Invalidating cache and emitting toggle.`);
-            invalidateMaintenanceCache();
-            try {
-                const io = getIo();
+        // Trigger real-time settings update
+        try {
+            const io = getIo();
+            io.emit('SETTINGS_UPDATE', settings);
+
+            // Specifically signal maintenance toggle if changed
+            if (maintenanceMode !== undefined && wasMaintenanceMode !== maintenanceMode) {
+                invalidateMaintenanceCache();
                 io.emit('MAINTENANCE_TOGGLE', { enabled: !!maintenanceMode });
-            } catch (err) {
-                console.error('Failed to emit maintenance toggle:', err);
             }
+
+            console.log('[EZH-SETTINGS] Emitted SETTINGS_UPDATE via socket');
+        } catch (err) {
+            console.error('[EZH-SETTINGS] Failed to emit socket update:', err);
         }
 
         // Trigger settings update event

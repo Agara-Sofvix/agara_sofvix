@@ -38,6 +38,16 @@ router.post('/logo', adminAuth, logoUpload.single('logo'), async (req, res) => {
 
         await settings.save();
 
+        // Trigger real-time settings update
+        try {
+            const { getIo } = await import('../socket');
+            const io = getIo();
+            io.emit('SETTINGS_UPDATE', settings);
+            console.log('[EZH-LOGO] Emitted SETTINGS_UPDATE via socket');
+        } catch (err) {
+            console.error('[EZH-LOGO] Failed to emit socket update:', err);
+        }
+
         res.json({
             success: true,
             message: 'Logo uploaded successfully',
