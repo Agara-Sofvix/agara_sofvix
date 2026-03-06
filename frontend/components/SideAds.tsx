@@ -15,6 +15,7 @@ interface GeneratedPosterProps {
     title: string;
     description?: string;
     ctaText?: string;
+    imageUrl?: string;
 }
 
 const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, ctaText }) => (
@@ -97,36 +98,13 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                         className="block w-full h-full"
                     >
                         <div className="w-full h-full overflow-hidden">
-                            {currentAd.imageUrl ? (
-                                <img
-                                    key={currentAd._id}
-                                    src={currentAd.imageUrl}
-                                    alt={currentAd.title}
-                                    className="w-full h-full object-cover transition-opacity duration-1000 animate-in fade-in"
-                                />
-                            ) : (
-                                <GeneratedPoster
-                                    title={currentAd.title}
-                                    description={currentAd.description}
-                                    ctaText={currentAd.ctaText}
-                                />
-                            )}
+                            <GeneratedPoster
+                                title={currentAd.title}
+                                description={currentAd.description}
+                                ctaText={currentAd.ctaText}
+                                imageUrl={currentAd.imageUrl}
+                            />
                         </div>
-
-                        {/* Subtle Ad Overlay for Image Ads */}
-                        {currentAd.imageUrl && (
-                            <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <h4 className="text-white font-black text-sm leading-tight mb-1">
-                                    {currentAd.title}
-                                </h4>
-                                {currentAd.description && (
-                                    <p className="text-white/80 text-[10px] font-medium line-clamp-2">
-                                        {currentAd.description}
-                                    </p>
-                                )}
-                                <div className="mt-2 text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">Advertisement</div>
-                            </div>
-                        )}
                     </a>
 
                     {/* Rotation Progress Indicator */}
