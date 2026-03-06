@@ -204,22 +204,14 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
         .arena-asymmetric-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 3rem;
+            gap: 3.5rem;
             align-items: start;
             width: 100%;
         }
-        @media (min-width: 1024px) and (max-width: 1279px) {
+        @media (min-width: 1024px) {
             .arena-asymmetric-grid {
-                grid-template-columns: 280px 1fr 300px;
-                gap: 2rem;
-            }
-        }
-        @media (min-width: 1280px) {
-            .arena-asymmetric-grid {
-                grid-template-columns: 1fr;
-                gap: 4rem;
-                max-width: 800px;
-                margin: 0 auto;
+                grid-template-columns: 280px 1fr 320px;
+                gap: 3.5rem;
             }
         }
       `}} />
@@ -254,7 +246,7 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
           <div className="arena-asymmetric-grid py-8">
 
             {/* Left Column: GLOBAL LEADERBOARD + PERSONAL STANDING (lg+) */}
-            <section className="flex flex-col gap-12 animate-in slide-in-from-left-8 duration-700 order-2 xl:order-2">
+            <section className="flex flex-col gap-12 animate-in slide-in-from-left-8 duration-700 lg:col-start-1 order-3 lg:order-1">
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-black opacity-60">Tournament Leaderboard</h2>
@@ -335,7 +327,7 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
             </section>
 
             {/* Center Column: LIVE ACTIVE (lg+) */}
-            <section className="flex flex-col items-center animate-in zoom-in duration-700 order-1 xl:order-1">
+            <section className="flex flex-col items-center animate-in zoom-in duration-700 order-1 lg:order-2 lg:col-start-2">
               <div className="organic-core max-w-[550px] w-full mb-12">
                 <div className="absolute inset-0 bg-gradient-to-tr from-[#92450f]/5 to-transparent pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-6 bg-red-600/10 border border-red-600/20 px-4 py-1.5 rounded-full">
@@ -405,10 +397,10 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
             </section>
 
             {/* Right Column: SYSTEM GUIDELINES (lg+) */}
-            <section className="flex flex-col items-center animate-in slide-in-from-right-8 duration-700 order-3 xl:order-3">
+            <section className="flex flex-col items-center animate-in slide-in-from-right-8 duration-700 order-2 lg:order-3 lg:col-start-3">
               <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-10 text-black opacity-60">System Guidelines</h2>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4 w-full">
+              <div className="grid grid-cols-2 gap-4 w-full max-w-[320px]">
                 <div className="guideline-tile">
                   <span className="material-symbols-outlined text-3xl mb-4 opacity-70">cake</span>
                   <p className="text-[10px] font-black uppercase leading-tight tracking-widest">16+ Age<br />Requirement</p>

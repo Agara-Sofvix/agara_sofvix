@@ -730,7 +730,7 @@ const AppInner: React.FC = () => {
           <SideAds position="left" />
 
           <div className={`
-            ${isTournamentResult ? 'w-full' : 'w-full xl:w-[70%] px-2 xs:px-4 md:px-6 lg:px-10'}
+            ${isTournamentResult ? 'w-full' : (currentView === 'TournamentArena' ? 'w-full xl:w-[85%] px-2 xs:px-4 md:px-6 lg:px-10' : 'w-full xl:w-[70%] px-2 xs:px-4 md:px-6 lg:px-10')}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
             ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full flex flex-col !px-0 !max-w-none' : `flex flex-col ${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0`}
           `}>
@@ -841,7 +841,7 @@ const AppInner: React.FC = () => {
             )}
           </div>
 
-          <SideAds position="right" />
+          {currentView !== 'TournamentArena' && <SideAds position="right" />}
         </div>
       </main>
       {!isTournamentLive && !isTournamentResult && (
