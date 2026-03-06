@@ -17,7 +17,8 @@ export const maintenanceMode = async (req: Request, res: Response, next: NextFun
         // Note: Check both /api/admin and the specific routes if needed
         if (req.path.startsWith('/api/admin') ||
             req.path.startsWith('/api/settings/public') ||
-            req.path.startsWith('/uploads')) {
+            req.path.startsWith('/uploads') ||
+            req.path.startsWith('/avatars')) {
             return next();
         }
 

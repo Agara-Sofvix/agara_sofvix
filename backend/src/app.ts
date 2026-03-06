@@ -164,8 +164,15 @@ uploadDirs.forEach(dir => {
     }
 });
 
-app.use('/uploads', express.static(resolvePublicPath('public/uploads')));
-app.use('/avatars', express.static(resolvePublicPath('public/avatars')));
+// Serve Static Uploads
+const uploadsPath = resolvePublicPath('public/uploads');
+const avatarsPath = resolvePublicPath('public/avatars');
+
+console.log(`[EZH-STATIC] Serving /uploads from: ${uploadsPath}`);
+console.log(`[EZH-STATIC] Serving /avatars from: ${avatarsPath}`);
+
+app.use('/uploads', express.static(uploadsPath));
+app.use('/avatars', express.static(avatarsPath));
 
 app.get('/robots.txt', getRobotsTxt);
 app.get('/sitemap.xml', getSitemapXml);

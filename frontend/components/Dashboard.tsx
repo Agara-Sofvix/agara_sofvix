@@ -111,7 +111,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
       }
     }
 
-    return `${baseUrl}${cleanPath}`;
+    const result = `${baseUrl}${cleanPath}`;
+    console.log(`[EZH-DEBUG] getFullUrl(${path}) -> ${result}`);
+    return result;
   };
 
   const avatarUrl = stats.profilePic ? getFullUrl(stats.profilePic) : null;
@@ -127,18 +129,24 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
             className="w-40 h-40 sm:w-56 sm:h-56 md:w-72 lg:w-80 bg-cream-light/50 border border-slate-200 rounded-[30px] sm:rounded-[50px] md:rounded-[60px] p-2 sm:p-4 transition-all duration-700 shadow-inner overflow-visible z-10 relative flex items-center justify-center overflow-hidden"
             onClick={() => setShowAvatarPicker(true)}
           >
-            {avatarUrl ? (
-              <img
-                alt="User Avatar"
-                className="w-full h-full object-cover rounded-[24px] sm:rounded-[48px]"
-                src={avatarUrl}
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
-                <span className="material-symbols-outlined text-5xl sm:text-7xl">person</span>
-                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No Avatar</span>
-              </div>
-            )}
+            {(() => {
+              console.log(`[EZH-DEBUG] Rendering profile avatar: ${avatarUrl}`);
+              if (avatarUrl) {
+                return (
+                  <img
+                    alt="User Avatar"
+                    className="w-full h-full object-cover rounded-[24px] sm:rounded-[48px]"
+                    src={avatarUrl}
+                  />
+                );
+              }
+              return (
+                <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <span className="material-symbols-outlined text-5xl sm:text-7xl">person</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest opacity-60">No Avatar</span>
+                </div>
+              );
+            })()}
 
             {isUploading && (
               <div className="absolute inset-0 bg-black/40 rounded-[24px] sm:rounded-[48px] flex items-center justify-center z-20">
@@ -180,20 +188,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
                         <div className="h-px flex-1 bg-slate-100"></div>
                       </h3>
                       <div className="grid grid-cols-3 gap-4 sm:gap-6">
-                        {group.items.map((img) => (
-                          <button
-                            key={img}
-                            onClick={() => handleSelectAvatar(`/avatars/${img}`)}
-                            className="aspect-square rounded-2xl overflow-hidden border-2 border-slate-100 hover:border-header-brown transition-all hover:scale-105 active:scale-95 group/item relative"
-                          >
-                            <img
-                              src={getFullUrl(`/avatars/${img}`) || ''}
-                              alt={img}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-header-brown/0 group-hover/item:bg-header-brown/10 transition-colors"></div>
-                          </button>
-                        ))}
+                        {group.items.map((img) => {
+                          const src = getFullUrl(`/avatars/${img}`) || '';
+                          return (
+                            <button
+                              key={img}
+                              onClick={() => handleSelectAvatar(`/avatars/${img}`)}
+                              className="aspect-square rounded-2xl overflow-hidden border-2 border-slate-100 hover:border-header-brown transition-all hover:scale-105 active:scale-95 group/item relative"
+                            >
+                              <img
+                                src={src}
+                                alt={img}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-header-brown/0 group-hover/item:bg-header-brown/10 transition-colors"></div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   ))}
