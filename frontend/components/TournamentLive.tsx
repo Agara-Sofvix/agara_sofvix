@@ -3,6 +3,7 @@ import Keyboard from './Keyboard';
 import { processTamilInput, handleTamilBackspace, getTamilGraphemes } from '../tamilEngine';
 import { AppSettings } from '../App';
 import { useTextStore } from '../src/store/useTextStore';
+import { generateUUID } from '../src/utils/uuid';
 
 interface TournamentLiveProps {
   onComplete: (wpm: number, accuracy: number, extra: {
@@ -31,7 +32,7 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
   const [isFinished, setIsFinished] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [violations, setViolations] = useState(0);
-  const [testSessionId] = useState(() => crypto.randomUUID());
+  const [testSessionId] = useState(() => generateUUID());
 
   const { fetchTexts, getRandomText, isLoading } = useTextStore();
   const [isFetchingText, setIsFetchingText] = useState(false);

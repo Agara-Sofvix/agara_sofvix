@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { processTamilInput, handleTamilBackspace, getTamilGraphemes } from '../tamilEngine';
 import { useTextStore } from '../src/store/useTextStore';
+import { generateUUID } from '../src/utils/uuid';
 import Keyboard from './Keyboard';
 import { AppSettings } from '../App';
 
@@ -38,7 +39,7 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
   const [startTime, setStartTime] = useState<number | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
   const [lastResult, setLastResult] = useState<{ wpm: number; accuracy: number; errors: number; totalChars: number } | null>(null);
-  const [testSessionId] = useState(() => crypto.randomUUID());
+  const [testSessionId] = useState(() => generateUUID());
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const targetDisplayRef = useRef<HTMLDivElement>(null);
 

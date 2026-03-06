@@ -4,6 +4,7 @@ import { AppSettings } from '../App';
 import { processTamilInput, handleTamilBackspace, getTamilGraphemes } from '../tamilEngine';
 import { useTextStore } from '../src/store/useTextStore';
 import { keyboardPracticeData, practiceSchedule, motivationTips, COMPOUND_SERIES } from '../src/data/keyboard_practice_data';
+import { generateUUID } from '../src/utils/uuid';
 
 type Mode = 'free' | 'lesson' | 'custom';
 
@@ -259,7 +260,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   }); // in seconds, null means no limit
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isFinished, setIsFinished] = useState(false);
-  const [testSessionId, setTestSessionId] = useState(() => crypto.randomUUID());
+  const [testSessionId, setTestSessionId] = useState(() => generateUUID());
   const onCompleteCalled = useRef(false);
   const { getCategories, fetchTexts, getRandomText, getRandomTextObject, isLoading } = useTextStore();
   const [selectedFreeCategory, setSelectedFreeCategory] = useState('free-typing');
@@ -373,7 +374,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     setTimeLeft(practiceDuration);
     setFeedbackStatus('neutral'); // Force neutral on reset to prevent stale success state
     setIsFinished(false);
-    setTestSessionId(crypto.randomUUID());
+    setTestSessionId(generateUUID());
     onCompleteCalled.current = false;
     // Intentional focus after reset
     setTimeout(() => {
