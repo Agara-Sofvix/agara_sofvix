@@ -20,7 +20,8 @@ interface Advertisement {
     _id: string;
     title: string;
     description?: string;
-    imageUrl: string;
+    ctaText?: string;
+    imageUrl?: string;
     linkUrl: string;
     position: 'left-side' | 'right-side';
     isActive: boolean;
@@ -40,6 +41,7 @@ const Advertisements = () => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
+        ctaText: '',
         imageUrl: '',
         linkUrl: '',
         position: 'left-side' as const,
@@ -118,7 +120,8 @@ const Advertisements = () => {
         setFormData({
             title: ad.title,
             description: ad.description || '',
-            imageUrl: ad.imageUrl,
+            ctaText: ad.ctaText || '',
+            imageUrl: ad.imageUrl || '',
             linkUrl: ad.linkUrl,
             position: ad.position as any,
             isActive: ad.isActive,
@@ -132,6 +135,7 @@ const Advertisements = () => {
         setFormData({
             title: '',
             description: '',
+            ctaText: '',
             imageUrl: '',
             linkUrl: '',
             position: 'left-side',
@@ -297,15 +301,31 @@ const Advertisements = () => {
                     </div>
 
                     <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Image URL</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">CTA Text</label>
                         <input
                             type="text"
                             className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-sm text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500 transition-all"
-                            placeholder="https://..."
+                            placeholder="e.g. Start Now, Learn More"
+                            value={formData.ctaText}
+                            onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
+                        />
+                    </div>
+
+                    <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Image URL</label>
+                            <span className="text-[10px] text-blue-500 font-medium">Optional</span>
+                        </div>
+                        <input
+                            type="text"
+                            className="w-full bg-[#0f1214] border border-slate-800 rounded-lg text-sm text-slate-300 p-2.5 outline-none focus:ring-1 focus:ring-blue-500 transition-all"
+                            placeholder="https://... (leave empty for auto-generated poster)"
                             value={formData.imageUrl}
                             onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                            required
                         />
+                        <p className="mt-1.5 text-[10px] text-slate-500 italic leading-snug">
+                            If empty, a professional poster will be auto-generated from Title & CTA.
+                        </p>
                     </div>
 
                     <div>

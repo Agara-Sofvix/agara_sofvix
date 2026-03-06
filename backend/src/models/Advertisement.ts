@@ -3,7 +3,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IAdvertisement extends Document {
     title: string;
     description?: string;
-    imageUrl: string;
+    ctaText?: string;
+    imageUrl?: string;
     linkUrl: string;
     position: 'left-side' | 'right-side';
     isActive: boolean;
@@ -16,7 +17,8 @@ export interface IAdvertisement extends Document {
 const AdvertisementSchema: Schema = new Schema({
     title: { type: String, required: true },
     description: { type: String },
-    imageUrl: { type: String, required: true },
+    ctaText: { type: String },
+    imageUrl: { type: String },
     linkUrl: { type: String, required: true },
     position: {
         type: String,

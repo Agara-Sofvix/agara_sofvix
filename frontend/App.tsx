@@ -734,7 +734,7 @@ const AppInner: React.FC = () => {
           ${currentView !== 'TournamentArena' ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
         `}>
           {currentView !== 'TournamentArena' && (
-            <div className="hidden xl:block overflow-hidden">
+            <div className="hidden xl:block sticky top-0 h-screen overflow-hidden border-r border-slate-100/50">
               <SideAds position="left" />
             </div>
           )}
@@ -853,7 +853,7 @@ const AppInner: React.FC = () => {
           </div>
 
           {currentView !== 'TournamentArena' && (
-            <div className="hidden xl:block overflow-hidden">
+            <div className="hidden xl:block sticky top-0 h-screen overflow-hidden border-l border-slate-100/50">
               <SideAds position="right" />
             </div>
           )}
