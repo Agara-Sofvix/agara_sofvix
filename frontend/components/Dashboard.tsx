@@ -95,22 +95,23 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
   const getFullUrl = (path: string) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
-    const base = getUploadBaseUrl().replace(/\/$/, '');
+    const baseUrl = getUploadBaseUrl().replace(/\/$/, '');
 
-    // Fallback for old records that missing the /avatars/ or /uploads/ prefix
     let cleanPath = path || '';
-    if (path && !path.startsWith('/') && !path.includes('/')) {
-      // If it's just a filename like male_1.png, it's an avatar
-      if (path.includes('male') || path.includes('female')) {
-        cleanPath = `/avatars/${path}`;
-      } else {
-        cleanPath = `/uploads/${path}`;
-      }
-    } else if (path) {
-      cleanPath = path.startsWith('/') ? path : `/${path}`;
+    if (!cleanPath.startsWith('/')) {
+      cleanPath = `/${cleanPath}`;
     }
 
-    return `${base}${cleanPath}`;
+    // Fallback for old records that missing the /avatars/ or /uploads/ prefix
+    if (!cleanPath.includes('/', 1)) {
+      if (cleanPath.includes('male') || cleanPath.includes('female')) {
+        cleanPath = `/avatars${cleanPath}`;
+      } else {
+        cleanPath = `/uploads${cleanPath}`;
+      }
+    }
+
+    return `${baseUrl}${cleanPath}`;
   };
 
   const avatarUrl = stats.profilePic ? getFullUrl(stats.profilePic) : null;

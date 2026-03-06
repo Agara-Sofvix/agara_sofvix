@@ -41,8 +41,9 @@ const Settings = () => {
     const getFullImageUrl = (path?: string | null) => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
+        const baseUrl = getUploadBaseUrl().replace(/\/$/, '');
         const cleanPath = path.startsWith('/') ? path : `/${path}`;
-        return `${getUploadBaseUrl()}${cleanPath}`;
+        return `${baseUrl}${cleanPath}`;
     };
 
     // Apply theme color real-time

@@ -140,20 +140,23 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
                     alt="Avatar"
                     className="w-full h-full object-cover"
                     src={(() => {
-                      const base = getUploadBaseUrl().replace(/\/$/, '');
+                      const baseUrl = getUploadBaseUrl().replace(/\/$/, '');
                       if (profilePic?.startsWith('http')) return profilePic;
 
                       let cleanPath = profilePic || '';
-                      if (profilePic && !profilePic.startsWith('/') && !profilePic.includes('/')) {
-                        if (profilePic.includes('male') || profilePic.includes('female')) {
-                          cleanPath = `/avatars/${profilePic}`;
-                        } else {
-                          cleanPath = `/uploads/${profilePic}`;
-                        }
-                      } else if (profilePic) {
-                        cleanPath = profilePic.startsWith('/') ? profilePic : `/${profilePic}`;
+                      if (cleanPath && !cleanPath.startsWith('/')) {
+                        cleanPath = `/${cleanPath}`;
                       }
-                      return `${base}${cleanPath}`;
+
+                      // Fallback for old records missing prefixes
+                      if (cleanPath && !cleanPath.includes('/', 1)) {
+                        if (cleanPath.includes('male') || cleanPath.includes('female')) {
+                          cleanPath = `/avatars${cleanPath}`;
+                        } else {
+                          cleanPath = `/uploads${cleanPath}`;
+                        }
+                      }
+                      return `${baseUrl}${cleanPath}`;
                     })()}
                   />
                 ) : (
