@@ -60,14 +60,14 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
     const theme = THEMES[themeIndex];
 
     return (
-        <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-10 text-center relative overflow-hidden group`}>
+        <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-6 md:p-8 text-center relative overflow-hidden group`}>
             {/* Abstract tech background elements */}
             <div className={`absolute top-[-10%] left-[-10%] w-64 h-64 ${theme.accent}/10 rounded-full blur-[100px] animate-pulse`}></div>
             <div className={`absolute bottom-[-5%] right-[-5%] w-56 h-56 ${theme.accent}/5 rounded-full blur-[80px]`}></div>
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
 
-            <div className="z-10 mt-6">
-                <div className="flex items-center gap-2 justify-center mb-6 opacity-40">
+            <div className="z-10 mt-2">
+                <div className="flex items-center gap-2 justify-center mb-4 opacity-40">
                     <div className="w-5 h-5 bg-white/20 rounded-md flex items-center justify-center">
                         <span className="text-[9px] text-white font-black">EZH</span>
                     </div>
@@ -75,17 +75,17 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
                 </div>
             </div>
 
-            <div className="z-10 flex flex-col items-center gap-8 w-full h-full justify-center py-6">
+            <div className="z-10 flex flex-col items-center gap-4 md:gap-6 w-full h-full justify-center py-2">
                 {/* Headline always first */}
-                <h3 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight uppercase px-4 drop-shadow-2xl mb-2 break-words">
+                <h3 className="text-white text-2xl md:text-3xl font-black leading-tight tracking-tight uppercase px-2 drop-shadow-2xl mb-1 break-words">
                     {title}
                 </h3>
 
                 {/* Optional Image Frame - Centered */}
                 {imageUrl && (
-                    <div className="w-full aspect-square max-w-[240px] relative">
-                        <div className={`absolute inset-0 ${theme.glow} rounded-3xl blur-2xl animate-pulse`}></div>
-                        <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-3xl p-6 overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-all duration-500">
+                    <div className="w-full aspect-square max-w-[180px] md:max-w-[200px] relative">
+                        <div className={`absolute inset-0 ${theme.glow} rounded-2xl blur-xl animate-pulse`}></div>
+                        <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-all duration-500">
                             <img
                                 src={imageUrl}
                                 alt={title}
@@ -102,12 +102,12 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
                 )}
             </div>
 
-            <div className="z-10 mb-10 w-full px-8 flex flex-col items-center gap-5">
+            <div className="z-10 mb-4 w-full px-4 md:px-6 flex flex-col items-center gap-3">
                 {/* CTA Button */}
-                <div className={`w-full ${theme.button} ${theme.buttonText} py-4 px-8 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10`}>
+                <div className={`w-full ${theme.button} ${theme.buttonText} py-3 px-6 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10`}>
                     {ctaText || 'Start Now'}
                 </div>
-                <div className="text-[8px] text-white/20 font-black uppercase tracking-[0.6em] mt-3">Sponsored Content</div>
+                <div className="text-[7px] text-white/20 font-black uppercase tracking-[0.4em] mt-1">Sponsored Content</div>
             </div>
         </div>
     );
