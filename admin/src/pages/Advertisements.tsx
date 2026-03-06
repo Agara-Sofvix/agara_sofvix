@@ -30,6 +30,78 @@ interface Advertisement {
     createdAt: string;
 }
 
+const PREVIEW_THEMES = [
+    { name: 'Emerald', bg: 'from-[#064e3b] via-[#065f46] to-[#0f172a]', accent: 'bg-emerald-500', glow: 'bg-emerald-500/20', button: 'bg-emerald-600' },
+    { name: 'Indigo', bg: 'from-[#1e1b4b] via-[#312e81] to-[#0f172a]', accent: 'bg-indigo-500', glow: 'bg-indigo-500/20', button: 'bg-indigo-600' },
+    { name: 'Rose', bg: 'from-[#4c0519] via-[#881337] to-[#0f172a]', accent: 'bg-rose-500', glow: 'bg-rose-500/20', button: 'bg-rose-600' },
+    { name: 'Cyan', bg: 'from-[#083344] via-[#155e75] to-[#0f172a]', accent: 'bg-cyan-500', glow: 'bg-cyan-500/20', button: 'bg-cyan-600' }
+];
+
+const PosterPreview = ({ formData }: { formData: any }) => {
+    const [themeIdx, setThemeIdx] = useState(0);
+    const theme = PREVIEW_THEMES[themeIdx];
+
+    return (
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live Preview</label>
+                <div className="flex gap-1">
+                    {PREVIEW_THEMES.map((_, i) => (
+                        <button
+                            key={i}
+                            type="button"
+                            onClick={() => setThemeIdx(i)}
+                            className={`w-3 h-3 rounded-full border border-white/20 transition-all ${PREVIEW_THEMES[i].accent} ${themeIdx === i ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-[#1a1d21] scale-125' : 'opacity-40 hover:opacity-100'}`}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <div className={`aspect-[9/16] w-full rounded-2xl bg-gradient-to-br ${theme.bg} overflow-hidden relative flex flex-col items-center justify-between p-6 text-center shadow-2xl transition-all duration-500 border border-slate-800`}>
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '16px 16px' }}></div>
+
+                <div className="z-10 mt-2 opacity-30 flex items-center gap-1.5 justify-center">
+                    <div className="w-3.5 h-3.5 bg-white/20 rounded-sm" />
+                    <span className="text-[7px] text-white font-black uppercase tracking-[0.3em]">Tamil Typing</span>
+                </div>
+
+                <div className="z-10 flex flex-col items-center gap-4 py-4 w-full h-full justify-center">
+                    <h4 className="text-white text-xl font-black leading-tight uppercase drop-shadow-xl line-clamp-3">
+                        {formData.title || 'Your Campaign Title'}
+                    </h4>
+
+                    {formData.imageUrl && (
+                        <div className="w-full aspect-square max-w-[140px] relative">
+                            <div className={`absolute inset-0 ${theme.glow} rounded-2xl blur-xl`}></div>
+                            <div className="relative w-full h-full bg-[#0f172a]/40 backdrop-blur-sm border border-white/10 rounded-2xl p-4 overflow-hidden shadow-xl flex items-center justify-center">
+                                <img
+                                    src={formData.imageUrl}
+                                    className="max-w-full max-h-full object-contain drop-shadow-lg"
+                                    alt="Preview"
+                                    onError={(e) => (e.currentTarget.style.display = 'none')}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {formData.description && (
+                        <p className="text-white/50 text-[10px] font-medium leading-relaxed line-clamp-3 px-2">
+                            {formData.description}
+                        </p>
+                    )}
+                </div>
+
+                <div className="z-10 mb-4 w-full px-4">
+                    <div className={`w-full ${theme.button} text-white py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg border border-white/10`}>
+                        {formData.ctaText || 'Learn More'}
+                    </div>
+                </div>
+            </div>
+            <p className="text-[9px] text-slate-500 italic text-center">Actual billboard will scale to full sidebar height.</p>
+        </div>
+    );
+};
+
 const Advertisements = () => {
     const [advertisements, setAdvertisements] = useState<Advertisement[]>([]);
     const [loading, setLoading] = useState(true);
@@ -388,7 +460,11 @@ const Advertisements = () => {
                         <span className="text-xs font-semibold text-slate-400">Mark as Active</span>
                     </div>
 
-                    <div className="flex gap-3 pt-2">
+                    <div className="py-2 border-t border-slate-800/50 mt-4">
+                        <PosterPreview formData={formData} />
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
                         {editingId && (
                             <button
                                 type="button"

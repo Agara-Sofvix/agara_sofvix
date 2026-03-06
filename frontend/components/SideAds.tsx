@@ -76,14 +76,16 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
             </div>
 
             <div className="z-10 flex flex-col items-center gap-8 w-full h-full justify-center py-6">
-                <h3 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight uppercase px-4 drop-shadow-2xl">
+                {/* Headline always first */}
+                <h3 className="text-white text-3xl md:text-4xl font-black leading-tight tracking-tight uppercase px-4 drop-shadow-2xl mb-2">
                     {title}
                 </h3>
 
+                {/* Optional Image Frame - Centered */}
                 {imageUrl && (
-                    <div className="w-full aspect-square max-w-[220px] relative">
+                    <div className="w-full aspect-square max-w-[240px] relative">
                         <div className={`absolute inset-0 ${theme.glow} rounded-3xl blur-2xl animate-pulse`}></div>
-                        <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-3xl p-6 overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-colors duration-500">
+                        <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-3xl p-6 overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-all duration-500">
                             <img 
                                 src={imageUrl} 
                                 alt={title} 
@@ -94,13 +96,14 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
                 )}
                 
                 {description && (
-                    <p className="text-white/60 text-sm font-medium leading-relaxed max-w-[240px] line-clamp-4 px-4 mt-2">
+                    <p className="text-white/60 text-sm font-medium leading-relaxed max-w-[260px] line-clamp-4 px-4">
                         {description}
                     </p>
                 )}
             </div>
 
             <div className="z-10 mb-10 w-full px-8 flex flex-col items-center gap-5">
+                {/* CTA Button */}
                 <div className={`w-full ${theme.button} ${theme.buttonText} py-4 px-8 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10`}>
                     {ctaText || 'Start Now'}
                 </div>
