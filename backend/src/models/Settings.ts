@@ -35,6 +35,7 @@ export interface ISettings extends Document {
     };
     branding: {
         logoUrl?: string;
+        faviconUrl?: string;
         primaryColor: string;
     };
     seo: {
@@ -92,6 +93,7 @@ const SettingsSchema = new Schema({
     },
     branding: {
         logoUrl: { type: String },
+        faviconUrl: { type: String },
         primaryColor: { type: String, default: '#135bec' }
     },
     seo: {

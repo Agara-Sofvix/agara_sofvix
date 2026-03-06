@@ -170,13 +170,13 @@ export const getActiveAdvertisements = async (req: Request, res: Response): Prom
                 {
                     $or: [
                         { startDate: { $exists: false } },
-                        { startDate: { $lte: now } }
+                        { startDate: { $lte: new Date(now.setHours(23, 59, 59, 999)) } }
                     ]
                 },
                 {
                     $or: [
                         { endDate: { $exists: false } },
-                        { endDate: { $gte: now } }
+                        { endDate: { $gte: new Date(now.setHours(0, 0, 0, 0)) } }
                     ]
                 }
             ]

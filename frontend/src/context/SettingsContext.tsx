@@ -80,6 +80,25 @@ const applySeoSettings = (seo: any) => {
     }
 };
 
+const getFullUrl = (path?: string | null) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+    const baseUrl = (typeof window !== 'undefined' && (window as any).VITE_API_URL) || '';
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    return `${baseUrl}${cleanPath}`;
+};
+
+const updateFavicon = (url: string) => {
+    if (typeof document === 'undefined') return;
+    let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    }
+    link.href = url || '/favicon.ico';
+};
+
 export const updatePageTitle = (pageTitle: string, siteName?: string) => {
     const name = siteName || 'Ezhuthidu';
     document.title = pageTitle ? `${pageTitle} | ${name}` : name;
@@ -124,6 +143,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
             // Update SEO settings
             if (data.seo) {
                 applySeoSettings(data.seo);
+            }
+            // Update Favicon
+            if (data.branding.faviconUrl) {
+                updateFavicon(getFullUrl(data.branding.faviconUrl));
+            } else {
+                updateFavicon('/favicon.ico');
             }
         } catch (error) {
             console.error('Failed to load settings:', error);
@@ -188,6 +213,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
             console.log('Settings updated via socket:', data);
             if (data.seo) {
                 applySeoSettings(data.seo);
+            }
+            if (data.branding?.faviconUrl) {
+                updateFavicon(getFullUrl(data.branding.faviconUrl));
+            } else if (data.branding) {
+                updateFavicon('/favicon.ico');
             }
             loadSettings();
         });

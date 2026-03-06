@@ -58,7 +58,10 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-            "img-src": ["'self'", "data:", "*"], // Allow all images (simplest for cross-origin assets)
+            "img-src": ["'self'", "data:", "*"],
+            "font-src": ["'self'", "https://fonts.gstatic.com", "https://fonts.googleapis.com"],
+            "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.tailwindcss.com"],
+            "script-src": ["'self'", "'unsafe-inline'", "cdn.tailwindcss.com"],
         },
     },
 }));

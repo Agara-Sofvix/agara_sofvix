@@ -348,6 +348,7 @@ export const getPublicSettings = async (req: Request, res: Response): Promise<vo
             maintenanceMode: !!settings.maintenanceMode,
             branding: {
                 logoUrl: settings.branding.logoUrl || '',
+                faviconUrl: settings.branding.faviconUrl || '',
                 primaryColor: settings.branding.primaryColor || '#135bec'
             },
             seo: settings.seo || {},

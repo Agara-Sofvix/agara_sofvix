@@ -56,6 +56,7 @@ export interface Settings {
     };
     branding: {
         logoUrl?: string;
+        faviconUrl?: string;
         primaryColor: string;
     };
     seo: {
@@ -116,6 +117,16 @@ export const uploadLogo = async (file: File): Promise<{ logoUrl: string }> => {
     const formData = new FormData();
     formData.append('logo', file);
     const result = await api.post('/settings/logo', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    return result.data.data;
+};
+export const uploadFavicon = async (file: File): Promise<{ faviconUrl: string }> => {
+    const formData = new FormData();
+    formData.append('favicon', file);
+    const result = await api.post('/settings/favicon', formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }

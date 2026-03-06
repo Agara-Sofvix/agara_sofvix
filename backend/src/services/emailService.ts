@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer'; // Email changed to agara92in@gmail.com
 
+if (!process.env.EMAIL_HOST) {
+    console.warn('[EMAIL WARNING] EMAIL_HOST is not set. SMTP transport may fail.');
+}
+
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.EMAIL_PORT || '587'),

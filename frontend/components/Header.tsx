@@ -62,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
     <header className="fixed top-0 left-0 right-0 z-[60] bg-header-brown px-2 xs:px-4 md:px-6 lg:px-10 py-2 xs:py-3 shadow-lg transition-colors duration-200">
       <div className="flex items-center justify-between whitespace-nowrap max-w-screen-4xl mx-auto overflow-hidden w-full">
         {/* Left Slot: Logo & Mobile Toggle (Matches Left Side-Ad) */}
-        <div className="relative z-20 flex items-center gap-2 xs:gap-3 xl:w-[15%]">
+        <div className="relative z-20 flex items-center gap-2 xs:gap-3 lg:w-[15%]">
           {/* Mobile Hamburger Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -95,7 +95,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
         </div>
 
         {/* Center Slot: Navigation (Matches Main Content & Marquee) */}
-        <div className="hidden lg:flex flex-1 xl:w-[70%] px-2 xs:px-4 md:px-6 lg:px-10 justify-center">
+        <div className="hidden lg:flex flex-1 lg:w-[70%] px-2 xs:px-4 md:px-6 lg:px-10 justify-center">
           <div className="w-full px-4 xs:px-6 lg:px-10">
             {/* Desktop Navigation */}
             <nav className="flex items-center justify-center gap-4 md:gap-6 xl:gap-8 transition-all">
@@ -117,7 +117,7 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
         </div>
 
         {/* Right Slot: User Actions (Matches Right Side-Ad) */}
-        <div className="relative z-20 flex items-center justify-end gap-3 xs:gap-4 md:gap-6 xl:w-[15%]">
+        <div className="relative z-20 flex items-center justify-end gap-3 xs:gap-4 md:gap-6 lg:w-[15%]">
           <button
             onClick={onOpenNotifications}
             className="material-symbols-outlined text-white text-2xl xs:text-3xl hover:scale-110 transition-transform relative"

@@ -27,6 +27,8 @@ services:
       MONGODB_URI: mongodb://mongo:27017/Ezhuthidu
       JWT_SECRET: ${JWT_SECRET:-change_this_secret_in_production}
       ALLOWED_ORIGINS: "*"
+    env_file:
+      - ./backend/.env
     volumes:
       - backend_uploads:/app/public/uploads
     depends_on:

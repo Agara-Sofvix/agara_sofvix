@@ -9,6 +9,7 @@ export interface PublicSettings {
     maintenanceMode: boolean;
     branding: {
         logoUrl?: string;
+        faviconUrl?: string;
         primaryColor: string;
     };
     seo: {

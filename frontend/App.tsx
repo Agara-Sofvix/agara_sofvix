@@ -240,14 +240,18 @@ const AppInner: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       setActiveKeys(prev => {
         const next = new Set(prev);
-        next.add(e.key.toLowerCase());
+        if (e.key) {
+          next.add(e.key.toLowerCase());
+        }
         return next;
       });
     };
     const handleKeyUp = (e: KeyboardEvent) => {
       setActiveKeys(prev => {
         const next = new Set(prev);
-        next.delete(e.key.toLowerCase());
+        if (e.key) {
+          next.delete(e.key.toLowerCase());
+        }
         return next;
       });
     };
@@ -758,14 +762,14 @@ const AppInner: React.FC = () => {
         ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-[calc(100vh-72px)] overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow'}
       `}>
         <div className={`
-          grid w-full mx-auto
-          ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
-          max-w-screen-4xl
-          grid-cols-1 md:grid-cols-1 lg:grid-cols-1
-          ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup') ? 'xl:grid-cols-[20%_60%_20%]' : 'grid-cols-1'}
-        `}>
+            grid w-full mx-auto
+            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
+            max-w-screen-4xl
+            grid-cols-1 md:grid-cols-1 lg:grid-cols-1
+            ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup') ? 'lg:grid-cols-[15%_70%_15%] xl:grid-cols-[20%_60%_20%]' : 'grid-cols-1'}
+          `}>
           {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
-            <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
+            <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="left" />
               </div>
@@ -886,7 +890,7 @@ const AppInner: React.FC = () => {
           </div>
 
           {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
-            <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-l border-slate-100/50 z-[45] p-3 md:p-4">
+            <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-l border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="right" />
               </div>

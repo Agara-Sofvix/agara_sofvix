@@ -14,7 +14,7 @@ import {
     XCircle,
     Trash2
 } from 'lucide-react';
-import { fetchSettings, updateSettings, generateApiKey, revokeApiKey, uploadLogo } from '../services/settingsApi';
+import { fetchSettings, updateSettings, generateApiKey, revokeApiKey, uploadLogo, uploadFavicon } from '../services/settingsApi';
 import { getUploadBaseUrl } from '../config/apiConfig';
 
 const Settings = () => {
@@ -31,6 +31,7 @@ const Settings = () => {
     const [webhookUrl, setWebhookUrl] = useState('https://api.tamilspeedsters.com/v1/sync');
     const [primaryColor, setPrimaryColor] = useState('#135bec');
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
     const [apiKeys, setApiKeys] = useState<Array<{ key: string; name: string; createdAt: Date }>>([]);
 
     // Notification State
@@ -69,6 +70,7 @@ const Settings = () => {
             setWebhookUrl(settings.webhookUrl);
             setPrimaryColor(settings.branding.primaryColor);
             setLogoUrl(settings.branding.logoUrl || null);
+            setFaviconUrl(settings.branding.faviconUrl || null);
             setApiKeys(settings.apiKeys);
             setNotifyRegister(settings.notifications.newRegistration);
             setNotifyReports(settings.notifications.tournamentReports);
@@ -107,6 +109,33 @@ const Settings = () => {
         showNotification('success', 'Logo marked for removal. Click Save to confirm.');
     };
 
+    const handleFaviconChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file size (1MB for favicon)
+        if (file.size > 1 * 1024 * 1024) {
+            showNotification('error', 'Favicon size exceeds 1MB limit');
+            return;
+        }
+
+        try {
+            setUploading(true);
+            const { faviconUrl } = await uploadFavicon(file);
+            setFaviconUrl(faviconUrl);
+            showNotification('success', 'Favicon uploaded successfully!');
+        } catch (error: any) {
+            showNotification('error', 'Failed to upload favicon: ' + error.message);
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const handleRemoveFavicon = () => {
+        setFaviconUrl(null);
+        showNotification('success', 'Favicon marked for removal. Click Save to confirm.');
+    };
+
     const handleSave = async () => {
         try {
             setSaving(true);
@@ -124,7 +153,8 @@ const Settings = () => {
                 },
                 branding: {
                     primaryColor,
-                    logoUrl: logoUrl || "" // Explicitly pass empty string if null to clear in DB
+                    logoUrl: logoUrl || "", // Explicitly pass empty string if null to clear in DB
+                    faviconUrl: faviconUrl || ""
                 }
             });
             showNotification('success', 'Settings saved successfully!');
@@ -208,20 +238,20 @@ const Settings = () => {
                 <div className="lg:sticky lg:top-4 space-y-1">
                     <h3 className="px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-6">Settings Navigation</h3>
                     <div className="space-y-1">
-                        <a href="#general" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all text-sm font-medium">
-                            <SettingsIcon size={20} /> General Settings
+                        <a href="#general" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium group">
+                            <SettingsIcon size={20} className="shrink-0 text-slate-500 group-hover:text-white transition-colors" /> General Settings
                         </a>
-                        <a href="#security" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all text-sm font-medium">
-                            <Shield size={20} /> Security & Auth
+                        <a href="#security" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium group">
+                            <Shield size={20} className="shrink-0 text-slate-500 group-hover:text-white transition-colors" /> Security & Auth
                         </a>
-                        <a href="#api" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all text-sm font-medium">
-                            <Webhook size={20} /> API & Webhooks
+                        <a href="#api" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium group">
+                            <Webhook size={20} className="shrink-0 text-slate-500 group-hover:text-white transition-colors" /> API & Webhooks
                         </a>
-                        <a href="#notifications" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all text-sm font-medium">
-                            <Bell size={20} /> Notifications
+                        <a href="#notifications" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium group">
+                            <Bell size={20} className="shrink-0 text-slate-500 group-hover:text-white transition-colors" /> Notifications
                         </a>
-                        <a href="#branding" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all text-sm font-medium">
-                            <Palette size={20} /> Branding & Identity
+                        <a href="#branding" className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-all text-sm font-medium group">
+                            <Palette size={20} className="shrink-0 text-slate-500 group-hover:text-white transition-colors" /> Branding & Identity
                         </a>
                     </div>
 
@@ -233,11 +263,11 @@ const Settings = () => {
                         >
                             {saving ? (
                                 <>
-                                    <Loader2 size={16} className="animate-spin" /> Saving...
+                                    <Loader2 size={16} className="animate-spin shrink-0" /> Saving...
                                 </>
                             ) : (
                                 <>
-                                    <Save size={16} /> Save Changes
+                                    <Save size={16} className="shrink-0" /> Save Changes
                                 </>
                             )}
                         </button>
@@ -479,9 +509,9 @@ const Settings = () => {
                                     {logoUrl && (
                                         <button
                                             onClick={handleRemoveLogo}
-                                            className="text-[10px] flex items-center gap-1.5 text-red-500 hover:text-red-400 font-bold uppercase tracking-wider transition-colors"
+                                            className="text-[10px] flex items-center gap-1.5 text-red-500 hover:text-red-400 font-black uppercase tracking-wider transition-colors bg-red-500/10 px-2 py-1 rounded"
                                         >
-                                            <Trash2 size={12} /> Remove Logo
+                                            <Trash2 size={14} className="shrink-0" /> Remove Logo
                                         </button>
                                     )}
                                 </div>
@@ -526,6 +556,61 @@ const Settings = () => {
                                 </label>
                             </div>
                             <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-sm font-semibold text-slate-300">Site Favicon</h4>
+                                    {faviconUrl && (
+                                        <button
+                                            onClick={handleRemoveFavicon}
+                                            className="text-[10px] flex items-center gap-1.5 text-red-500 hover:text-red-400 font-black uppercase tracking-wider transition-colors bg-red-500/10 px-2 py-1 rounded"
+                                        >
+                                            <Trash2 size={14} className="shrink-0" /> Remove Favicon
+                                        </button>
+                                    )}
+                                </div>
+                                <label className="border-2 border-dashed border-slate-700 rounded-xl h-40 flex flex-col items-center justify-center gap-3 bg-[#0f1214]/30 hover:bg-[#0f1214]/50 transition-colors cursor-pointer group relative overflow-hidden">
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept=".ico,.png,.jpg,.jpeg,.svg"
+                                        onChange={handleFaviconChange}
+                                        disabled={uploading}
+                                    />
+                                    {faviconUrl ? (
+                                        <div className="flex flex-col items-center gap-3">
+                                            <img
+                                                src={getFullImageUrl(faviconUrl)}
+                                                alt="Site Favicon"
+                                                className="size-16 object-contain"
+                                                onError={(e) => {
+                                                    console.error('Favicon failed to load:', e.currentTarget.src);
+                                                    e.currentTarget.style.opacity = '0.5';
+                                                }}
+                                            />
+                                            <p className="text-[10px] text-slate-500 font-mono">{faviconUrl.split('/').pop()}</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="size-14 bg-primary/10 rounded-lg flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                                {uploading ? (
+                                                    <Loader2 size={24} className="animate-spin" />
+                                                ) : (
+                                                    <Upload size={24} />
+                                                )}
+                                            </div>
+                                            <div className="text-center px-4">
+                                                <p className="text-xs font-semibold text-white">Click to upload favicon</p>
+                                                <p className="text-[10px] text-slate-500">ICO, PNG, or SVG (max 1MB)</p>
+                                            </div>
+                                        </>
+                                    )}
+                                    {uploading && (
+                                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                            <Loader2 size={32} className="animate-spin text-white" />
+                                        </div>
+                                    )}
+                                </label>
+                            </div>
+                            <div className="col-span-full border-t border-slate-800/50 pt-8 mt-4">
                                 <h4 className="text-sm font-semibold text-slate-300 mb-4">Primary Theme Color</h4>
                                 <div className="grid grid-cols-5 gap-3">
                                     {colorOptions.map((color) => (

@@ -45,8 +45,9 @@ const brandingStorage = multer.diskStorage({
         cb(null, brandingDir);
     },
     filename: (req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
-        const ext = path.extname(file.originalname);
-        const filename = `logo-${Date.now()}${ext}`;
+        const ext = path.extname(file.originalname).toLowerCase();
+        const prefix = file.fieldname === 'favicon' ? 'favicon' : 'logo';
+        const filename = `${prefix}-${Date.now()}${ext}`;
         cb(null, filename);
     }
 });
@@ -65,7 +66,7 @@ const profileStorage = multer.diskStorage({
 
 // File filter for images only
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.svg', '.webp'];
+    const allowedExtensions = ['.png', '.jpg', '.jpeg', '.svg', '.webp', '.ico'];
     const ext = path.extname(file.originalname).toLowerCase();
 
     if (allowedExtensions.includes(ext)) {
@@ -89,6 +90,14 @@ export const profileUpload = multer({
     fileFilter,
     limits: {
         fileSize: 2 * 1024 * 1024 // 2MB limit
+    }
+});
+
+export const faviconUpload = multer({
+    storage: brandingStorage,
+    fileFilter,
+    limits: {
+        fileSize: 1 * 1024 * 1024 // 1MB limit for favicons
     }
 });
 
