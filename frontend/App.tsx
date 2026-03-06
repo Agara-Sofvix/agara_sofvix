@@ -726,13 +726,24 @@ const AppInner: React.FC = () => {
         ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-12 xs:pt-14'} 
         ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-screen overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow overflow-x-hidden'}
       `}>
-        <div className={`flex flex-row w-full ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full justify-center' : 'min-h-full justify-center'} max-w-screen-4xl mx-auto`}>
-          {currentView !== 'TournamentArena' && <SideAds position="left" />}
+        <div className={`
+          grid w-full mx-auto
+          ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
+          max-w-screen-4xl
+          grid-cols-1 md:grid-cols-1 lg:grid-cols-1
+          ${currentView !== 'TournamentArena' ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
+        `}>
+          {currentView !== 'TournamentArena' && (
+            <div className="hidden xl:block overflow-hidden">
+              <SideAds position="left" />
+            </div>
+          )}
 
           <div className={`
-            ${isTournamentResult || currentView === 'TournamentArena' ? 'w-full' : 'w-full xl:w-[70%] px-2 xs:px-4 md:px-6 lg:px-10'}
+            w-full flex flex-col
+            ${isTournamentResult || currentView === 'TournamentArena' ? 'xl:col-span-3' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
-            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full flex flex-col !px-0 !max-w-none' : `flex flex-col ${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0`}
+            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full !px-0 !max-w-none' : `${currentView === 'Ezhuthidu' ? 'gap-1' : 'gap-4 xs:gap-6'} shrink-0`}
           `}>
             {!isTournamentLive && !isTournamentResult && (
               <div className="w-full mx-auto px-4 xs:px-6 lg:px-10">
@@ -841,7 +852,11 @@ const AppInner: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'TournamentArena' && <SideAds position="right" />}
+          {currentView !== 'TournamentArena' && (
+            <div className="hidden xl:block overflow-hidden">
+              <SideAds position="right" />
+            </div>
+          )}
         </div>
       </main>
       {!isTournamentLive && !isTournamentResult && (
