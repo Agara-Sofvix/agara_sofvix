@@ -14,7 +14,8 @@ import {
     getAuditLogs,
     createTournament,
     updateTournament,
-    getLeaderboard
+    getLeaderboard,
+    toggleSuspiciousScore
 } from '../controllers/adminTournamentController';
 import { getUsers, getUserDetails, deleteUser, toggleUserBan, getUserStats } from '../controllers/adminUserController';
 import { getTexts, addText, updateText, deleteText } from '../controllers/adminContentController';
@@ -58,6 +59,7 @@ router.put('/tournaments/:id', adminAuth, updateTournament);
 
 // Leaderboard Management
 router.delete('/leaderboards/:resultId', adminAuth, removeLeaderboardScore);
+router.put('/leaderboards/:resultId/flag', adminAuth, toggleSuspiciousScore);
 router.post('/leaderboards/:tournamentId/reset', adminAuth, resetLeaderboard);
 router.get('/leaderboards/:tournamentId/export', adminAuth, exportLeaderboard);
 router.get('/leaderboards', adminAuth, getLeaderboard);

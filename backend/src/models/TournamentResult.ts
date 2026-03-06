@@ -7,6 +7,7 @@ export interface ITournamentResult extends Document {
     accuracy: number;
     score: number; // Could be same as WPM or a derived score
     timestamp: Date;
+    isSuspicious: boolean;
     testSessionId?: string; // For idempotency
     createdAt: Date;
     updatedAt: Date;
@@ -34,6 +35,10 @@ const TournamentResultSchema: Schema = new Schema({
     score: {
         type: Number,
         required: true,
+    },
+    isSuspicious: {
+        type: Boolean,
+        default: false,
     },
     timestamp: {
         type: Date,

@@ -30,6 +30,7 @@ interface LeaderboardEntry {
     wpm: number;
     accuracy: number;
     score: number;
+    isSuspicious?: boolean;
     createdAt: string;
 }
 
@@ -177,6 +178,20 @@ const Leaderboards = () => {
         }
     };
 
+    const handleToggleFlag = async (resultId: string) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('adminUser') || '{}');
+            const token = user.token;
+            await axios.put(`${ADMIN_API_URL}/leaderboards/${resultId}/flag`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchLeaderboard(); // Refresh
+        } catch (error) {
+            console.error('Error toggling flag:', error);
+            alert('Failed to toggle flag.');
+        }
+    };
+
     const filteredLeaderboard = leaderboard.filter(entry =>
         entry.user?.name.toLowerCase().includes(search.toLowerCase()) ||
         entry.user?.username.toLowerCase().includes(search.toLowerCase())
@@ -263,7 +278,7 @@ const Leaderboards = () => {
                                 <tr><td colSpan={7} className="p-6 text-center text-slate-500">No records found.</td></tr>
                             ) : (
                                 filteredLeaderboard.map((entry, index) => (
-                                    <tr key={entry._id} className="hover:bg-[#1e293b] transition-colors">
+                                    <tr key={entry._id} className={`hover:bg-[#1e293b] transition-colors ${entry.isSuspicious ? 'bg-orange-500/5' : ''}`}>
                                         <td className="px-6 py-4">
                                             <span className={`flex items-center justify-center w-7 h-7 rounded font-bold text-xs ${index < 3 ? 'bg-blue-500/10 text-blue-500 ring-1 ring-blue-500/30' : 'bg-slate-800 text-slate-500'}`}>
                                                 #{index + 1}
@@ -275,7 +290,14 @@ const Leaderboards = () => {
                                                     {entry.user?.name?.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-semibold text-slate-200">{entry.user?.name || 'Unknown'}</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm font-semibold text-slate-200">{entry.user?.name || 'Unknown'}</p>
+                                                        {entry.isSuspicious && (
+                                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter bg-orange-500/20 text-orange-500 border border-orange-500/30">
+                                                                <Flag size={8} fill="currentColor" /> Suspicious
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-[10px] text-slate-500 uppercase">@{entry.user?.username || 'unknown'}</p>
                                                 </div>
                                             </div>
@@ -304,10 +326,11 @@ const Leaderboards = () => {
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
-                                                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-800 text-slate-500 hover:text-orange-500 transition-all"
-                                                    title="Flag suspicious score"
+                                                    onClick={() => handleToggleFlag(entry._id)}
+                                                    className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${entry.isSuspicious ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'hover:bg-slate-800 text-slate-500 hover:text-orange-500'}`}
+                                                    title={entry.isSuspicious ? "Unflag score" : "Flag suspicious score"}
                                                 >
-                                                    <Flag size={16} />
+                                                    <Flag size={16} fill={entry.isSuspicious ? "currentColor" : "none"} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteScore(entry._id)}

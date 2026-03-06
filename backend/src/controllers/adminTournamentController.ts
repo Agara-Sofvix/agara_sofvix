@@ -180,6 +180,42 @@ export const resetLeaderboard = async (req: Request, res: Response): Promise<voi
     }
 };
 
+// @desc    Toggle suspicious flag for a score
+// @route   PUT /api/admin/leaderboards/:resultId/flag
+// @access  Private (Admin)
+export const toggleSuspiciousScore = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { resultId } = req.params;
+        const result = await TournamentResult.findById(resultId);
+
+        if (!result) {
+            res.status(404).json({ message: 'Result not found' });
+            return;
+        }
+
+        result.isSuspicious = !result.isSuspicious;
+        await result.save();
+
+        // Log the action
+        await AuditLog.create({
+            admin: (req as any).admin._id,
+            action: result.isSuspicious ? 'FLAG_SUSPICIOUS_SCORE' : 'UNFLAG_SUSPICIOUS_SCORE',
+            targetType: 'TournamentResult',
+            targetId: resultId,
+            metadata: { wpm: result.wpm, user: result.user, isSuspicious: result.isSuspicious },
+            ipAddress: req.ip,
+        });
+
+        res.json({
+            success: true,
+            message: `Score ${result.isSuspicious ? 'flagged as suspicious' : 'unflagged'} successfully`,
+            data: result
+        });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Export leaderboard as PDF
 // @route   GET /api/admin/leaderboards/:tournamentId/export
 // @access  Private (Admin)
@@ -276,7 +312,7 @@ export const exportLeaderboard = async (req: Request, res: Response): Promise<vo
             const user = result.user as any;
             const row = [
                 (index + 1).toString(),
-                user?.name || 'Deleted User',
+                `${user?.name || 'Deleted User'}${result.isSuspicious ? ' (FLAGGED)' : ''}`,
                 user?.username || 'N/A',
                 Math.round(result.wpm || 0).toString(),
                 `${Math.round(result.accuracy || 0)}%`
