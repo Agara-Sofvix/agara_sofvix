@@ -202,6 +202,33 @@ const AppInner: React.FC = () => {
     }
   }, [userStats, isLoggedIn]);
 
+  // Global Error & Rejection Logging for EC2 Debugging
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('[EZH-GLOBAL-ERROR]', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error?.stack || event.error
+      });
+    };
+
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      console.error('[EZH-GLOBAL-REJECTION]', {
+        reason: event.reason?.message || event.reason,
+        stack: event.reason?.stack
+      });
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
   // Check if accessing admin panel
   if (currentView === 'Admin' && !window.location.pathname.startsWith('/admin')) {
     return <AdminApp />;
@@ -518,6 +545,7 @@ const AppInner: React.FC = () => {
   };
 
   const handleLogin = async (user: { name: string, token?: string, lastNotificationReadAt?: string, dob?: string, profilePic?: string }) => {
+    console.log('[EZH-LOGIN] User data received:', { ...user, token: user.token ? '***' : null });
     // 1. Immediate data persistence
     const token = user.token || localStorage.getItem('token');
     if (user.token) {
@@ -557,6 +585,7 @@ const AppInner: React.FC = () => {
     setCurrentView(target);
 
     const targetPath = VIEW_TO_PATH[target] || '/dashboard';
+    console.log(`[EZH-LOGIN] Navigating to ${target} (${targetPath})`);
     // Use replaceState to clear the login entry from history if preferred, or pushState for standard nav
     window.history.pushState({ view: target }, '', targetPath);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -575,7 +604,7 @@ const AppInner: React.FC = () => {
           profilePic: user.profilePic || prev.profilePic
         }));
       } catch (err) {
-        console.error("Failed to load user history in background", err);
+        console.error("[EZH-LOGIN] Failed to load user history in background", err);
       }
     }
   };

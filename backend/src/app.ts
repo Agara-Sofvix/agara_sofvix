@@ -144,7 +144,9 @@ const resolvePublicPath = (targetSubPath: string) => {
     for (const p of candidates) {
         if (fs.existsSync(p)) return p;
     }
-    return path.join(root, 'public', targetSubPath.replace(/^public\//, '')); // Default fallback
+    // Fallback: If all else fails, use a path relative to the process root
+    const fallbackPath = path.join(root, targetSubPath);
+    return fallbackPath;
 };
 
 // Ensure upload directories exist
