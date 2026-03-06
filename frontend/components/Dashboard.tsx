@@ -88,15 +88,28 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
   };
 
   const predefinedAvatars = [
-    { gender: 'Male', items: ['male_1.png', 'male_2.png', 'male_3.png'] },
-    { gender: 'Female', items: ['female_1.png', 'female_2.png', 'female_3.png'] },
+    { gender: 'Male', items: ['/avatars/male_1.png', '/avatars/male_2.png', '/avatars/male_3.png'] },
+    { gender: 'Female', items: ['/avatars/female_1.png', '/avatars/female_2.png', '/avatars/female_3.png'] },
   ];
 
   const getFullUrl = (path: string) => {
     if (!path) return null;
     if (path.startsWith('http')) return path;
     const base = getUploadBaseUrl().replace(/\/$/, '');
-    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+
+    // Fallback for old records that missing the /avatars/ or /uploads/ prefix
+    let cleanPath = path;
+    if (!path.startsWith('/') && !path.includes('/')) {
+      // If it's just a filename like male_1.png, it's an avatar
+      if (path.includes('male') || path.includes('female')) {
+        cleanPath = `/avatars/${path}`;
+      } else {
+        cleanPath = `/uploads/${path}`;
+      }
+    } else {
+      cleanPath = path.startsWith('/') ? path : `/${path}`;
+    }
+
     return `${base}${cleanPath}`;
   };
 

@@ -139,7 +139,22 @@ const Header: React.FC<HeaderProps> = ({ activeTab, onNavigate, isLoggedIn, disp
                   <img
                     alt="Avatar"
                     className="w-full h-full object-cover"
-                    src={`${getUploadBaseUrl().replace(/\/$/, '')}${profilePic.startsWith('/') ? profilePic : `/${profilePic}`}`}
+                    src={(() => {
+                      const base = getUploadBaseUrl().replace(/\/$/, '');
+                      if (profilePic.startsWith('http')) return profilePic;
+
+                      let cleanPath = profilePic;
+                      if (!profilePic.startsWith('/') && !profilePic.includes('/')) {
+                        if (profilePic.includes('male') || profilePic.includes('female')) {
+                          cleanPath = `/avatars/${profilePic}`;
+                        } else {
+                          cleanPath = `/uploads/${profilePic}`;
+                        }
+                      } else {
+                        cleanPath = profilePic.startsWith('/') ? profilePic : `/${profilePic}`;
+                      }
+                      return `${base}${cleanPath}`;
+                    })()}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-white/40">

@@ -144,8 +144,23 @@ const resolvePublicPath = (targetSubPath: string) => {
     for (const p of candidates) {
         if (fs.existsSync(p)) return p;
     }
-    return path.join(root, '..', targetSubPath); // Default fallback
+    return path.join(root, 'public', targetSubPath.replace(/^public\//, '')); // Default fallback
 };
+
+// Ensure upload directories exist
+const uploadDirs = [
+    resolvePublicPath('public/uploads'),
+    resolvePublicPath('public/uploads/profiles'),
+    resolvePublicPath('public/uploads/branding'),
+    resolvePublicPath('public/avatars')
+];
+
+uploadDirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+        console.log(`Created missing directory: ${dir}`);
+    }
+});
 
 app.use('/uploads', express.static(resolvePublicPath('public/uploads')));
 app.use('/avatars', express.static(resolvePublicPath('public/avatars')));
