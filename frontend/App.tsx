@@ -731,9 +731,9 @@ const AppInner: React.FC = () => {
           ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
           max-w-screen-4xl
           grid-cols-1 md:grid-cols-1 lg:grid-cols-1
-          ${(currentView !== 'TournamentArena' || currentView === 'TournamentArena') ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
+          ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Ezhuthidu') ? 'xl:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
         `}>
-          {currentView !== 'TournamentLive' && currentView !== 'TournamentResult' && (
+          {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Ezhuthidu' && (
             <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="left" />
@@ -854,7 +854,7 @@ const AppInner: React.FC = () => {
             )}
           </div>
 
-          {currentView !== 'TournamentLive' && currentView !== 'TournamentResult' && (
+          {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Ezhuthidu' && (
             <div className="hidden xl:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-l border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="right" />
