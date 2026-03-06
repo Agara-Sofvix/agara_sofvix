@@ -344,34 +344,34 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
       className="xs:text-xs min-h-screen bg-warm-bg text-slate-900 flex flex-col animate-in fade-in duration-1000 select-none font-tamil"
       onContextMenu={(e) => e.preventDefault()}
     >
-      <header className="bg-header-brown border-b border-black/5 xs:px-4 px-6 sm:px-12 py-2 sm:py-4 flex items-center justify-between sticky top-0 z-50 shadow-md rounded-t-3xl transition-all">
+      <header className="bg-header-brown border-b border-black/5 xs:px-4 px-6 sm:px-12 py-1.5 sm:py-2.5 flex items-center justify-between sticky top-0 z-50 shadow-md rounded-t-3xl transition-all">
         <div className="flex flex-col">
-          <h1 className="xs:text-[9px] text-xs sm:text-lg lg:text-xl font-black text-white uppercase tracking-widest leading-none">{activeTournament?.name || "Elite Championship"}</h1>
-          <span className="xs:text-[8px] text-[10px] sm:text-xs lg:text-sm font-bold text-white/50 uppercase mt-1">{activeTournament?.subheading || "Official Competition Sprint"}</span>
+          <h1 className="xs:text-[8px] text-[10px] sm:text-sm lg:text-base font-black text-white uppercase tracking-widest leading-none">{activeTournament?.name || "Elite Championship"}</h1>
+          <span className="xs:text-[7px] text-[8px] sm:text-[10px] lg:text-xs font-bold text-white/40 uppercase mt-0.5">{activeTournament?.subheading || "Official Competition Sprint"}</span>
         </div>
 
-        <div className="flex flex-col items-center gap-2">
-          <div className={`xs:text-base text-2xl sm:text-3xl lg:text-5xl font-black tabular-nums transition-colors duration-300 text-white ${timeLeft < 20 ? 'text-red-300' : ''}`}>
+        <div className="flex flex-col items-center">
+          <div className={`xs:text-sm text-lg sm:text-2xl lg:text-3xl font-black tabular-nums transition-colors duration-300 text-white leading-tight ${timeLeft < 20 ? 'text-red-300' : ''}`}>
             {formatTime(timeLeft)}
           </div>
           {isStarted && !isFinished && (
             <button
               onClick={() => handleFinish('Manual')}
-              className="px-4 py-1.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-widest text-white transition-all active:scale-95 no-print"
+              className="px-3 py-1 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full text-[8px] font-black uppercase tracking-widest text-white transition-all active:scale-95 no-print mt-0.5"
             >
               Finish & Submit
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-6 text-right text-white">
+        <div className="flex items-center gap-4 sm:gap-6 text-right text-white">
           <div className="flex flex-col text-right">
-            <span className="xs:text-[8px] text-[9px] sm:text-xs lg:text-xs font-black uppercase tracking-tighter opacity-40">Attempt</span>
-            <span className="xs:text-xs text-sm sm:text-base lg:text-lg font-bold">1 / 1</span>
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tighter opacity-30">Attempt</span>
+            <span className="text-[10px] sm:text-sm font-bold">1/1</span>
           </div>
           <div className="flex flex-col text-right">
-            <span className="xs:text-[8px] text-[9px] sm:text-xs lg:text-xs font-black uppercase tracking-tighter opacity-40">User Identity</span>
-            <span className="xs:text-xs text-sm sm:text-base lg:text-lg font-bold font-mono">{maskedId}</span>
+            <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-tighter opacity-30">Identity</span>
+            <span className="text-[10px] sm:text-sm font-bold font-mono">{maskedId}</span>
           </div>
         </div>
       </header>
