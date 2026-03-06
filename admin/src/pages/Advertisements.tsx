@@ -66,7 +66,7 @@ const PosterPreview = ({ formData }: { formData: any }) => {
                 </div>
 
                 <div className="z-10 flex flex-col items-center gap-4 py-4 w-full h-full justify-center">
-                    <h4 className="text-white text-xl font-black leading-tight uppercase drop-shadow-xl line-clamp-3 break-words">
+                    <h4 className="text-white text-xl font-black leading-tight uppercase drop-shadow-xl break-words">
                         {formData.title || 'Your Campaign Title'}
                     </h4>
 
@@ -85,14 +85,14 @@ const PosterPreview = ({ formData }: { formData: any }) => {
                     )}
 
                     {formData.description && (
-                        <p className="text-white/50 text-[10px] font-medium leading-relaxed line-clamp-3 px-2 break-words">
+                        <p className="text-white/50 text-[10px] font-medium leading-relaxed px-2 break-words">
                             {formData.description}
                         </p>
                     )}
                 </div>
 
                 <div className="z-10 mb-4 w-full px-4">
-                    <div className={`w-full ${theme.button} text-white py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg border border-white/10`}>
+                    <div className={`w-full ${theme.button} text-white py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-lg border border-white/10 whitespace-nowrap overflow-hidden text-ellipsis`}>
                         {formData.ctaText || 'Learn More'}
                     </div>
                 </div>
