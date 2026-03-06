@@ -103,7 +103,7 @@ const Users = () => {
             const response = await axios.get(`${ADMIN_API_URL}/users/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setSelectedUser(response.data);
+            setSelectedUser(response.data.data);
         } catch (error) {
             console.error('Error fetching user details:', error);
         } finally {
@@ -275,10 +275,10 @@ const Users = () => {
                         <div className="w-full md:w-80 bg-[#1e2227] p-8 border-b md:border-b-0 md:border-r border-slate-800">
                             <div className="flex flex-col items-center text-center">
                                 <div className="w-24 h-24 rounded-full bg-blue-500/10 border-4 border-slate-800 flex items-center justify-center mb-4">
-                                    <span className="text-4xl font-black text-blue-500">{selectedUser.user.name.charAt(0).toUpperCase()}</span>
+                                    <span className="text-4xl font-black text-blue-500">{selectedUser.user?.name?.charAt(0).toUpperCase() || '?'}</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-white">{selectedUser.user.name}</h3>
-                                <p className="text-xs text-slate-500 uppercase font-black tracking-widest mt-1">@{selectedUser.user.username}</p>
+                                <h3 className="text-xl font-bold text-white">{selectedUser.user?.name || 'Unknown User'}</h3>
+                                <p className="text-xs text-slate-500 uppercase font-black tracking-widest mt-1">@{selectedUser.user?.username || 'user'}</p>
 
                                 <div className="w-full mt-8 space-y-4">
                                     <div className="bg-[#1a1d21] p-3 rounded-xl border border-slate-800">
@@ -287,7 +287,15 @@ const Users = () => {
                                     </div>
                                     <div className="bg-[#1a1d21] p-3 rounded-xl border border-slate-800">
                                         <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Member Since</p>
-                                        <p className="text-sm text-slate-300 mt-1">{format(new Date(selectedUser.user.createdAt), 'MMMM d, yyyy')}</p>
+                                        <p className="text-sm text-slate-300 mt-1">
+                                            {(() => {
+                                                try {
+                                                    return selectedUser.user?.createdAt ? format(new Date(selectedUser.user.createdAt), 'MMMM d, yyyy') : 'N/A';
+                                                } catch (e) {
+                                                    return 'Unknown Date';
+                                                }
+                                            })()}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -356,7 +364,15 @@ const Users = () => {
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-bold text-slate-200">{result.tournament?.name || 'Tournament'}</p>
-                                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest">{format(new Date(result.createdAt), 'MMM d, h:mm a')}</p>
+                                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest">
+                                                                {(() => {
+                                                                    try {
+                                                                        return result.createdAt ? format(new Date(result.createdAt), 'MMM d, h:mm a') : 'Recent';
+                                                                    } catch (e) {
+                                                                        return 'Recent';
+                                                                    }
+                                                                })()}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
@@ -393,7 +409,15 @@ const Users = () => {
                                                         </div>
                                                         <div>
                                                             <p className="text-sm font-bold text-slate-200 truncate w-32">{result.text?.substring(0, 20)}...</p>
-                                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest">{format(new Date(result.createdAt), 'MMM d, h:mm a')}</p>
+                                                            <p className="text-[10px] text-slate-500 uppercase tracking-widest">
+                                                                {(() => {
+                                                                    try {
+                                                                        return result.createdAt ? format(new Date(result.createdAt), 'MMM d, h:mm a') : 'Recent';
+                                                                    } catch (e) {
+                                                                        return 'Recent';
+                                                                    }
+                                                                })()}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
