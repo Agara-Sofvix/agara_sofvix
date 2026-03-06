@@ -60,7 +60,7 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
     const theme = THEMES[themeIndex];
 
     return (
-        <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-6 md:p-8 text-center relative overflow-hidden group`}>
+        <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-6 md:p-8 text-center relative group`}>
             {/* Abstract tech background elements */}
             <div className={`absolute top-[-10%] left-[-10%] w-64 h-64 ${theme.accent}/10 rounded-full blur-[100px] animate-pulse`}></div>
             <div className={`absolute bottom-[-5%] right-[-5%] w-56 h-56 ${theme.accent}/5 rounded-full blur-[80px]`}></div>
@@ -96,7 +96,7 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
                 )}
 
                 {description && (
-                    <p className="text-white/60 text-sm font-medium leading-relaxed max-w-[260px] px-4 break-words">
+                    <p className="text-white/60 text-sm font-medium leading-relaxed max-w-[260px] line-clamp-4 px-4 break-words">
                         {description}
                     </p>
                 )}
@@ -104,7 +104,7 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
 
             <div className="z-10 mb-4 w-full px-4 md:px-6 flex flex-col items-center gap-3">
                 {/* CTA Button */}
-                <div className={`w-full ${theme.button} ${theme.buttonText} py-3 px-6 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10 whitespace-nowrap overflow-hidden text-ellipsis`}>
+                <div className={`w-full ${theme.button} ${theme.buttonText} py-3 px-6 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10`}>
                     {ctaText || 'Start Now'}
                 </div>
                 <div className="text-[7px] text-white/20 font-black uppercase tracking-[0.4em] mt-1">Sponsored Content</div>
