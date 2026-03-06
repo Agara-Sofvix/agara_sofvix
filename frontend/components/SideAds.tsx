@@ -60,12 +60,12 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                             </div>
 
                             <a href={ad.linkUrl} target="_blank" rel="noopener noreferrer" className="block">
-                                <div className="p-2 pb-0">
-                                    <div className="overflow-hidden rounded-lg bg-slate-100 max-h-32">
+                                <div className="pt-6 flex justify-center">
+                                    <div className="w-24 h-24 flex items-center justify-center bg-slate-50 rounded-2xl border border-slate-100 p-3 overflow-hidden group-hover:border-primary/20 transition-colors">
                                         <img
                                             src={ad.imageUrl}
                                             alt={ad.title}
-                                            className="w-full object-cover aspect-[21/9] group-hover:scale-105 transition-transform duration-500 grayscale-[20%] group-hover:grayscale-0"
+                                            className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500"
                                         />
                                     </div>
                                 </div>
