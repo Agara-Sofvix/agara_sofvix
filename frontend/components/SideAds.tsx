@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { getActiveAdvertisements } from '../src/services/api';
 import { getUploadBaseUrl } from '../src/config/apiConfig';
 
@@ -121,7 +122,7 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
     })();
 
     return (
-        <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-6 md:p-8 text-center relative group`}>
+        <div className={`w-full h-full bg-gradient-to-br ${theme.bg} flex flex-col items-center justify-between p-[8%] xs:p-[10%] text-center relative group`}>
             {/* Abstract tech background elements */}
             <div className={`absolute top-[-10%] left-[-10%] w-64 h-64 ${theme.accent}/10 rounded-full blur-[100px] animate-pulse`}></div>
             <div className={`absolute bottom-[-5%] right-[-5%] w-56 h-56 ${theme.accent}/5 rounded-full blur-[80px]`}></div>
@@ -138,15 +139,15 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
 
             <div className="z-10 flex flex-col items-center gap-4 md:gap-6 w-full h-full justify-center py-2">
                 {/* Headline always first */}
-                <h3 className="text-white text-2xl md:text-3xl font-black leading-tight tracking-tight uppercase px-2 drop-shadow-2xl mb-1 break-words">
+                <h3 className="text-white text-[clamp(1.2rem,5cqw,1.8rem)] xl:text-[clamp(1.5rem,6cqw,2.2rem)] font-black leading-tight tracking-tight uppercase px-2 drop-shadow-2xl mb-1 break-words">
                     {title}
                 </h3>
 
                 {/* Optional Image Frame - Centered */}
                 {imageUrl && (
-                    <div className="w-full aspect-square max-w-[180px] md:max-w-[200px] relative">
+                    <div className="w-[85%] aspect-square relative">
                         <div className={`absolute inset-0 ${theme.glow} rounded-2xl blur-xl animate-pulse`}></div>
-                        <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-4 overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-all duration-500">
+                        <div className="relative w-full h-full bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-2xl p-[10%] overflow-hidden shadow-2xl flex items-center justify-center group-hover:border-white/20 transition-all duration-500">
                             <img
                                 src={resolvedImageUrl}
                                 alt={title}
@@ -157,15 +158,15 @@ const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, c
                 )}
 
                 {description && (
-                    <p className="text-white/60 text-sm font-medium leading-relaxed max-w-[260px] line-clamp-4 px-4 break-words">
+                    <p className="text-white/60 text-[clamp(0.7rem,3cqw,0.9rem)] font-medium leading-relaxed max-w-[90%] line-clamp-4 px-2 break-words">
                         {description}
                     </p>
                 )}
             </div>
 
-            <div className="z-10 mb-4 w-full px-4 md:px-6 flex flex-col items-center gap-3">
+            <div className="z-10 mb-4 w-full px-[5%] flex flex-col items-center gap-3">
                 {/* CTA Button */}
-                <div className={`w-full ${theme.button} ${theme.buttonText} py-3 px-6 rounded-xl font-black text-[10px] md:text-xs uppercase tracking-[0.2em] shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10`}>
+                <div className={`w-full ${theme.button} ${theme.buttonText} py-[5%] px-[10%] rounded-xl font-black text-[clamp(0.6rem,2.5cqw,0.8rem)] uppercase tracking-[0.2em] shadow-xl shadow-black/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/10`}>
                     {ctaText || 'Start Now'}
                 </div>
                 <div className="text-[7px] text-white/20 font-black uppercase tracking-[0.4em] mt-1">Sponsored Content</div>
@@ -226,7 +227,7 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                         rel="noopener noreferrer"
                         className="block w-full h-full"
                     >
-                        <div className="w-full h-full overflow-hidden">
+                        <div className="w-full h-full overflow-hidden @container">
                             <GeneratedPoster
                                 title={currentAd.title}
                                 description={currentAd.description}

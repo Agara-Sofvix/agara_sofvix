@@ -195,11 +195,11 @@ const Ezhuthidu: React.FC<EzhuthiduProps> = ({ settings, activeKeys }) => {
       element.appendChild(body);
 
       const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
+        margin: [0.5, 0.5, 0.5, 0.5] as [number, number, number, number],
         filename: `${title.trim().replace(/\s+/g, '-') || 'ezhuthidu-doc'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const }
       };
 
       // @ts-ignore
@@ -318,7 +318,7 @@ const Ezhuthidu: React.FC<EzhuthiduProps> = ({ settings, activeKeys }) => {
 
       {/* KEYBOARD CONTAINER - Responsive width and padding */}
       {showKeyboard && (
-        <div className="flex-none w-full bg-slate-900/5 rounded-2xl p-2 flex items-center justify-center no-print mt-2">
+        <div className="flex-none w-full bg-slate-900/5 rounded-2xl p-2 pb-6 flex items-center justify-center no-print mt-2">
           <div className="w-full flex justify-center py-2 transition-all duration-300">
             <Keyboard activeKeys={activeKeys} settings={settings} />
           </div>

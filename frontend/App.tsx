@@ -130,7 +130,14 @@ const AppInner: React.FC = () => {
 
   const [appUiSettings, setAppUiSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SETTINGS);
-    return saved ? JSON.parse(saved) : {
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse app settings from localStorage', e);
+      }
+    }
+    return {
       keyboardSound: true,
       handGuidance: true,
       duration: '1m'
@@ -140,11 +147,15 @@ const AppInner: React.FC = () => {
   const [userStats, setUserStats] = useState<UserStats>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_STATS);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        ...parsed,
-        trophies: parsed.trophies || []
-      };
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          trophies: parsed.trophies || []
+        };
+      } catch (e) {
+        console.error('Failed to parse user stats from localStorage', e);
+      }
     }
     return {
       displayName: '',
@@ -759,7 +770,7 @@ const AppInner: React.FC = () => {
 
       <main className={`
         ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-12 xs:pt-14'} 
-        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-[calc(100vh-72px)] overflow-hidden pb-0' : 'pb-8 xs:pb-12 flex-grow'}
+        ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'min-h-[900px] lg:h-auto overflow-visible pb-10 xs:pb-12 md:pb-16' : 'pb-8 xs:pb-12 flex-grow'}
       `}>
         <div className={`
             grid w-full mx-auto
@@ -769,7 +780,7 @@ const AppInner: React.FC = () => {
             ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup') ? 'lg:grid-cols-[15%_70%_15%] xl:grid-cols-[20%_60%_20%]' : 'grid-cols-1'}
           `}>
           {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
-            <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
+            <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-80px)] mb-6 overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="left" />
               </div>
@@ -890,7 +901,7 @@ const AppInner: React.FC = () => {
           </div>
 
           {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
-            <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] overflow-hidden border-l border-slate-100/50 z-[45] p-3 md:p-4">
+            <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-80px)] mb-6 overflow-hidden border-l border-slate-100/50 z-[45] p-3 md:p-4">
               <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
                 <SideAds position="right" />
               </div>

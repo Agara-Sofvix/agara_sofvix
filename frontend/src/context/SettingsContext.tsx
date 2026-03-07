@@ -163,7 +163,12 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         // Socket.io connection for real-time updates
         const userToken = localStorage.getItem('token');
         const adminStored = localStorage.getItem('adminUser');
-        const adminToken = adminStored ? JSON.parse(adminStored).token : null;
+        let adminToken = null;
+        try {
+            adminToken = adminStored ? JSON.parse(adminStored).token : null;
+        } catch (e) {
+            console.error('Failed to parse adminUser from localStorage', e);
+        }
         const token = userToken || adminToken;
         const socket = io(SOCKET_ORIGIN, {
             transports: ['websocket', 'polling'],

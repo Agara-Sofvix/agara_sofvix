@@ -9,6 +9,7 @@ interface TournamentArenaProps {
 }
 
 import { getTournamentLeaderboard, getActiveTournament, getRegistrationStatus, joinTournament } from '@/src/services/api';
+import { getUploadBaseUrl } from '@/src/config/apiConfig';
 
 interface LeaderboardEntry {
   wpm: number;
@@ -379,19 +380,34 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
                   </div>
                 </div>
 
-                <div className="pill-stat">
-                  <div className="w-10 h-10 rounded-full bg-[#92450f]/10 flex items-center justify-center overflow-hidden">
-                    <img
-                      alt="Top User"
-                      className="w-full h-full object-cover"
-                      src={leaderboard[0] ? `https://api.dicebear.com/7.x/avataaars/svg?seed=${leaderboard[0].user.username || leaderboard[0].user.name}` : "https://api.dicebear.com/7.x/avataaars/svg?seed=Kathir"}
-                    />
+                {leaderboard[0] ? (
+                  <div className="pill-stat !min-w-[280px] animate-in slide-in-from-bottom-4 duration-500 !p-3">
+                    <div className="w-14 h-14 rounded-full bg-[#92450f]/10 flex items-center justify-center overflow-hidden border-2 border-primary/20 shadow-lg">
+                      <img
+                        alt="Top User"
+                        className="w-full h-full object-cover"
+                        src={leaderboard[0].user.profilePic
+                          ? `${getUploadBaseUrl().replace(/\/$/, '')}/${leaderboard[0].user.profilePic.replace(/^\//, '')}`
+                          : `https://api.dicebear.com/7.x/avataaars/svg?seed=${leaderboard[0].user.username || leaderboard[0].user.name}`}
+                      />
+                    </div>
+                    <div className="flex flex-col ml-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[8px] font-black bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-[0.2em] shadow-sm">Rank #1</span>
+                      </div>
+                      <p className="text-xl font-black leading-none text-slate-800">{leaderboard[0].user.username || leaderboard[0].user.name}</p>
+                      <p className="text-[10px] font-bold uppercase opacity-60 mt-1.5 flex items-center gap-2 text-primary">
+                        <span>{leaderboard[0].wpm} WPM</span>
+                        <span className="w-1 h-1 rounded-full bg-primary/30"></span>
+                        <span>{leaderboard[0].accuracy}% ACC</span>
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-2xl font-black leading-none">{leaderboard[0] ? (leaderboard[0].user.username || leaderboard[0].user.name) : 'No Leader'}</p>
-                    <p className="text-[10px] font-bold uppercase opacity-50">Current Leader</p>
+                ) : (
+                  <div className="pill-stat opacity-0 pointer-events-none invisible">
+                    {/* Empty state - per user request */}
                   </div>
-                </div>
+                )}
 
               </div>
             </section>
