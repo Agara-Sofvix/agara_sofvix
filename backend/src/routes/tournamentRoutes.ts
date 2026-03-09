@@ -10,6 +10,6 @@ router.get('/', getTournaments);
 router.post('/:id/join', protect, joinTournament);
 router.get('/:id/registration-status', protect, getRegistrationStatus);
 router.post('/:id/submit', protect, submitResult);
-router.get('/:id/leaderboard', optionalProtect, getLeaderboard);
+router.get('/:id/leaderboard', protect, getLeaderboard);
 
 export default router;

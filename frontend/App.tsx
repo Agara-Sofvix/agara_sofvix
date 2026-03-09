@@ -53,7 +53,7 @@ const VIEW_TO_PATH: Record<string, string> = {
 };
 
 // Sections that require login
-const restrictedViews = ['TournamentArena', 'TournamentLive', 'Dashboard'];
+const restrictedViews = ['TournamentArena', 'TournamentLive', 'Dashboard', 'Leaderboard'];
 
 const PATH_TO_VIEW: Record<string, string> = Object.entries(VIEW_TO_PATH).reduce((acc, [view, path]) => {
   acc[path] = view;

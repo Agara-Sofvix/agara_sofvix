@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.post('/save', protect, saveTypingResult);
 router.get('/history', protect, getTypingHistory);
-router.get('/leaderboard', getLeaderboard);
+router.get('/leaderboard', protect, getLeaderboard);
 
 export default router;
