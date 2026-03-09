@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Keyboard from './Keyboard';
-import { AppSettings } from '../App';
+import { AppSettings } from '../src/types';
 import { processTamilInput, handleTamilBackspace, getTamilGraphemes } from '../tamilEngine';
 
 interface EzhuthiduProps {

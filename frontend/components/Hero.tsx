@@ -3,10 +3,9 @@ import React from 'react';
 
 interface HeroProps {
   onNavigate: (view: string) => void;
-  onOpenRules: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenRules }) => {
+const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
   const cards = [
     {
       title: "Practice Tamil Typing",
@@ -57,10 +56,10 @@ const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenRules }) => {
             Enter Arena
           </button>
           <button
-            onClick={onOpenRules}
+            onClick={() => onNavigate('Leaderboard')}
             className="w-full sm:w-[260px] sm:min-w-[260px] cursor-pointer flex items-center justify-center rounded-full sm:rounded-2xl h-12 sm:h-12 md:h-14 px-4 sm:px-8 md:px-10 bg-slate-100 text-[#0d141b] text-base sm:text-base md:text-lg font-black transition-all hover:bg-slate-200 shadow-sm border border-slate-200 hover:scale-105 active:scale-95"
           >
-            Eligibility & Rules
+            Leaderboard
           </button>
         </div>
 

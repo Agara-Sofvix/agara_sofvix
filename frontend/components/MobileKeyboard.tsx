@@ -22,7 +22,7 @@ const tamilRows: KeySpec[][] = [
   // Row 2
   [
     { kind: 'char', label: 'ஔ', phonetic: 'q' },
-    { kind: 'char', label: 'ஜ', phonetic: 'J' },
+    { kind: 'char', label: 'ஐ', phonetic: 'w' },
     { kind: 'char', label: 'எ', phonetic: 'e', shiftLabel: 'ஏ', shiftPhonetic: 'E' },
     { kind: 'char', label: 'ர', phonetic: 'r', shiftLabel: 'ற்', shiftPhonetic: 'R' },
     { kind: 'char', label: 'த்', phonetic: 't' },

@@ -60,9 +60,14 @@ export const getSettings = async (req: Request, res: Response): Promise<void> =>
             });
         }
 
+        // Return settings (excluding sensitive apiKeys from general view if needed, 
+        // but since this is usually called by admin panel, we keep it for now but picked fields later)
+        const settingsObj = settings.toJSON() as any;
+        delete settingsObj.apiKeys;
+
         res.json({
             success: true,
-            data: settings
+            data: settingsObj
         });
     } catch (error: any) {
         res.status(500).json({ success: false, message: 'Error fetching settings', error: error.message });

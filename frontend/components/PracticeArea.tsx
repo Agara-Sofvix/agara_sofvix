@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import Keyboard from './Keyboard';
-import { AppSettings } from '../App';
-import { processTamilInput, handleTamilBackspace, getTamilGraphemes } from '../tamilEngine';
+import { AppSettings } from '../src/types';
+import { processTamilInput, handleTamilBackspace, getTamilGraphemes, isPotentialMatch } from '../tamilEngine';
 import { useTextStore } from '../src/store/useTextStore';
 import { keyboardPracticeData, practiceSchedule, motivationTips, COMPOUND_SERIES } from '../src/data/keyboard_practice_data';
 import { generateUUID } from '../src/utils/uuid';
@@ -466,6 +466,46 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     }
   }, [selectedCategoryId, mode, isLoading]);
 
+  const targetGraphemes = getTamilGraphemes(targetText);
+  const inputGraphemes = getTamilGraphemes(selectedCategoryId === 'keyboard_practice' ? inputHistory + inputText : inputText);
+
+  // Robust Highlight Logic for Free/Custom Typing
+  const { alignmentStatuses, activeCharIndex } = React.useMemo(() => {
+    const statuses: ('success' | 'error' | 'current' | 'neutral')[] = new Array(targetGraphemes.length).fill('neutral');
+    let t = 0;
+    let i = 0;
+    const iG = inputGraphemes;
+    const tG = targetGraphemes;
+
+    while (i < iG.length && t < tG.length) {
+      const inp = iG[i];
+      const tgt = tG[t];
+
+      if (inp === tgt) {
+        statuses[t] = 'success';
+        t++;
+        i++;
+      } else if (tgt === ' ' && inp !== ' ') {
+        // Missing space in input? Mark space as error and move on
+        statuses[t] = 'error';
+        t++;
+      } else if (inp === ' ' && tgt !== ' ') {
+        // Extra space in input? Greedy skip it to stay in sync
+        i++;
+      } else if (isPotentialMatch(inp, tgt) && i === iG.length - 1) {
+        // Composition state: hold position
+        break;
+      } else {
+        statuses[t] = 'error';
+        t++;
+        i++;
+      }
+    }
+
+    if (t < tG.length) statuses[t] = 'current';
+    return { alignmentStatuses: statuses, activeCharIndex: t };
+  }, [inputGraphemes, targetGraphemes]);
+
   useEffect(() => {
     let interval: number;
     if (startTime) {
@@ -624,17 +664,12 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
         // Check for next paragraph
         if (mode === 'free') {
-          const inputGraphemesCount = getTamilGraphemes(newText).length;
-          const targetGraphemesCount = getTamilGraphemes(targetText).length;
-
-          if (inputGraphemesCount >= targetGraphemesCount) {
+          // Use activeCharIndex to ensure the last character is FULLY completed
+          // (activeCharIndex increments only after perfect match or non-potential error)
+          if (activeCharIndex >= targetGraphemes.length) {
             setTargetText(prev => {
-              const currentGraphemesCount = getTamilGraphemes(prev).length;
-              if (inputGraphemesCount >= currentGraphemesCount) {
-                const nextPara = getRandomText('free-typing', prev.split(' ').pop() || "");
-                return prev.trimEnd() + " " + nextPara;
-              }
-              return prev;
+              const nextPara = getRandomText('free-typing', prev.split(' ').pop() || "");
+              return prev.trimEnd() + " " + nextPara;
             });
           }
         }
@@ -853,19 +888,12 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         }
       }, 0);
 
-      // check for next paragraph
+      // Check for next paragraph
       if (mode === 'free') {
-        const inputGraphemesCount = getTamilGraphemes(newText).length;
-        const targetGraphemesCount = getTamilGraphemes(targetText).length;
-
-        if (inputGraphemesCount >= targetGraphemesCount) {
+        if (activeCharIndex >= targetGraphemes.length) {
           setTargetText(prev => {
-            const currentGraphemesCount = getTamilGraphemes(prev).length;
-            if (inputGraphemesCount >= currentGraphemesCount) {
-              const nextPara = getRandomText('free-typing', prev.split(' ').pop() || "");
-              return prev.trimEnd() + " " + nextPara;
-            }
-            return prev;
+            const nextPara = getRandomText('free-typing', prev.split(' ').pop() || "");
+            return prev.trimEnd() + " " + nextPara;
           });
         }
       }
@@ -879,46 +907,15 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     let correctChars = 0;
     let errors = 0;
 
-    // Split target into tokens to decide on word-based vs character-based matching
-    const targetTokens = targetText.trim().split(/\s+/);
-    const inputRaw = (selectedCategoryId === 'keyboard_practice' ? inputHistory + inputText : inputText);
-    const inputTokens = inputRaw.trim().split(/\s+/).filter(t => t.length > 0);
+    // Use alignmentStatuses for consistent statistics
+    alignmentStatuses.forEach(status => {
+      if (status === 'success') correctChars++;
+      else if (status === 'error') errors++;
+    });
 
-    if (targetTokens.length > 1 || selectedCategoryId === 'keyboard_practice') {
-      // WORD-BASED SYNC MATCHER
-      let targetIdx = 0;
-      for (let i = 0; i < inputTokens.length; i++) {
-        const inpToken = inputTokens[i];
-        const currentTarget = targetTokens[targetIdx % targetTokens.length];
-        const prevTarget = targetTokens[(targetIdx - 1 + targetTokens.length) % targetTokens.length];
-
-        if (inpToken === currentTarget) {
-          correctChars += getTamilGraphemes(inpToken).length;
-          targetIdx++;
-        } else if (inpToken === prevTarget) {
-          correctChars += getTamilGraphemes(inpToken).length;
-        } else {
-          errors++;
-        }
-      }
-      correctChars += Math.max(0, inputTokens.length - 1); // Spaces
-    } else {
-      // CHARACTER-BASED SYNC MATCHER
-      let targetIdx = 0;
-      for (let i = 0; i < inputGraphemes.length; i++) {
-        const char = inputGraphemes[i];
-        const currentTarget = targetGraphemes[targetIdx % (targetGraphemes.length || 1)];
-        const prevTarget = targetGraphemes[(targetIdx - 1 + targetGraphemes.length) % (targetGraphemes.length || 1)];
-
-        if (char === currentTarget) {
-          correctChars++;
-          targetIdx++;
-        } else if (char === prevTarget) {
-          correctChars++;
-        } else {
-          errors++;
-        }
-      }
+    // Handle characters typed beyond target length as errors
+    if (inputGraphemes.length > targetGraphemes.length) {
+      errors += (inputGraphemes.length - targetGraphemes.length);
     }
 
     const totalChars = inputGraphemes.length;
@@ -954,10 +951,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
   // useLayoutEffect removed
 
-  const targetGraphemes = getTamilGraphemes(targetText);
-  const inputGraphemes = getTamilGraphemes(inputText);
-
-  const nextUnprocessedGraphemeIndex = inputGraphemes.length;
+  const nextUnprocessedGraphemeIndex = activeCharIndex;
   const nextTargetGrapheme = targetGraphemes[nextUnprocessedGraphemeIndex] || "";
   const activeKeysWithGuide = new Set(activeKeys);
   if (nextTargetGrapheme && isLetter(nextTargetGrapheme)) {
@@ -965,29 +959,6 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   }
 
   function isLetter(str: string) { return str.length === 1 && str.match(/[a-z]/i); }
-
-  // Helper to check if a produced character is "correct progress" towards target
-  function isPotentialMatch(produced: string, target: string): boolean {
-    if (!produced || !target) return false;
-
-    // 1. Direct sub-string match (Vowel Doubling sequence)
-    // e.g. 'அ' is a valid step towards target 'ஆ'
-    const VOWEL_PAIRS: Record<string, string> = {
-      'ஆ': 'அ', 'ஈ': 'இ', 'ஊ': 'உ', 'ஏ': 'எ', 'ஓ': 'ஒ'
-    };
-    if (VOWEL_PAIRS[target] === produced) return true;
-
-    // 2. Base Character Match (Uyirmei / Mei sequence)
-    // Strip modifiers (Pulli, Vowel Signs)
-    const strip = (s: string) => s.replace(/[\u0BCD\u0BBE-\u0BCC]/g, '');
-
-    const producedBase = strip(produced);
-    const targetBase = strip(target);
-
-    // If typing 'கா' (base 'க'), 'க்' (base 'க') is a valid progress!
-    // Handle complex Grantha like 'க்ஷ' (base 'கஷ'), 'க்' (base 'க') is valid!
-    return targetBase.startsWith(producedBase) && producedBase.length > 0;
-  }
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -1002,16 +973,16 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
     if (selectedCategoryId !== 'keyboard_practice') return { tape, tIdx: 0, lastInputStatus };
 
-    const targetGraphemes = getTamilGraphemes(tgt);
-    const inputGraphemes = getTamilGraphemes(history + inp); // Merge history and current input
+    const tGraphemes = getTamilGraphemes(tgt);
+    const iGraphemes = getTamilGraphemes(history + inp); // Merge history and current input
 
-    if (targetGraphemes.length === 0) return { tape, tIdx: 0, lastInputStatus };
+    if (tGraphemes.length === 0) return { tape, tIdx: 0, lastInputStatus };
 
     // Pagination: Show exactly 8 words per set
     const WORDS_PER_PAGE = 8;
 
     // 1. Identify all tokens (characters) in the target text
-    const allTokens = targetGraphemes.filter(g => g !== ' ');
+    const allTokens = tGraphemes.filter(g => g !== ' ');
 
     if (allTokens.length === 0) return { tape, tIdx: 0, lastInputStatus };
 
@@ -1297,10 +1268,13 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
                   <p className="text-lg sm:text-xl md:text-2xl font-tamil leading-relaxed sm:leading-[1.6] md:leading-[2.0] tracking-wide text-justify">
                     {targetGraphemes.map((char, i) => {
                       if (char === '\n') return <br key={i} />;
+                      const status = alignmentStatuses[i];
                       let className = "inline ";
-                      if (i < inputGraphemes.length) {
-                        className += inputGraphemes[i] === char ? "text-[#15803d]" : "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
-                      } else if (i === inputGraphemes.length) {
+                      if (status === 'success') {
+                        className += "text-[#15803d]";
+                      } else if (status === 'error') {
+                        className += "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
+                      } else if (status === 'current') {
                         className += "char-current bg-blue-100 border-b-2 border-blue-600";
                       }
                       return <span key={i} className={className}>{char}</span>;

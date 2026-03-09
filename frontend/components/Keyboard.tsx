@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AppSettings } from '../App';
+import { AppSettings } from '../src/types';
 import { TAMIL_PHONETIC_MAP } from '../tamilEngine';
 import MobileKeyboard from './MobileKeyboard';
 

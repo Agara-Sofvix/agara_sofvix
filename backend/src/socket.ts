@@ -21,6 +21,7 @@ export const initSocket = (httpServer: HttpServer) => {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as any;
             (socket as any).userId = decoded.id;
+            (socket as any).userName = decoded.name;
             next();
         } catch (err) {
             return next(new Error('Invalid token'));
@@ -32,6 +33,7 @@ export const initSocket = (httpServer: HttpServer) => {
 
         socket.on('join_tournament', (tournamentId) => {
             socket.join(tournamentId);
+            console.log(`User ${(socket as any).userId} joined tournament room: ${tournamentId}`);
         });
 
         socket.on('join_admin', () => {

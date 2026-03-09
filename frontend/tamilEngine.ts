@@ -99,15 +99,16 @@ const ALL_SIGNS = Object.values(VOWEL_TO_SIGN).filter(s => s !== '');
  * Split text into Tamil logical units (graphemes)
  */
 export function getTamilGraphemes(text: string): string[] {
+  const normalized = text.normalize('NFC');
   // Use type casting to any for Intl to avoid TS errors when Intl.Segmenter is not in the environment's lib definitions
   const IntlAny = Intl as any;
   if (typeof IntlAny !== 'undefined' && IntlAny.Segmenter) {
     const segmenter = new IntlAny.Segmenter('ta', { granularity: 'grapheme' });
-    return Array.from(segmenter.segment(text)).map((s: any) => s.segment);
+    return Array.from(segmenter.segment(normalized)).map((s: any) => s.segment);
   }
   // Fallback regex for Tamil graphemes if Segmenter is unavailable
   const tamilRegex = /[\u0B80-\u0BFF][\u0BBE-\u0BCD\u0BD7]*|./g;
-  return text.match(tamilRegex) || [];
+  return normalized.match(tamilRegex) || [];
 }
 
 const isBaseConsonant = (char: string): boolean => {
@@ -181,6 +182,30 @@ export function processTamilInput(
   return { text: updatedLeft + rightPart, newCursorPos: updatedLeft.length };
 }
 
+/**
+ * Helper to check if a produced character is a "correct progress" towards a target grapheme.
+ * Used to prevent the cursor from jumping forward during vowel composition (e.g., 'ய்' -> 'யா').
+ */
+export function isPotentialMatch(produced: string, target: string): boolean {
+  if (!produced || !target) return false;
+
+  // 1. Direct sub-string match (Vowel Doubling sequence)
+  const VOWEL_PAIRS: Record<string, string> = {
+    'ஆ': 'அ', 'ஈ': 'இ', 'ஊ': 'உ', 'ஏ': 'எ', 'ஓ': 'ஒ'
+  };
+  if (VOWEL_PAIRS[target] === produced) return true;
+
+  // 2. Base Character Match (Uyirmei / Mei sequence)
+  // Strip modifiers (Pulli, Vowel Signs)
+  const strip = (s: string) => s.replace(/[\u0BCD\u0BBE-\u0BCC]/g, '');
+
+  const producedBase = strip(produced.normalize('NFC'));
+  const targetBase = strip(target.normalize('NFC'));
+
+  // If typing 'கா' (base 'க'), 'க்' (base 'க') is a valid progress!
+  return targetBase.startsWith(producedBase) && producedBase.length > 0;
+}
+
 export function handleTamilBackspace(
   text: string,
   cursorStart: number,
@@ -205,4 +230,11 @@ export function handleTamilBackspace(
   graphemes.pop();
   const updatedLeft = graphemes.join("");
   return { text: updatedLeft + rightPart, newCursorPos: updatedLeft.length };
+}
+
+/**
+ * Robust match helper for comparing multi-character sequences
+ */
+export function robustMatch(typed: string, target: string): boolean {
+  return typed.normalize('NFC') === target.normalize('NFC');
 }

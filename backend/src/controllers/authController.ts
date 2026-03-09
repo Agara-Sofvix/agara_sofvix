@@ -75,7 +75,12 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             res.status(201).json({
                 success: true,
                 data: {
-                    ...user.toJSON(),
+                    _id: user._id,
+                    name: user.name,
+                    username: user.username,
+                    email: user.email,
+                    dob: user.dob,
+                    profilePic: user.profilePic,
                     token: generateToken(user._id as any, user.tokenVersion)
                 }
             });
@@ -140,7 +145,13 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
             res.json({
                 success: true,
                 data: {
-                    ...user.toJSON(), // Convert Mongoose document to plain object
+                    _id: user._id,
+                    name: user.name,
+                    username: user.username,
+                    email: user.email,
+                    dob: user.dob,
+                    profilePic: user.profilePic,
+                    lastNotificationReadAt: user.lastNotificationReadAt,
                     token: generateToken(user._id as any, user.tokenVersion),
                 }
             });

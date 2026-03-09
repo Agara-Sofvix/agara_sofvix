@@ -129,9 +129,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
     const loadSettings = async () => {
         try {
-            console.log('Fetching public settings...');
             const data = await fetchPublicSettings();
-            console.log('Public settings loaded:', data);
             setSettings(data);
             setLoading(false);
 
@@ -176,7 +174,6 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         });
 
         socket.on('MAINTENANCE_TOGGLE', (data: { enabled: boolean }) => {
-            console.log('Maintenance mode socket event received:', data.enabled);
             setSettings(prev => {
                 const updated = prev ? { ...prev, maintenanceMode: !!data.enabled } : {
                     // Fallback in case settings weren't loaded yet
@@ -209,13 +206,11 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
                         }
                     }
                 };
-                console.log('Updated settings state:', updated);
                 return updated;
             });
         });
 
         socket.on('SETTINGS_UPDATE', (data: any) => {
-            console.log('Settings updated via socket:', data);
             if (data.seo) {
                 applySeoSettings(data.seo);
             }

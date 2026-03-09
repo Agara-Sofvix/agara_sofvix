@@ -4,11 +4,10 @@ import React from 'react';
 interface FooterProps {
   onNavigate?: (view: string, mode?: string) => void;
   isLoggedIn?: boolean;
-  onOpenRules?: () => void;
   onOpenLoginRequired?: () => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ onNavigate, isLoggedIn, onOpenRules, onOpenLoginRequired }) => {
+const Footer: React.FC<FooterProps> = ({ onNavigate, isLoggedIn, onOpenLoginRequired }) => {
   return (
     <footer className="bg-header-brown border-t border-slate-200 py-8 xs:py-10 md:py-12 text-white transition-colors duration-200 w-full">
       <div className="w-full px-4 xs:px-6 md:px-10 lg:px-16 max-w-screen-4xl mx-auto">
@@ -40,11 +39,10 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, isLoggedIn, onOpenRules, on
                   onOpenLoginRequired?.();
                 }
               }}>Enter Arena</a></li>
-              <li><a className="hover:text-white" href="#" onClick={(e) => { e.preventDefault(); onOpenRules?.(); }}>Eligibility & Rules</a></li>
               <li><a className="hover:text-white" href="#" onClick={(e) => {
                 e.preventDefault();
                 if (isLoggedIn) {
-                  onNavigate?.('TournamentArena');
+                  onNavigate?.('Leaderboard');
                 } else {
                   onOpenLoginRequired?.();
                 }
@@ -72,6 +70,11 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, isLoggedIn, onOpenRules, on
 
         <div className="mt-12 xs:mt-16 pt-8 border-t border-white/10 flex flex-col items-center gap-6 text-xl font-bold text-white text-center">
           <p>© 2026 எழுத்திடு. All rights reserved.</p>
+          <div className="flex gap-6 text-sm opacity-60">
+            <a href="/" className="hover:text-white transition-colors">Home</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('TournamentArena'); }} className="hover:text-white transition-colors">Tournament</a>
+            <a href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('KeyboardLayout'); }} className="hover:text-white transition-colors">Keyboard Layout</a>
+          </div>
         </div>
       </div>
     </footer>

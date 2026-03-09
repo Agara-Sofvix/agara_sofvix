@@ -57,18 +57,39 @@ const verifySecurity = async () => {
     }
 
     console.log('\n--- Verifying Data Leakage (Bug 26) ---');
-    const loginRes = await api.post('/auth/login', {
-        username: 'admin@ezhuthidu.com',
+
+    // User Login Check
+    console.log('Checking User Login for leakage...');
+    const userLoginRes = await api.post('/auth/login', {
+        username: 'testuser', // Assuming this might exist or 404 is fine as long as we check fields when it succeeds
+        password: 'Password123!'
+    });
+    console.log('User Login Status:', userLoginRes.status);
+    if (userLoginRes.data.data) {
+        const leaked = ['password', 'tokenVersion', 'resetOTP', '__v'].filter(field => field in userLoginRes.data.data);
+        if (leaked.length === 0) {
+            console.log('✅ Success: No sensitive fields leaked in user login response.');
+        } else {
+            console.log('❌ Error: Leaked fields in user login:', leaked);
+        }
+    }
+
+    // Admin Login Check
+    console.log('\nChecking Admin Login for leakage...');
+    const adminLoginRes = await api.post('/admin/auth/login', {
+        email: 'admin@ezhuthidu.com',
         password: 'Admin@123'
     });
-
-    if (loginRes.data.data) {
-        const leaked = ['password', 'tokenVersion', 'resetOTP', '__v'].filter(field => field in loginRes.data.data);
+    console.log('Admin Login Status:', adminLoginRes.status);
+    if (adminLoginRes.data.data) {
+        const leaked = ['password', 'tokenVersion', 'resetOTP', '__v', 'apiKeys'].filter(field => field in adminLoginRes.data.data);
         if (leaked.length === 0) {
-            console.log('✅ Success: No sensitive fields leaked in login response.');
+            console.log('✅ Success: No sensitive fields leaked in admin login response.');
         } else {
-            console.log('❌ Error: Leaked fields:', leaked);
+            console.log('❌ Error: Leaked fields in admin login:', leaked, adminLoginRes.data.data);
         }
+    } else {
+        console.log('⚠️ Warning: Admin login failed or returned no data. Status:', adminLoginRes.status);
     }
 };
 

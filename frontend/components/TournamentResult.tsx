@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TournamentScore } from '../App';
+import { TournamentScore } from '../src/types';
 
 interface TournamentResultProps {
   score: TournamentScore | null;
@@ -59,11 +59,11 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
       `;
 
       const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
+        margin: [0.5, 0.5, 0.5, 0.5] as [number, number, number, number],
         filename: `tournament-result-${displayName}.pdf`,
-        image: { type: 'jpeg', quality: 1 },
+        image: { type: 'jpeg' as const, quality: 1 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' as const }
       };
 
       // @ts-ignore

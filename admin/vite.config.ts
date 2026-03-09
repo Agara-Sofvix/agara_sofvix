@@ -6,6 +6,9 @@ import path from 'path'
 export default defineConfig({
   base: '/admin/',
   plugins: [react()],
+  esbuild: {
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+  },
   server: {
     port: 3001,
     host: '0.0.0.0',

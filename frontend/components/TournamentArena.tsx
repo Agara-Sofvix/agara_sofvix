@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { UserStats } from '../App';
+import { UserStats } from '../src/types';
 
 interface TournamentArenaProps {
   onNavigate: (view: string) => void;
@@ -211,7 +211,7 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
         }
         @media (min-width: 1024px) {
             .arena-asymmetric-grid {
-                grid-template-columns: 280px 1fr 320px;
+                grid-template-columns: 320px 1fr;
                 gap: 3.5rem;
             }
         }
@@ -412,37 +412,6 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
               </div>
             </section>
 
-            {/* Right Column: SYSTEM GUIDELINES (lg+) */}
-            <section className="flex flex-col items-center animate-in slide-in-from-right-8 duration-700 order-2 lg:order-3 lg:col-start-3">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.4em] mb-10 text-black opacity-60">System Guidelines</h2>
-
-              <div className="grid grid-cols-2 gap-4 w-full max-w-[320px]">
-                <div className="guideline-tile">
-                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">cake</span>
-                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">16+ Age<br />Requirement</p>
-                </div>
-                <div className="guideline-tile mt-8">
-                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">history_edu</span>
-                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Multiple<br />Attempts</p>
-                </div>
-                <div className="guideline-tile">
-                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">refresh</span>
-                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">No Page<br />Reload</p>
-                </div>
-                <div className="guideline-tile mt-8">
-                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">extension_off</span>
-                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Anti-Cheat<br />Active</p>
-                </div>
-                <div className="guideline-tile">
-                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">precision_manufacturing</span>
-                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">95% Acc<br />Minimum</p>
-                </div>
-                <div className="guideline-tile mt-8">
-                  <span className="material-symbols-outlined text-3xl mb-4 opacity-70">shield_lock</span>
-                  <p className="text-[10px] font-black uppercase leading-tight tracking-widest">Permanent<br />Entry</p>
-                </div>
-              </div>
-            </section>
 
           </div>
 

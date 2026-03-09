@@ -62,7 +62,10 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
         res.json({
             success: true,
             data: {
-                ...admin.toJSON(),
+                _id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                lastLogin: admin.lastLogin,
                 token: generateToken(admin._id as any, admin.tokenVersion)
             }
         });
@@ -112,7 +115,9 @@ export const updateAdminProfile = async (req: Request, res: Response): Promise<v
             res.json({
                 success: true,
                 data: {
-                    ...updatedAdmin.toJSON(),
+                    _id: updatedAdmin._id,
+                    name: updatedAdmin.name,
+                    email: updatedAdmin.email,
                     token: generateToken(updatedAdmin._id as any, updatedAdmin.tokenVersion)
                 }
             });

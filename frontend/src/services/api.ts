@@ -327,3 +327,4 @@ export const resetPassword = async (data: { email: string; password: string }) =
 
     return response.json();
 };
+

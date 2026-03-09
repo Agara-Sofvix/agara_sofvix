@@ -1,7 +1,7 @@
 import React from 'react';
-import { UserStats, AppSettings } from '../App';
+import { UserStats, AppSettings } from '../src/types';
 import { updateProfilePic, setAvatar } from '../src/services/api';
-import { getUploadBaseUrl } from '../src/config/apiConfig';
+import { getUploadBaseUrl, getFullProfileUrl } from '../src/config/apiConfig';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -92,31 +92,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
     { gender: 'Female', items: ['female_1.png', 'female_2.png', 'female_3.png'] },
   ];
 
-  const getFullUrl = (path: string) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return path;
-    const baseUrl = getUploadBaseUrl().replace(/\/$/, '');
-
-    let cleanPath = path || '';
-    if (!cleanPath.startsWith('/')) {
-      cleanPath = `/${cleanPath}`;
-    }
-
-    // Fallback for old records that missing the /avatars/ or /uploads/ prefix
-    if (!cleanPath.includes('/', 1)) {
-      if (cleanPath.includes('male') || cleanPath.includes('female')) {
-        cleanPath = `/avatars${cleanPath}`;
-      } else {
-        cleanPath = `/uploads${cleanPath}`;
-      }
-    }
-
-    const result = `${baseUrl}${cleanPath}`;
-    console.log(`[EZH-DEBUG] getFullUrl(${path}) -> ${result}`);
-    return result;
-  };
-
-  const avatarUrl = stats.profilePic ? getFullUrl(stats.profilePic) : null;
+  const avatarUrl = getFullProfileUrl(stats.profilePic);
 
   return (
     <div className="xs:text-xs text-sm sm:text-base flex flex-col gap-16 animate-in fade-in slide-in-from-bottom-4 duration-700 relative pb-10">
@@ -189,7 +165,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
                       </h3>
                       <div className="grid grid-cols-3 gap-4 sm:gap-6">
                         {group.items.map((img) => {
-                          const src = getFullUrl(`/avatars/${img}`) || '';
+                          const src = getFullProfileUrl(`/avatars/${img}`) || '';
                           return (
                             <button
                               key={img}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { processTamilInput, handleTamilBackspace, getTamilGraphemes } from '../tamilEngine';
+import { processTamilInput, handleTamilBackspace, getTamilGraphemes, isPotentialMatch } from '../tamilEngine';
 import { useTextStore } from '../src/store/useTextStore';
 import { generateUUID } from '../src/utils/uuid';
 import Keyboard from './Keyboard';
-import { AppSettings } from '../App';
+import { AppSettings } from '../src/types';
 
 interface TestAreaProps {
   onComplete: (wpm: number, accuracy: number, stats?: any) => void;
@@ -223,17 +223,10 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
         }
 
         // Check for next paragraph
-        const inputGraphemesCount = getTamilGraphemes(newText).length;
-        const targetGraphemesCount = getTamilGraphemes(targetText).length;
-
-        if (inputGraphemesCount >= targetGraphemesCount) {
+        if (activeCharIndex >= targetGraphemes.length) {
           setTargetText(prev => {
-            const currentTargetGraphemesCount = getTamilGraphemes(prev).length;
-            if (inputGraphemesCount >= currentTargetGraphemesCount) {
-              const nextPara = getRandomText(testModules[testConfig.module].category, prev.split(' ').pop() || "");
-              return prev.trimEnd() + " " + nextPara;
-            }
-            return prev;
+            const nextPara = getRandomText(testModules[testConfig.module].category, prev.split(' ').pop() || "");
+            return prev.trimEnd() + " " + nextPara;
           });
         }
       } catch (err) {
@@ -342,18 +335,11 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
         }
       }, 0);
 
-      // check for next paragraph
-      const inputGraphemesCount = getTamilGraphemes(newText).length;
-      const targetGraphemesCount = getTamilGraphemes(targetText).length;
-
-      if (inputGraphemesCount >= targetGraphemesCount) {
+      // Check for next paragraph
+      if (activeCharIndex >= targetGraphemes.length) {
         setTargetText(prev => {
-          const currentTargetGraphemesCount = getTamilGraphemes(prev).length;
-          if (inputGraphemesCount >= currentTargetGraphemesCount) {
-            const nextPara = getRandomText(testModules[testConfig.module].category, prev.split(' ').pop() || "");
-            return prev.trimEnd() + " " + nextPara;
-          }
-          return prev;
+          const nextPara = getRandomText(testModules[testConfig.module].category, prev.split(' ').pop() || "");
+          return prev.trimEnd() + " " + nextPara;
         });
       }
     }
@@ -361,6 +347,25 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
 
   const targetGraphemes = getTamilGraphemes(targetText);
   const inputGraphemes = getTamilGraphemes(inputText);
+
+  // Smart Highlight logic: find the first character that is not perfectly matched
+  // and is not currently being composed (partial match).
+  let activeCharIndex = 0;
+  for (let i = 0; i < inputGraphemes.length; i++) {
+    const inp = inputGraphemes[i];
+    const tgt = targetGraphemes[activeCharIndex];
+    if (!tgt) break;
+
+    if (inp === tgt) {
+      activeCharIndex++;
+    } else if (isPotentialMatch(inp, tgt) && i === inputGraphemes.length - 1) {
+      // ONLY pause if it's a potential match AND it's the very last character type.
+      break;
+    } else {
+      // Error or surpassed character, move to next
+      activeCharIndex++;
+    }
+  }
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -473,9 +478,10 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
           {targetGraphemes.map((char, i) => {
             if (char === '\n') return <br key={i} />;
             let className = "inline ";
-            if (i < inputGraphemes.length) {
-              className += inputGraphemes[i] === char ? "text-[#15803d]" : "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
-            } else if (i === inputGraphemes.length) {
+            if (i < activeCharIndex) {
+              const typed = inputGraphemes[i]; // Simplification for now
+              className += typed === char ? "text-[#15803d]" : "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
+            } else if (i === activeCharIndex) {
               className += "char-current bg-blue-50 border-b-2 border-blue-600";
             }
             return <span key={i} className={className}>{char}</span>;

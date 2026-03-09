@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Keyboard from './Keyboard';
-import { processTamilInput, handleTamilBackspace, getTamilGraphemes } from '../tamilEngine';
-import { AppSettings } from '../App';
+import { processTamilInput, handleTamilBackspace, getTamilGraphemes, isPotentialMatch } from '../tamilEngine';
+import { AppSettings } from '../src/types';
 import { useTextStore } from '../src/store/useTextStore';
 import { generateUUID } from '../src/utils/uuid';
 
@@ -67,8 +67,27 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
     loadTournamentText();
   }, [activeTournament]);
 
-  // NO LONGER falling back to random tournament texts below
+  const targetGraphemes = getTamilGraphemes(targetText);
+  const inputGraphemes = getTamilGraphemes(inputText);
 
+  // Smart Highlight logic: find the first character that is not perfectly matched
+  // and is not currently being composed (partial match).
+  let activeCharIndex = 0;
+  for (let i = 0; i < inputGraphemes.length; i++) {
+    const inp = inputGraphemes[i];
+    const tgt = targetGraphemes[activeCharIndex];
+    if (!tgt) break;
+
+    if (inp === tgt) {
+      activeCharIndex++;
+    } else if (isPotentialMatch(inp, tgt) && i === inputGraphemes.length - 1) {
+      // ONLY pause if it's a potential match AND it's the very last character type.
+      break;
+    } else {
+      // Error or surpassed character, move to next
+      activeCharIndex++;
+    }
+  }
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const targetDisplayRef = useRef<HTMLDivElement>(null);
@@ -126,17 +145,10 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
       }
 
       // Check for next paragraph
-      const inputGraphemesCount = getTamilGraphemes(newText).length;
-      const targetGraphemesCount = getTamilGraphemes(targetText).length;
-
-      if (inputGraphemesCount >= targetGraphemesCount) {
+      if (activeCharIndex >= targetGraphemes.length) {
         setTargetText(prev => {
-          const currentTargetGraphemes = getTamilGraphemes(prev);
-          if (inputGraphemesCount >= currentTargetGraphemes.length) {
-            // Loop the original text continuously until time ends
-            return prev.trimEnd() + " " + originalTargetText.trim();
-          }
-          return prev;
+          // Loop the original text continuously until time ends
+          return prev.trimEnd() + " " + originalTargetText.trim();
         });
       }
     };
@@ -302,25 +314,15 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
         }
       }, 0);
 
-      // check for next paragraph
-      const inputGraphemesCount = getTamilGraphemes(newText).length;
-      const targetGraphemesCount = getTamilGraphemes(targetText).length;
-
-      if (inputGraphemesCount >= targetGraphemesCount) {
+      // Check for next paragraph
+      if (activeCharIndex >= targetGraphemes.length) {
         setTargetText(prev => {
-          const currentTargetGraphemesCount = getTamilGraphemes(prev).length;
-          if (inputGraphemesCount >= currentTargetGraphemesCount) {
-            // Loop the original text continuously until time ends
-            return prev.trimEnd() + " " + originalTargetText.trim();
-          }
-          return prev;
+          // Loop the original text continuously until time ends
+          return prev.trimEnd() + " " + originalTargetText.trim();
         });
       }
     }
   };
-
-  const targetGraphemes = getTamilGraphemes(targetText);
-  const inputGraphemes = getTamilGraphemes(inputText);
 
   const currentStats = (() => {
     let correctCount = 0;
@@ -389,9 +391,10 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
                 targetGraphemes.map((char, i) => {
                   if (char === '\n') return <br key={i} />;
                   let className = "inline ";
-                  if (i < inputGraphemes.length) {
-                    className += inputGraphemes[i] === char ? "text-[#15803d]" : "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
-                  } else if (i === inputGraphemes.length) {
+                  if (i < activeCharIndex) {
+                    const typed = inputGraphemes[i]; // Simplification for now
+                    className += typed === char ? "text-[#15803d]" : "text-[#b91c1c] bg-[#fee2e2] rounded-[2px]";
+                  } else if (i === activeCharIndex) {
                     className += "char-current bg-header-brown/10 border-b-2 border-header-brown";
                   }
                   return <span key={i} className={className}>{char}</span>;

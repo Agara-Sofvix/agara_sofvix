@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { saveResult, submitTournamentResult, getActiveTournament } from './src/services/api';
+import { UserStats, AppSettings, TournamentScore } from './src/types';
 import Header from './components/Header';
 import Marquee from './components/Marquee';
 import Hero from './components/Hero';
@@ -19,8 +20,8 @@ import VerifyOTP from './components/VerifyOTP';
 import ResetPassword from './components/ResetPassword';
 import Dashboard from './components/Dashboard';
 import TournamentArena from './components/TournamentArena';
+import LeaderboardPage from './components/LeaderboardPage';
 import Footer from './components/Footer';
-import RulesModal from './components/RulesModal';
 import NotificationPanel from './components/NotificationPanel';
 import LoginRequiredModal from './components/LoginRequiredModal';
 import AdminApp from './AdminApp';
@@ -35,6 +36,7 @@ const VIEW_TO_PATH: Record<string, string> = {
   'Practice': '/practice',
   'Test': '/test',
   'TournamentArena': '/tournament',
+  'Leaderboard': '/leaderboard',
   'TournamentLive': '/tournament/live',
   'TournamentResult': '/tournament/result',
   'Dashboard': '/dashboard',
@@ -58,52 +60,7 @@ const PATH_TO_VIEW: Record<string, string> = Object.entries(VIEW_TO_PATH).reduce
   return acc;
 }, {} as Record<string, string>);
 
-export interface UserStats {
-  displayName: string;
-  bestWpm: number;
-  avgWpm: number;
-  accuracy: number;
-  streak: number;
-  tournamentBest: number;
-  dob?: string;
-  profilePic?: string;
-  trophies: Array<{
-    id: string;
-    type: 'Test' | 'Tournament' | 'Accuracy';
-    tier: 'Bronze' | 'Silver' | 'Gold' | 'Diamond';
-    label: string;
-    value: number | string;
-    icon: string;
-  }>;
-  history: Array<{
-    id: string;
-    date: string;
-    type: string;
-    wpm: number;
-    accuracy: number;
-    label: string;
-    rank?: number;
-    tournamentName?: string;
-  }>;
-}
-
-export interface AppSettings {
-  keyboardSound: boolean;
-  handGuidance: boolean;
-  duration: string;
-}
-
-export interface TournamentScore {
-  wpm: number;
-  accuracy: number;
-  errors: number;
-  totalChars: number;
-  correctChars: number;
-  wrongChars: number;
-  timeTaken: string;
-  submissionType: 'Manual' | 'Auto';
-  timestamp: string;
-}
+// Redundant interfaces removed (now in src/types.ts)
 
 const STORAGE_KEY_STATS = 'ezhuthidu_user_stats';
 const STORAGE_KEY_SETTINGS = 'ezhuthidu_settings';
@@ -114,7 +71,6 @@ const AppInner: React.FC = () => {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [isTournamentActive, setIsTournamentActive] = useState(false);
   const [lastTournamentScore, setLastTournamentScore] = useState<TournamentScore | null>(null);
-  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
 
   const handleOpenNotificationPanel = () => {
@@ -562,7 +518,6 @@ const AppInner: React.FC = () => {
   };
 
   const handleLogin = async (user: { name: string, token?: string, lastNotificationReadAt?: string, dob?: string, profilePic?: string }) => {
-    console.log('[EZH-LOGIN] User data received:', { ...user, token: user.token ? '***' : null });
     // 1. Immediate data persistence
     const token = user.token || localStorage.getItem('token');
     if (user.token) {
@@ -602,7 +557,6 @@ const AppInner: React.FC = () => {
     setCurrentView(target);
 
     const targetPath = VIEW_TO_PATH[target] || '/dashboard';
-    console.log(`[EZH-LOGIN] Navigating to ${target} (${targetPath})`);
     // Use replaceState to clear the login entry from history if preferred, or pushState for standard nav
     window.history.pushState({ view: target }, '', targetPath);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -801,7 +755,7 @@ const AppInner: React.FC = () => {
 
             {currentView === 'Home' ? (
               <>
-                <Hero onNavigate={handleNavigate} onOpenRules={() => setIsRulesModalOpen(true)} />
+                <Hero onNavigate={handleNavigate} />
                 <section className="bg-cream-light/50 border border-slate-200 rounded-3xl p-3 md:p-8 shadow-inner">
                   <div className="flex flex-col items-center gap-6">
                     <div className="text-center">
@@ -831,6 +785,8 @@ const AppInner: React.FC = () => {
               />
             ) : currentView === 'TournamentArena' ? (
               <TournamentArena onNavigate={handleNavigate} stats={userStats} activeTournament={activeTournament} />
+            ) : currentView === 'Leaderboard' ? (
+              <LeaderboardPage onNavigate={handleNavigate} stats={userStats} />
             ) : currentView === 'TournamentLive' ? (
               <TournamentLive
                 onComplete={(wpm, acc, extra) => recordSession(wpm, acc, 'Tournament', extra)}
@@ -913,11 +869,9 @@ const AppInner: React.FC = () => {
         <Footer
           onNavigate={handleNavigate}
           isLoggedIn={isLoggedIn}
-          onOpenRules={() => setIsRulesModalOpen(true)}
           onOpenLoginRequired={() => setIsLoginRequiredModalOpen(true)}
         />
       )}
-      <RulesModal isOpen={isRulesModalOpen} onClose={() => setIsRulesModalOpen(false)} onNavigate={handleNavigate} />
       <NotificationPanel
         isOpen={isNotificationPanelOpen}
         onClose={() => setIsNotificationPanelOpen(false)}

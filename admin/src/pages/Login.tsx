@@ -29,7 +29,6 @@ const Login = () => {
             login(userData);
             navigate('/');
         } catch (err: any) {
-            console.error("Login failed", err);
             setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
         } finally {
             setLoading(false);
