@@ -300,7 +300,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
       // Auto-select the first lesson of the new series (only if in lesson mode)
       if (mode === 'lesson' && newLessons.length > 0) {
-        setTargetText(newLessons[0].text);
+        setTargetText(newLessons[0].char);
         setInputText("");
         setInputHistory("");
         setPartialInput("");
@@ -314,7 +314,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     if (mode === 'lesson' && categories.length > 0) {
       const category = categories.find(c => c.id === selectedCategoryId);
       if (category && category.lessons.length > 0 && !targetText) {
-        setTargetText(category.lessons[0].text);
+        setTargetText(category.lessons[0].char);
         setInputText("");
         setInputHistory("");
         setPartialInput("");
@@ -386,7 +386,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     const category = categories.find(c => c.id === selectedCategoryId);
     if (category && index >= 0 && index < category.lessons.length) {
       setCurrentLessonIndex(index);
-      setTargetText(category.lessons[index].text);
+      setTargetText(category.lessons[index].char);
       // Set the correct page based on the selected lesson
       setCurrentPage(Math.floor(index / LESSONS_PER_PAGE));
       resetPractice();
@@ -411,7 +411,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     // Also update target text to the first lesson of the new category/vowel
     const category = categories.find(c => c.id === selectedCategoryId);
     if (category && category.lessons.length > 0) {
-      setTargetText(category.lessons[0].text);
+      setTargetText(category.lessons[0].char);
       resetPractice();
       // setFeedbackStatus('neutral'); // Handled by resetPractice
     }
@@ -445,7 +445,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         if (category) {
           // Start with the first lesson's first char
           setCurrentLessonIndex(0);
-          const firstChar = category.lessons[0].text;
+          const firstChar = category.lessons[0].char;
           setTargetText(firstChar);
           setCurrentTextId(undefined); // No DB ID
           resetPractice();
@@ -755,7 +755,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
         // Strict Space Logic: Must have typed correctly to advance
         // Disable space-to-advance for Keyboard Practice to allow infinite typing
-        if (selectedCategoryId !== 'keyboard_practice' && activeCharIndex >= targetGraphemes.length) {
+        if (selectedCategoryId !== 'keyboard_practice' && (inputText.length > 0 || feedbackStatus === 'success')) {
           const category = categories.find(c => c.id === selectedCategoryId);
           if (category) {
             const nextIndex = currentLessonIndex + 1;
@@ -766,7 +766,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
             if (nextIndex < category.lessons.length) {
               setCurrentLessonIndex(nextIndex);
-              setTargetText(category.lessons[nextIndex].text);
+              setTargetText(category.lessons[nextIndex].char);
               setInputText("");
               setFeedbackStatus('neutral'); // Reset feedback for next lesson
 
@@ -783,7 +783,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
               });
               setCurrentLessonIndex(0);
               setCurrentPage(0); // Reset to first page
-              setTargetText(category.lessons[0].text);
+              setTargetText(category.lessons[0].char);
               setInputText("");
               setFeedbackStatus('neutral'); // Reset feedback for restart
             }
@@ -825,26 +825,42 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
           return;
         }
 
-        // NEW LESSON LOGIC: Unify with robust alignment match
-        // Update ONLY if it's not and-of-lesson (handled by Space)
-        const newText = inputText + produced;
-        setInputText(newText);
-        setPartialInput("");
+        // ORIGINAL LESSON LOGIC: For single-character lessons (Uyir, Mei, etc.)
+        if (produced === targetText) {
+          // COMPLETE SUCCESS
+          setFeedbackStatus('success');
+          const newLessonInp = inputText + targetText;
+          setInputText(newLessonInp);
+          setPartialInput("");
 
-        const newPosEnd = newText.length;
+          const newPosLesson = newLessonInp.length;
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPosLesson;
+            }
+          }, 0);
+          return;
+        }
+
+        if (isPotentialMatch(produced, targetText)) {
+          // PARTIAL MATCH - show as error (red) until complete
+          setFeedbackStatus('error');
+          setPartialInput(produced);
+          return;
+        }
+
+        // WRONG INPUT - Allow all characters but mark as error
+        setFeedbackStatus('error');
+        setPartialInput("");
+        const newInp = inputText + produced;
+        setInputText(newInp);
+
+        const newPosEnd = newInp.length;
         setTimeout(() => {
           if (inputRef.current) {
             inputRef.current.selectionStart = inputRef.current.selectionEnd = newPosEnd;
           }
         }, 0);
-
-        // Feedback based on matching the current grapheme
-        const alignment = alignmentStatuses[activeCharIndex];
-        if (alignment === 'success' || (isPotentialMatch(produced, targetGraphemes[activeCharIndex]) && activeCharIndex < targetGraphemes.length)) {
-          setFeedbackStatus('neutral'); // Or 'success' if you want a flash
-        } else {
-          setFeedbackStatus('error');
-        }
         return;
       }
     }
@@ -891,15 +907,31 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     let correctChars = 0;
     let errors = 0;
 
-    // Use alignmentStatuses for consistent statistics
-    alignmentStatuses.forEach(status => {
-      if (status === 'success') correctChars++;
-      else if (status === 'error') errors++;
-    });
+    if (mode === 'lesson') {
+      // In lesson mode, we allow users to type the target character/text multiple times.
+      // We calculate stats by checking each input grapheme against the target pattern.
+      inputGraphemes.forEach((inp, idx) => {
+        const tgt = targetGraphemes[idx % targetGraphemes.length];
+        if (inp === tgt) {
+          correctChars++;
+        } else {
+          // Only count as error if it's not a potential phonetic match in progress
+          if (!isPotentialMatch(inp, tgt) || idx < inputGraphemes.length - 1) {
+            errors++;
+          }
+        }
+      });
+    } else {
+      // Use alignmentStatuses for consistent statistics in Free/Custom modes
+      alignmentStatuses.forEach(status => {
+        if (status === 'success') correctChars++;
+        else if (status === 'error') errors++;
+      });
 
-    // Handle characters typed beyond target length as errors
-    if (inputGraphemes.length > targetGraphemes.length) {
-      errors += (inputGraphemes.length - targetGraphemes.length);
+      // Handle characters typed beyond target length as errors for non-lesson modes
+      if (inputGraphemes.length > targetGraphemes.length) {
+        errors += (inputGraphemes.length - targetGraphemes.length);
+      }
     }
 
     const totalChars = inputGraphemes.length;
@@ -1244,7 +1276,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
             )}
 
             <div ref={inputAreaRef} className="flex flex-col gap-4 w-full shrink-0 scroll-mt-24">
-              {selectedCategoryId !== 'keyboard_practice' && (
+              {mode !== 'lesson' && (
                 <div
                   ref={targetDisplayRef}
                   className="bg-white rounded-[1.5rem] md:rounded-[2.5rem] p-3 sm:p-4 md:p-5 paper-shadow border border-black/5 font-tamil w-full h-[80px] md:h-[110px] overflow-y-auto scroll-smooth"
