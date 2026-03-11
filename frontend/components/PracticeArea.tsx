@@ -363,8 +363,6 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
   }, [inputText, selectedCategoryId]);
 
 
-  const currentCategory = categories.find(c => c.id === selectedCategoryId) || categories[0];
-
   const resetPractice = () => {
     setInputText("");
     setInputHistory("");
@@ -381,6 +379,8 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       inputRef.current?.focus({ preventScroll: true });
     }, 0);
   };
+
+  const currentCategory = categories.find(c => c.id === selectedCategoryId) || categories[0];
 
   const selectLesson = (index: number) => {
     const category = categories.find(c => c.id === selectedCategoryId);
@@ -404,18 +404,47 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       const firstDrill = keyboardPracticeData[0]?.lessons[0]?.content || "";
       setTargetText(firstDrill);
       resetPractice();
-      // setFeedbackStatus('neutral'); // Handled by resetPractice
       return;
     }
 
-    // Also update target text to the first lesson of the new category/vowel
     const category = categories.find(c => c.id === selectedCategoryId);
     if (category && category.lessons.length > 0) {
       setTargetText(category.lessons[0].char);
       resetPractice();
-      // setFeedbackStatus('neutral'); // Handled by resetPractice
     }
   }, [selectedCategoryId, selectedCompoundVowel, categories, mode]);
+
+  const advanceLesson = () => {
+    const category = categories.find(c => c.id === selectedCategoryId);
+    if (category) {
+      const nextIndex = currentLessonIndex + 1;
+      const currentPageEnd = (currentPage + 1) * LESSONS_PER_PAGE;
+      const isPageComplete = nextIndex === currentPageEnd && nextIndex < category.lessons.length;
+
+      if (nextIndex < category.lessons.length) {
+        setCurrentLessonIndex(nextIndex);
+        setTargetText(category.lessons[nextIndex].char);
+        setInputText("");
+        setFeedbackStatus('neutral');
+
+        if (isPageComplete) {
+          setCurrentPage(currentPage + 1);
+        }
+      } else {
+        if (onComplete) onComplete(stats.netWpm, stats.accuracy, {
+          rawTypedText: inputHistory + inputText,
+          durationMs: elapsedTime * 1000,
+          testSessionId: testSessionId,
+          textId: currentTextId
+        });
+        setCurrentLessonIndex(0);
+        setCurrentPage(0);
+        setTargetText(category.lessons[0].char);
+        setInputText("");
+        setFeedbackStatus('neutral');
+      }
+    }
+  };
 
   const selectPracticeLesson = (text: string) => {
     setTargetText(text);
@@ -548,17 +577,13 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
                 setInputText(inputText + targetText);
                 setPartialInput("");
               } else if (isPotentialMatch(produced, targetText)) {
-                // Only trigger error if not already in error state to prevent noise
-                if (feedbackStatus !== 'error') {
-                  setFeedbackStatus('error');
-                }
+                setFeedbackStatus('error');
                 setPartialInput(produced);
               } else {
-                // Only trigger error if not already in error state
-                if (feedbackStatus !== 'error') {
-                  setFeedbackStatus('error');
-                  setPartialInput("");
-                }
+                // Wrong input - match desktop behavior by appending it
+                setFeedbackStatus('error');
+                setPartialInput("");
+                setInputText(inputText + produced);
               }
             };
 
@@ -592,14 +617,18 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
             return;
           }
 
-          newText = inputText.slice(0, start) + char + inputText.slice(start);
-          setInputText(newText);
-          const newPos = start + char.length;
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
+          if (char === ' ') {
+            if (selectedCategoryId === 'keyboard_practice') {
+              setInputHistory(inputHistory + inputText + ' ');
+              setInputText('');
+              setFeedbackStatus('neutral');
+            } else if (inputText.length > 0 || feedbackStatus === 'success') {
+              advanceLesson();
             }
-          }, 0);
+            return;
+          }
+
+          newText = inputText.slice(0, start) + char + inputText.slice(start);
         } else if (type === 'replace') {
           const char = value;
           const graphemes = getTamilGraphemes(inputText.slice(0, start));
@@ -756,38 +785,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         // Strict Space Logic: Must have typed correctly to advance
         // Disable space-to-advance for Keyboard Practice to allow infinite typing
         if (selectedCategoryId !== 'keyboard_practice' && (inputText.length > 0 || feedbackStatus === 'success')) {
-          const category = categories.find(c => c.id === selectedCategoryId);
-          if (category) {
-            const nextIndex = currentLessonIndex + 1;
-
-            // Check if we've completed the current page (8 lessons)
-            const currentPageEnd = (currentPage + 1) * LESSONS_PER_PAGE;
-            const isPageComplete = nextIndex === currentPageEnd && nextIndex < category.lessons.length;
-
-            if (nextIndex < category.lessons.length) {
-              setCurrentLessonIndex(nextIndex);
-              setTargetText(category.lessons[nextIndex].char);
-              setInputText("");
-              setFeedbackStatus('neutral'); // Reset feedback for next lesson
-
-              // Auto-advance to next page if current page is complete
-              if (isPageComplete) {
-                setCurrentPage(currentPage + 1);
-              }
-            } else {
-              if (onComplete) onComplete(stats.netWpm, stats.accuracy, {
-                rawTypedText: inputHistory + inputText,
-                durationMs: elapsedTime * 1000,
-                testSessionId: testSessionId,
-                textId: currentTextId
-              });
-              setCurrentLessonIndex(0);
-              setCurrentPage(0); // Reset to first page
-              setTargetText(category.lessons[0].char);
-              setInputText("");
-              setFeedbackStatus('neutral'); // Reset feedback for restart
-            }
-          }
+          advanceLesson();
         }
         return;
       }
