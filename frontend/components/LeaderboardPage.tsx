@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserStats, LeaderboardEntry, LeaderboardPageProps } from '../src/types';
 import { getTournamentLeaderboard, getActiveTournament } from '../src/services/api';
 import { getUploadBaseUrl, getFullProfileUrl } from '../src/config/apiConfig';
+import AdSenseBlock from './AdSenseBlock';
 
 const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) => {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -180,6 +181,10 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) 
                         })}
                     </div>
 
+                    <div className="my-8 flex justify-center">
+                        <AdSenseBlock adSlot="9900112233" adFormat="auto" />
+                    </div>
+
                     {/* Top 5 List Section (Ranks 4-5) */}
                     <div className="list-card overflow-hidden max-w-2xl mx-auto w-full">
                         <div className="p-6 border-b border-[#92450f08] bg-white/40 flex items-center justify-between">
@@ -254,6 +259,10 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) 
                                 </div>
                             </div>
                         )}
+                    </div>
+
+                    <div className="mt-8 flex justify-center">
+                        <AdSenseBlock adSlot="1112223334" adFormat="auto" />
                     </div>
                 </div>
 

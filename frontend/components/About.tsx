@@ -1,5 +1,6 @@
 
 import React from 'react';
+import AdSenseBlock from './AdSenseBlock';
 
 interface AboutProps {
   onNavigate: (view: string) => void;
@@ -48,6 +49,10 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
           </div>
         </div>
       </section>
+
+      <div className="my-8 flex justify-center">
+        <AdSenseBlock adSlot="4455667788" adFormat="auto" />
+      </div>
 
       {/* Mission & Vision */}
       <section id="core-purpose" className="bg-cream-light/50 rounded-[2rem] sm:rounded-[60px] 5xl:rounded-[100px] p-6 sm:p-10 md:p-16 4xl:p-32 5xl:p-48 flex flex-col items-center text-center shadow-inner mt-6 sm:mt-12">
@@ -116,6 +121,10 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
           ))}
         </div>
       </section>
+
+      <div className="mt-8 flex justify-center">
+        <AdSenseBlock adSlot="5566778899" adFormat="auto" />
+      </div>
     </div>
   );
 };

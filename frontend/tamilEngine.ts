@@ -188,6 +188,7 @@ export function processTamilInput(
  */
 export function isPotentialMatch(produced: string, target: string): boolean {
   if (!produced || !target) return false;
+  if (produced === target) return true;
 
   // 1. Direct sub-string match (Vowel Doubling sequence)
   const VOWEL_PAIRS: Record<string, string> = {
@@ -195,15 +196,38 @@ export function isPotentialMatch(produced: string, target: string): boolean {
   };
   if (VOWEL_PAIRS[target] === produced) return true;
 
-  // 2. Base Character Match (Uyirmei / Mei sequence)
-  // Strip modifiers (Pulli, Vowel Signs)
-  const strip = (s: string) => s.replace(/[\u0BCD\u0BBE-\u0BCC]/g, '');
+  const getBase = (s: string) => s.replace(/[\u0BCD\u0BBE-\u0BCC\u0BD7]/g, '');
+  const getSign = (s: string) => {
+    const match = s.match(/[\u0BBE-\u0BCC\u0BD7]/);
+    return match ? match[0] : '';
+  };
+  const hasPulli = (s: string) => s.includes(PULLI);
 
-  const producedBase = strip(produced.normalize('NFC'));
-  const targetBase = strip(target.normalize('NFC'));
+  const producedBase = getBase(produced.normalize('NFC'));
+  const targetBase = getBase(target.normalize('NFC'));
 
-  // If typing 'கா' (base 'க'), 'க்' (base 'க') is a valid progress!
-  return targetBase.startsWith(producedBase) && producedBase.length > 0;
+  // If bases are different, no match (handled Vowel Doubling above)
+  if (producedBase !== targetBase) return false;
+
+  const producedSign = getSign(produced);
+  const targetSign = getSign(target);
+  const producedHasPulli = hasPulli(produced);
+  const targetHasPulli = hasPulli(target);
+
+  // If produced has a non-pulli sign, it MUST match the target's sign exactly
+  if (producedSign && producedSign !== targetSign) return false;
+
+  // If target has a pulli, produced should only match if it's base (progress to pulli)
+  if (targetHasPulli && !producedHasPulli && !producedSign) return true;
+
+  // If target has a sign, produced can be base or pulli-version
+  if (targetSign && (producedHasPulli || !producedSign)) return true;
+
+  // If target is base (e.g. 'க'), produced can be pulli-version ('க்')
+  if (!targetSign && !targetHasPulli && producedHasPulli) return true;
+
+  // Otherwise, fallback: if they share base and produced has no sign/pulli
+  return !producedSign && !producedHasPulli;
 }
 
 export function handleTamilBackspace(

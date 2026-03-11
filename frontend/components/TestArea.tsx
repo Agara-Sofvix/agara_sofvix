@@ -4,6 +4,7 @@ import { useTextStore } from '../src/store/useTextStore';
 import { generateUUID } from '../src/utils/uuid';
 import Keyboard from './Keyboard';
 import { AppSettings } from '../src/types';
+import AdSenseBlock from './AdSenseBlock';
 
 interface TestAreaProps {
   onComplete: (wpm: number, accuracy: number, stats?: any) => void;
@@ -377,6 +378,9 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
     return (
       <div className="w-full max-w-4xl mx-auto py-12 animate-in fade-in zoom-in duration-500">
         <div className="bg-cream-light/50 border-4 border-slate-100 rounded-[50px] p-12 text-center shadow-inner relative overflow-hidden">
+          <div className="mb-8 w-full flex justify-center">
+            <AdSenseBlock adSlot="5566778899" adFormat="auto" />
+          </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-header-brown/5 rounded-bl-full pointer-events-none"></div>
 
           <div className="mb-10">
@@ -400,6 +404,10 @@ const TestArea: React.FC<TestAreaProps> = ({ onComplete, onReturn, config, activ
               <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40 mb-2 block text-slate-800">Precision Errors</span>
               <div className="text-4xl font-black text-red-600">{lastResult.errors}</div>
             </div>
+          </div>
+
+          <div className="mb-8 w-full flex justify-center">
+            <AdSenseBlock adSlot="6677889900" adFormat="rectangle" />
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

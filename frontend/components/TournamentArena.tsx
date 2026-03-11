@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import AdSenseBlock from './AdSenseBlock';
 import { UserStats } from '../src/types';
 
 interface TournamentArenaProps {
@@ -248,6 +249,9 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
 
             {/* Left Column: GLOBAL LEADERBOARD + PERSONAL STANDING (lg+) */}
             <section className="flex flex-col gap-12 animate-in slide-in-from-left-8 duration-700 lg:col-start-1 order-3 lg:order-1">
+              <div className="mb-4 flex justify-center">
+                <AdSenseBlock adSlot="8800112233" adFormat="auto" />
+              </div>
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-black opacity-60">Tournament Leaderboard</h2>
@@ -324,6 +328,9 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
                     </p>
                   )}
                 </div>
+              </div>
+              <div className="mt-8 flex justify-center">
+                <AdSenseBlock adSlot="9911223344" adFormat="auto" />
               </div>
             </section>
 

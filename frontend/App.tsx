@@ -22,6 +22,9 @@ import Dashboard from './components/Dashboard';
 import TournamentArena from './components/TournamentArena';
 import LeaderboardPage from './components/LeaderboardPage';
 import Footer from './components/Footer';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsConditions from './components/TermsConditions';
+import Contact from './components/Contact';
 import NotificationPanel from './components/NotificationPanel';
 import LoginRequiredModal from './components/LoginRequiredModal';
 import AdminApp from './AdminApp';
@@ -30,6 +33,7 @@ import { useNotifications } from './hooks/useNotifications';
 import Maintenance from './components/Maintenance';
 import SideAds from './components/SideAds';
 import TrophyEarnedModal from './components/TrophyEarnedModal';
+import AdSenseBlock from './components/AdSenseBlock';
 
 const VIEW_TO_PATH: Record<string, string> = {
   'Home': '/',
@@ -49,6 +53,9 @@ const VIEW_TO_PATH: Record<string, string> = {
   'About': '/about',
   'Keyboard Layout': '/keyboard-layout',
   'Games': '/games',
+  'PrivacyPolicy': '/privacy-policy',
+  'TermsConditions': '/terms-and-conditions',
+  'Contact': '/contact',
   'Admin': '/admin/',
 };
 
@@ -755,7 +762,13 @@ const AppInner: React.FC = () => {
 
             {currentView === 'Home' ? (
               <>
+                <div className="mb-8 flex justify-center">
+                  <AdSenseBlock adSlot="1234567890" adFormat="auto" />
+                </div>
                 <Hero onNavigate={handleNavigate} />
+                <div className="my-8 flex justify-center">
+                  <AdSenseBlock adSlot="0987654321" adFormat="rectangle" />
+                </div>
                 <section className="bg-cream-light/50 border border-slate-200 rounded-3xl p-3 md:p-8 shadow-inner">
                   <div className="flex flex-col items-center gap-6">
                     <div className="text-center">
@@ -774,6 +787,9 @@ const AppInner: React.FC = () => {
                     </button>
                   </div>
                 </section>
+                <div className="mt-8 flex justify-center">
+                  <AdSenseBlock adSlot="1122334455" adFormat="auto" />
+                </div>
               </>
             ) : currentView === 'Dashboard' ? (
               <Dashboard
@@ -847,6 +863,12 @@ const AppInner: React.FC = () => {
                 <p className="mt-4 sm:mt-6 text-sm sm:text-base md:text-lg text-slate-800 font-medium max-w-md mx-auto">We are building interactive games to help you master Tamil typing through fun and engagement. Stay tuned!</p>
                 <button onClick={() => handleNavigate('Home')} className="mt-6 sm:mt-8 px-6 sm:px-8 py-2 sm:py-3 bg-black text-white rounded-xl font-bold hover:bg-neutral-800 transition-all shadow-lg">Return to Home</button>
               </div>
+            ) : currentView === 'PrivacyPolicy' ? (
+              <PrivacyPolicy />
+            ) : currentView === 'TermsConditions' ? (
+              <TermsConditions />
+            ) : currentView === 'Contact' ? (
+              <Contact />
             ) : (
               <div className="bg-cream-light/50 border border-slate-200 rounded-3xl p-20 text-center shadow-inner relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-header-brown/5 rounded-bl-full pointer-events-none"></div>

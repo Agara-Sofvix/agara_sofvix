@@ -2,6 +2,7 @@ import React from 'react';
 import { UserStats, AppSettings } from '../src/types';
 import { updateProfilePic, setAvatar } from '../src/services/api';
 import { getUploadBaseUrl, getFullProfileUrl } from '../src/config/apiConfig';
+import AdSenseBlock from './AdSenseBlock';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -285,6 +286,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
         </div>
       </section>
 
+      <div className="my-8 flex justify-center">
+        <AdSenseBlock adSlot="2233445566" adFormat="auto" />
+      </div>
+
       {/* Analytics Chart Section */}
       <section className="relative bg-cream-light/50 border border-slate-200 rounded-[20px] sm:rounded-[30px] md:rounded-[50px] p-3 sm:p-6 md:p-8 lg:p-12 overflow-hidden h-[180px] sm:h-[280px] md:h-[400px] shadow-inner group">
         <div className="relative z-20 flex justify-between items-start">
@@ -526,6 +531,10 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
           </div>
         </div>
       )}
+
+      <div className="mt-8 flex justify-center">
+        <AdSenseBlock adSlot="3344556677" adFormat="auto" />
+      </div>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { TournamentScore } from '../src/types';
+import AdSenseBlock from './AdSenseBlock';
 
 interface TournamentResultProps {
   score: TournamentScore | null;
@@ -106,6 +107,10 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
           </div>
         </section>
 
+        <div className="my-8 flex justify-center">
+          <AdSenseBlock adSlot="7788990011" adFormat="auto" />
+        </div>
+
         {/* Breakdown Table */}
         <section className="space-y-6">
           <h3 className="text-xs font-black uppercase tracking-widest opacity-60 ml-2">Detailed Breakdown</h3>
@@ -167,6 +172,9 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
         </div>
 
         <div className="text-center pt-12">
+          <div className="mb-8 flex justify-center">
+            <AdSenseBlock adSlot="8899001122" adFormat="auto" />
+          </div>
           <p className="text-[10px] font-black uppercase tracking-widest opacity-20">No re-attempts allowed for this session ID</p>
         </div>
       </div>

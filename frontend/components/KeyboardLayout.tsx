@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import Keyboard from './Keyboard';
 import { TAMIL_PHONETIC_MAP, processTamilInput, handleTamilBackspace } from '../tamilEngine';
+import AdSenseBlock from './AdSenseBlock';
 
 const KeyboardLayout: React.FC = () => {
   const [demoInput, setDemoInput] = useState("");
@@ -105,6 +106,10 @@ const KeyboardLayout: React.FC = () => {
           Ezhuthidu uses a deterministic, phonetic-first engine. Every keystroke follows the Definitive Rule Specification for maximum efficiency.
         </p>
       </section>
+
+      <div className="my-8 flex justify-center">
+        <AdSenseBlock adSlot="6677889900" adFormat="auto" />
+      </div>
 
       {/* Logic Rules Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -225,6 +230,10 @@ const KeyboardLayout: React.FC = () => {
           </table>
         </div>
       </section>
+
+      <div className="mt-8 flex justify-center">
+        <AdSenseBlock adSlot="7788990011" adFormat="auto" />
+      </div>
     </div>
   );
 };

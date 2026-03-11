@@ -64,6 +64,9 @@ const Footer: React.FC<FooterProps> = ({ onNavigate, isLoggedIn, onOpenLoginRequ
                   <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current"><path d="M12 0C7.802 0 4.409 3.393 4.409 7.591c0 2.704 1.43 5.483 3.593 8.356l4.012 5.567c.28.388.852.388 1.132 0l4.012-5.567c2.163-2.873 3.593-5.652 3.593-8.356C20.8 3.393 17.407 0 13.209 0H12zm0 11.231c-2.007 0-3.636-1.629-3.636-3.636s1.629-3.636 3.636-3.636 3.636 1.629 3.636 3.636-1.629 3.636-3.636 3.636z" /></svg>
                 </a>
               </li>
+              <li><a className="hover:text-white" href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('Contact'); }}>Contact Us</a></li>
+              <li><a className="hover:text-white" href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('PrivacyPolicy'); }}>Privacy Policy</a></li>
+              <li><a className="hover:text-white" href="#" onClick={(e) => { e.preventDefault(); onNavigate?.('TermsConditions'); }}>Terms & Conditions</a></li>
             </ul>
           </div>
         </div>

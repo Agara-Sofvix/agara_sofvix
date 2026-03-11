@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTextStore } from '../src/store/useTextStore';
+import AdSenseBlock from './AdSenseBlock';
 
 interface TestSelectionProps {
     onStart: (config: { duration: number; module: string }) => void;
@@ -77,6 +78,9 @@ const TestSelection: React.FC<TestSelectionProps> = ({ onStart, defaultDuration 
 
     return (
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center py-8 animate-in fade-in zoom-in duration-700">
+            <div className="mb-8 w-full flex justify-center">
+                <AdSenseBlock adSlot="4455667788" adFormat="auto" />
+            </div>
             <div className="text-center mb-12">
                 <h1 className="text-4xl sm:text-6xl font-black tracking-tighter leading-tight text-slate-900">
                     Configure Your <span className="text-primary">Typing Mission</span>
@@ -163,6 +167,10 @@ const TestSelection: React.FC<TestSelectionProps> = ({ onStart, defaultDuration 
                                 <span className="material-symbols-outlined group-hover:translate-x-2 transition-transform">bolt</span>
                             </button>
                         </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-center">
+                        <AdSenseBlock adSlot="9988776655" adFormat="rectangle" />
                     </div>
 
                     <div className="flex items-center justify-center gap-6 opacity-40">
