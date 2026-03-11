@@ -511,7 +511,9 @@ const AppInner: React.FC = () => {
     }
 
     // Accuracy Milestones
-    const accuracies = history.map(h => h.accuracy || 0);
+    // Trophies are only for formal Tests and Tournaments
+    const nonPracticeHistory = history.filter(h => h.type !== 'Practice');
+    const accuracies = nonPracticeHistory.map(h => h.accuracy || 0);
     const has95 = accuracies.some(a => a >= 95);
     const has98 = accuracies.some(a => a >= 98);
     const has100 = accuracies.some(a => a === 100);
@@ -639,12 +641,14 @@ const AppInner: React.FC = () => {
       const newHistory = [newHistoryItem, ...prev.history].slice(0, 20);
       const updatedStats = calculateStats(newHistory, prev.displayName);
 
-      // Check for newly earned trophies
-      const oldTrophyIds = new Set(prev.trophies.map(t => t.id));
-      const newTrophiesDetected = updatedStats.trophies.filter(t => !oldTrophyIds.has(t.id));
+      // Check for newly earned trophies (Skip for Practice sessions)
+      if (finalType !== 'Practice') {
+        const oldTrophyIds = new Set(prev.trophies.map(t => t.id));
+        const newTrophiesDetected = updatedStats.trophies.filter(t => !oldTrophyIds.has(t.id));
 
-      if (newTrophiesDetected.length > 0) {
-        setLatestEarnedTrophy(newTrophiesDetected[0]);
+        if (newTrophiesDetected.length > 0) {
+          setLatestEarnedTrophy(newTrophiesDetected[0]);
+        }
       }
 
       return {
