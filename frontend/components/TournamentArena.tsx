@@ -248,7 +248,7 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
           <div className="arena-asymmetric-grid py-8">
 
             {/* Left Column: GLOBAL LEADERBOARD + PERSONAL STANDING (lg+) */}
-            <section className="flex flex-col gap-12 animate-in slide-in-from-left-8 duration-700 lg:col-start-1 order-3 lg:order-1">
+            <section className="flex flex-col gap-10 animate-in slide-in-from-left-8 duration-700 lg:col-start-1 order-3 lg:order-1">
               <div className="mb-4 flex justify-center">
                 <AdSenseBlock adSlot="8800112233" adFormat="auto" />
               </div>
@@ -329,7 +329,7 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
                   )}
                 </div>
               </div>
-              <div className="mt-8 flex justify-center">
+              <div className="mt-6 flex justify-center">
                 <AdSenseBlock adSlot="9911223344" adFormat="auto" />
               </div>
             </section>

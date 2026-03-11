@@ -77,8 +77,8 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
   };
 
   return (
-    <div className="min-h-screen bg-warm-bg text-slate-900 flex flex-col items-center py-16 px-6 animate-in fade-in duration-700">
-      <div className="w-full max-w-4xl space-y-12">
+    <div className="min-h-screen bg-warm-bg text-slate-900 flex flex-col items-center py-8 px-6 animate-in fade-in duration-700">
+      <div className="w-full max-w-4xl space-y-8">
 
         {/* Result Summary Card */}
         <section className="bg-cream-light border border-slate-200 rounded-[3rem] p-12 text-center relative overflow-hidden shadow-2xl">
@@ -107,7 +107,7 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
           </div>
         </section>
 
-        <div className="my-8 flex justify-center">
+        <div className="my-6 flex justify-center">
           <AdSenseBlock adSlot="7788990011" adFormat="auto" />
         </div>
 

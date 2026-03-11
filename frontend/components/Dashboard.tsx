@@ -96,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
   const avatarUrl = getFullProfileUrl(stats.profilePic);
 
   return (
-    <div className="xs:text-xs text-sm sm:text-base flex flex-col gap-16 animate-in fade-in slide-in-from-bottom-4 duration-700 relative pb-10">
+    <div className="xs:text-xs text-sm sm:text-base flex flex-col gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700 relative pb-10">
       {/* Background Blobs for Organic Feel - Removed background blobs for cleaner look */}
 
       {/* Profile Section */}
@@ -286,7 +286,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
         </div>
       </section>
 
-      <div className="my-8 flex justify-center">
+      <div className="my-6 flex justify-center">
         <AdSenseBlock adSlot="2233445566" adFormat="auto" />
       </div>
 
@@ -532,7 +532,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onNavigate, stats, settings, setS
         </div>
       )}
 
-      <div className="mt-8 flex justify-center">
+      <div className="mt-6 flex justify-center">
         <AdSenseBlock adSlot="3344556677" adFormat="auto" />
       </div>
     </div>

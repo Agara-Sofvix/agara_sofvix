@@ -8,10 +8,10 @@ interface AboutProps {
 
 const About: React.FC<AboutProps> = ({ onNavigate }) => {
   return (
-    <div className="flex flex-col gap-12 animate-in fade-in duration-700 pb-20 text-sm sm:text-base">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-700 pb-20 text-sm sm:text-base">
       {/* Hero Section */}
-      <section className="w-full min-h-[auto] sm:min-h-[60vh] lg:min-h-[85vh] 5xl:min-h-[70vh] flex items-center bg-cream-light/30 border border-slate-200 rounded-[2rem] sm:rounded-[3rem] 5xl:rounded-[6rem] p-4 sm:p-10 md:p-16 lg:p-16 2xl:p-20 4xl:p-32 5xl:p-48 shadow-inner overflow-hidden relative">
-        <div className="content-area flex flex-col lg:flex-row items-center gap-8 sm:gap-20 lg:gap-14 xl:gap-24 5xl:gap-32 w-full max-w-6xl mx-auto">
+      <section className="w-full min-h-[auto] sm:min-h-[50vh] lg:min-h-[75vh] 5xl:min-h-[60vh] flex items-center bg-cream-light/30 border border-slate-200 rounded-[2rem] sm:rounded-[3rem] 5xl:rounded-[6rem] p-4 sm:p-8 md:p-12 lg:p-12 2xl:p-16 4xl:p-24 5xl:p-36 shadow-inner overflow-hidden relative">
+        <div className="content-area flex flex-col lg:flex-row items-center gap-8 sm:gap-14 lg:gap-10 xl:gap-16 5xl:gap-24 w-full max-w-6xl mx-auto">
           <div className="flex-1 space-y-8 4xl:space-y-16 5xl:space-y-24 flex flex-col items-center text-center lg:items-start lg:text-left">
             <div className="inline-block px-4 py-1.5 5xl:px-10 5xl:py-4 bg-black text-white text-[10px] sm:text-xs 5xl:text-2xl font-black uppercase tracking-widest rounded-full">Explore Our Mission</div>
             <h1 className="text-3xl xs:text-4xl sm:text-7xl lg:text-5xl xl:text-6xl 3xl:text-8xl 5xl:text-9xl font-black leading-[1.1] text-slate-900 tracking-tighter">
@@ -50,12 +50,12 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      <div className="my-8 flex justify-center">
+      <div className="my-6 flex justify-center">
         <AdSenseBlock adSlot="4455667788" adFormat="auto" />
       </div>
 
       {/* Mission & Vision */}
-      <section id="core-purpose" className="bg-cream-light/50 rounded-[2rem] sm:rounded-[60px] 5xl:rounded-[100px] p-6 sm:p-10 md:p-16 4xl:p-32 5xl:p-48 flex flex-col items-center text-center shadow-inner mt-6 sm:mt-12">
+      <section id="core-purpose" className="bg-cream-light/50 rounded-[2rem] sm:rounded-[60px] 5xl:rounded-[100px] p-6 sm:p-10 md:p-12 4xl:p-24 5xl:p-36 flex flex-col items-center text-center shadow-inner mt-4 sm:mt-8">
         <div className="inline-block px-4 py-1.5 5xl:px-10 5xl:py-4 bg-header-brown text-white text-[9px] sm:text-[10px] 5xl:text-2xl font-black uppercase tracking-widest rounded-full mb-6 sm:mb-10">Our Core Purpose</div>
         <div className="max-w-5xl 5xl:max-w-6xl space-y-10 sm:space-y-12 5xl:space-y-24">
           <div>
@@ -99,7 +99,7 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
       </section>
 
       {/* Stages of Learning */}
-      <section className="bg-cream-light/30 rounded-[2rem] sm:rounded-[3.5rem] 5xl:rounded-[8rem] p-6 sm:p-10 md:p-16 4xl:p-32 5xl:p-48 border border-black/5 shadow-inner mb-20 max-w-6xl mx-auto w-full">
+      <section className="bg-cream-light/30 rounded-[2rem] sm:rounded-[3.5rem] 5xl:rounded-[8rem] p-6 sm:p-10 md:p-12 4xl:p-24 5xl:p-36 border border-black/5 shadow-inner mb-12 max-w-6xl mx-auto w-full">
         <div className="text-center mb-10 sm:mb-16">
           <h2 className="text-2xl sm:text-4xl md:text-5xl 5xl:text-8xl font-black mb-4 sm:mb-6 text-slate-900 leading-[1.1] tracking-tight">Designed for Every Stage of Learning</h2>
           <p className="text-sm sm:text-xl 5xl:text-4xl font-bold text-slate-800/80">A structured path from your first letter to professional speed.</p>
@@ -122,7 +122,7 @@ const About: React.FC<AboutProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      <div className="mt-8 flex justify-center">
+      <div className="mt-6 flex justify-center">
         <AdSenseBlock adSlot="5566778899" adFormat="auto" />
       </div>
     </div>

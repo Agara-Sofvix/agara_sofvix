@@ -93,7 +93,7 @@ const KeyboardLayout: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-12 animate-in fade-in duration-700 pb-20 text-sm sm:text-base">
+    <div className="flex flex-col gap-8 animate-in fade-in duration-700 pb-16 text-sm sm:text-base">
 
       {/* Header Section */}
       <section className="bg-cream-light/50 border border-slate-200 rounded-[2.5rem] p-12 text-center relative overflow-hidden shadow-inner">
@@ -107,7 +107,7 @@ const KeyboardLayout: React.FC = () => {
         </p>
       </section>
 
-      <div className="my-8 flex justify-center">
+      <div className="my-6 flex justify-center">
         <AdSenseBlock adSlot="6677889900" adFormat="auto" />
       </div>
 
