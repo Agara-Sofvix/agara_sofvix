@@ -708,6 +708,7 @@ const AppInner: React.FC = () => {
     if (isTournament && extra) {
       setLastTournamentScore({
         wpm,
+        score: wpm, // The 'wpm' passed from TournamentLive is actually the final calculated Score
         accuracy,
         errors: extra.errors || 0,
         totalChars: extra.totalChars || 0,

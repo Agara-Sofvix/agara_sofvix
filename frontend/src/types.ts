@@ -37,6 +37,7 @@ export interface AppSettings {
 export interface TournamentScore {
     wpm: number;
     accuracy: number;
+    score: number;
     errors: number;
     totalChars: number;
     correctChars: number;

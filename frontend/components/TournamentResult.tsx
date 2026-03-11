@@ -46,12 +46,12 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
             </tr>
           </thead>
           <tbody>
-            <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Performance Score</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.wpm} PTS</td></tr>
-            <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Final Accuracy</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.accuracy}%</td></tr>
-            <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Total Errors</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.errors}</td></tr>
-            <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Total Characters</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.totalChars}</td></tr>
-            <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Correct Strokes</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.correctChars}</td></tr>
-            <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Submission Mode</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.submissionType}</td></tr>
+             <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Final Match Score</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.score || score.wpm} PTS</td></tr>
+             <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Final Accuracy</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.accuracy}%</td></tr>
+             <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Calculation Basis</td><td style="padding: 12px; border-bottom: 1px solid #eee;">(CPM × Accuracy %)</td></tr>
+             <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Total Errors</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.errors}</td></tr>
+             <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Correct Strokes</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.correctChars}</td></tr>
+             <tr><td style="padding: 12px; border-bottom: 1px solid #eee;">Time Duration</td><td style="padding: 12px; border-bottom: 1px solid #eee;">${score.timeTaken}</td></tr>
           </tbody>
         </table>
         <div style="text-align: center; margin-top: 60px; border-top: 1px solid #eee; padding-top: 20px;">
@@ -96,8 +96,48 @@ const TournamentResult: React.FC<TournamentResultProps> = ({ score, displayName,
               <p className="text-4xl font-black text-red-600 font-sans">{score.errors}</p>
             </div>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 text-slate-700">Time Taken</p>
-              <p className="text-4xl font-black text-slate-900 font-sans">{score.timeTaken}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 text-slate-700">Final Score</p>
+              <p className="text-5xl font-black text-[#92450f] font-sans">{score.score || score.wpm} <span className="text-xs opacity-40">PTS</span></p>
+            </div>
+          </div>
+
+          {/* New Calculation Breakdown Section */}
+          <div className="mt-8 pt-8 border-t border-black/5 text-left">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] opacity-50 mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">calculate</span>
+              Score Calculation Breakdown
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-xs font-bold opacity-60">1. Speed (CPM)</span>
+                  <span className="text-sm font-black italic">
+                    ({score.correctChars} / {(() => {
+                      const [m, s] = score.timeTaken.split(':').map(Number);
+                      return (m * 60) + s || 1;
+                    })()}s) × 60 = {Math.round((score.correctChars / (score.timeTaken.split(':').map(Number).reduce((a, b, i) => i === 0 ? a + b * 60 : a + b, 0) || 1)) * 60)} CPM
+                  </span>
+                </div>
+                <div className="flex justify-between items-baseline text-green-600">
+                  <span className="text-xs font-bold">2. Accuracy Multiplier</span>
+                  <span className="text-sm font-black italic">× {score.accuracy}%</span>
+                </div>
+                <div className="pt-4 border-t border-black/5 flex justify-between items-baseline">
+                  <span className="text-sm font-black uppercase">Final Result</span>
+                  <p className="text-2xl font-black text-[#92450f]">{score.score || score.wpm}</p>
+                </div>
+              </div>
+              
+              <div className="bg-header-brown/5 rounded-2xl p-6 border border-header-brown/10">
+                <p className="text-[10px] font-black uppercase tracking-wider mb-2 opacity-40">Formula Applied</p>
+                <code className="text-[11px] font-bold text-header-brown block leading-relaxed">
+                  Final Score = ROUND((Correct Chars / Seconds) × 60 × (Accuracy / 100))
+                </code>
+                <p className="text-[10px] opacity-40 mt-4 leading-tight">
+                  Our algorithm prioritizes both raw speed and precision. High speed with low accuracy results in a lower score than moderate speed with high accuracy.
+                </p>
+              </div>
             </div>
           </div>
 
