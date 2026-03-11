@@ -75,11 +75,32 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        if (process.env.ALLOWED_ORIGINS === '*') return callback(null, true);
+        // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
+
+        const envOrigins = process.env.ALLOWED_ORIGINS || '';
+        if (envOrigins === '*') return callback(null, true);
+
+        const allowedOriginsList = [
+            'http://localhost:3000',
+            'http://localhost:3001',
+            'http://localhost:3002',
+            'http://localhost:3003',
+            'http://localhost:5000',
+            'http://localhost:5001',
+            'http://localhost:5173',
+            ...envOrigins.split(',').map(o => o.trim()).filter(o => o)
+        ];
+
+        // Check if origin is in allowed list or is a localhost origin
+        const isAllowed = allowedOriginsList.includes(origin) || 
+                          origin.startsWith('http://localhost:') || 
+                          origin.startsWith('http://127.0.0.1:');
+
+        if (isAllowed) {
             callback(null, true);
         } else {
+            console.error(`CORS Error: Origin ${origin} not allowed. Configured: ${envOrigins}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
