@@ -730,7 +730,7 @@ const AppInner: React.FC = () => {
       )}
 
       <main className={`
-        ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-6 xs:pt-8'} 
+        ${(isTournamentLive || isTournamentResult) ? 'pt-0' : 'pt-12 xs:pt-14'} 
         ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'min-h-[900px] lg:h-auto overflow-visible pb-10 xs:pb-12 md:pb-16' : 'pb-8 xs:pb-12 flex-grow'}
       `}>
         <div className={`
@@ -752,21 +752,21 @@ const AppInner: React.FC = () => {
             w-full flex flex-col
             ${isTournamentResult ? 'xl:col-span-3' : (currentView === 'Ezhuthidu' || isTournamentLive) ? '!px-0' : 'px-2 xs:px-4 md:px-6 lg:px-10'}
             ${(currentView === 'Practice') ? 'flex flex-col' : ''}
-            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'flex-1 shrink-0 overflow-x-hidden' : 'shrink-0 overflow-x-hidden gap-4 xs:gap-6'}
+            ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'flex-1 shrink-0 overflow-x-hidden' : 'shrink-0 overflow-x-hidden gap-4'}
           `}>
             {!isTournamentLive && !isTournamentResult && (
-              <div className="w-full mx-auto px-4 xs:px-6 lg:px-10">
+              <div className="w-full mx-auto px-4 xs:px-6 lg:px-10 mt-4">
                 <Marquee onClick={() => handleNavigate('TournamentArena')} />
               </div>
             )}
 
             {currentView === 'Home' ? (
               <>
-                <div className="mb-6 flex justify-center">
+                <div className="flex justify-center">
                   <AdSenseBlock adSlot="1234567890" adFormat="auto" />
                 </div>
                 <Hero onNavigate={handleNavigate} />
-                <div className="my-6 flex justify-center">
+                <div className="my-4 flex justify-center">
                   <AdSenseBlock adSlot="0987654321" adFormat="rectangle" />
                 </div>
                 <section className="bg-cream-light/50 border border-slate-200 rounded-3xl p-3 md:p-8 shadow-inner">
@@ -787,7 +787,7 @@ const AppInner: React.FC = () => {
                     </button>
                   </div>
                 </section>
-                <div className="mt-6 flex justify-center">
+                <div className="mt-4 flex justify-center">
                   <AdSenseBlock adSlot="1122334455" adFormat="auto" />
                 </div>
               </>

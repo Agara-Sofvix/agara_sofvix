@@ -12,7 +12,7 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6 bg-white rounded-3xl shadow-xl mt-8">
+    <div className="max-w-4xl mx-auto py-12 px-6 bg-white rounded-3xl shadow-xl mt-4 mb-6">
       <div className="mb-8 flex justify-center">
         <AdSenseBlock adSlot="3011121314" adFormat="auto" />
       </div>

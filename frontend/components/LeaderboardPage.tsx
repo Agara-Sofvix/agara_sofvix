@@ -181,7 +181,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) 
                         })}
                     </div>
 
-                    <div className="my-6 flex justify-center">
+                    <div className="my-8 flex justify-center">
                         <AdSenseBlock adSlot="9900112233" adFormat="auto" />
                     </div>
 
@@ -261,7 +261,7 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) 
                         )}
                     </div>
 
-                    <div className="mt-6 flex justify-center">
+                    <div className="mt-8 flex justify-center">
                         <AdSenseBlock adSlot="1112223334" adFormat="auto" />
                     </div>
                 </div>

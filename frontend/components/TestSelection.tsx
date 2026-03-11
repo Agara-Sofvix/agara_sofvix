@@ -77,11 +77,11 @@ const TestSelection: React.FC<TestSelectionProps> = ({ onStart, defaultDuration 
     }
 
     return (
-        <div className="w-full max-w-6xl mx-auto flex flex-col items-center py-6 animate-in fade-in zoom-in duration-700">
-            <div className="mb-6 w-full flex justify-center">
+        <div className="w-full max-w-6xl mx-auto flex flex-col items-center py-8 animate-in fade-in zoom-in duration-700">
+            <div className="mb-8 w-full flex justify-center">
                 <AdSenseBlock adSlot="4455667788" adFormat="auto" />
             </div>
-            <div className="text-center mb-8">
+            <div className="text-center mb-12">
                 <h1 className="text-4xl sm:text-6xl font-black tracking-tighter leading-tight text-slate-900">
                     Configure Your <span className="text-primary">Typing Mission</span>
                 </h1>

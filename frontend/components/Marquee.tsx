@@ -26,7 +26,7 @@ const Marquee: React.FC<MarqueeProps> = ({ onClick }) => {
   return (
     <div
       onClick={onClick}
-      className={`w-full mt-4 overflow-hidden bg-cream-light/60 rounded-xl border border-white/20 shadow-sm py-2 ${onClick ? 'cursor-pointer hover:bg-cream-light/80 transition-colors' : ''}`}
+      className={`w-full overflow-hidden bg-cream-light/60 rounded-xl border border-white/20 shadow-sm py-2 ${onClick ? 'cursor-pointer hover:bg-cream-light/80 transition-colors' : ''}`}
     >
       <div className="relative flex overflow-x-hidden">
         <div className="animate-marquee whitespace-nowrap flex items-center">

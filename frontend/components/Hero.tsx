@@ -34,7 +34,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <section className="bg-cream-light/50 border border-slate-200 rounded-xl xs:rounded-2xl md:rounded-[2rem] p-3 xs:p-6 sm:p-8 md:p-10 lg:p-12 xl:p-14 shadow-inner flex flex-col gap-4 xs:gap-6 md:gap-8 relative overflow-hidden">
+    <section className="bg-cream-light/50 border border-slate-200 rounded-xl xs:rounded-2xl md:rounded-[2rem] p-3 xs:p-6 sm:p-8 md:p-12 lg:p-16 xl:p-20 shadow-inner flex flex-col gap-4 xs:gap-8 md:gap-12 relative overflow-hidden">
       {/* Decorative Blob - Removed for cleaner look */}
 
       <div className="max-w-6xl mx-auto flex flex-col items-center gap-4 xs:gap-6 md:gap-8 text-center">
