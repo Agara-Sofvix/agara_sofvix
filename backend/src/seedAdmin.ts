@@ -7,33 +7,38 @@ dotenv.config();
 
 export const seedAdmin = async () => {
     try {
-        // connectDB is called in app.ts, so we might not need to call it here if running from app.ts
-        // But for safety, check connection state or assume connected. 
-        // If running as standalone script, we need to connect. 
-        // For now, let's assume this is called after DB connection.
+        const email = 'admin@ezhuthidu.com';
+        const password = process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@123';
+        const forceReset = process.env.FORCE_RESET_ADMIN === 'true';
 
         // Check if admin already exists
-        const existingAdmin = await Admin.findOne({ email: 'admin@ezhuthidu.com' });
+        const existingAdmin = await Admin.findOne({ email });
 
         if (existingAdmin) {
-            console.log('Admin already exists.');
-            // Optional: Update password if needed, but for auto-seed on restart, likely just skip
+            if (forceReset) {
+                console.log('FORCE_RESET_ADMIN is true. Updating admin credentials...');
+                existingAdmin.password = password;
+                existingAdmin.isActive = true;
+                // Optional: reset token version to force logout everywhere
+                existingAdmin.tokenVersion = (existingAdmin.tokenVersion || 1) + 1;
+                await existingAdmin.save();
+                console.log('Admin credentials updated successfully.');
+            } else {
+                console.log('Admin already exists. Use FORCE_RESET_ADMIN=true to reset credentials.');
+            }
             return;
         }
 
-        // Get password from env or default
-        const password = process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@123';
-
         // Create admin
-        const admin = await Admin.create({
+        await Admin.create({
             name: 'Admin',
-            email: 'admin@ezhuthidu.com',
+            email,
             password,
             isActive: true,
         });
 
         console.log('Admin created successfully');
-        console.log('Email: admin@ezhuthidu.com');
+        console.log(`Email: ${email}`);
         console.log('Please change the password after first login');
 
     } catch (error) {
