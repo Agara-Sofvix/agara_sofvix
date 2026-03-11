@@ -559,65 +559,40 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       try {
         const customEvent = e as CustomEvent;
         const { type, value, activeBase: isActiveBaseDelete } = customEvent.detail;
-
         const start = inputRef.current?.selectionStart || inputText.length;
         const end = inputRef.current?.selectionEnd || inputText.length;
 
         if (!startTime) setStartTime(Date.now());
 
-        let newText = inputText;
-
-        if (type === 'char') {
-          const char = value;
-
-          if (mode === 'lesson' && !isCustomSetup) {
-            const checkMatch = (produced: string) => {
-              if (produced === targetText) {
-                setFeedbackStatus('success');
-                setInputText(inputText + targetText);
-                setPartialInput("");
-              } else if (isPotentialMatch(produced, targetText)) {
-                setFeedbackStatus('error');
-                setPartialInput(produced);
-              } else {
-                // Wrong input - match desktop behavior by appending it
-                setFeedbackStatus('error');
-                setPartialInput("");
-                setInputText(inputText + produced);
-              }
-            };
-
-            if (type === 'char' || type === 'replace' || type === 'phonetic') {
-              const result = processTamilInput(partialInput, value, partialInput.length);
-              const produced = result.text;
-
-              // Keyboard Practice Infinite Logic for Virtual Keyboard
-              if (selectedCategoryId === 'keyboard_practice') {
-                const result = processTamilInput(partialInput, value, partialInput.length);
-                const produced = result.text;
-
-                const { lastInputStatus } = calculateDynamicTape(targetText, inputText + produced, inputHistory);
-
-                const newDisplayInput = inputText + produced;
-                setInputText(newDisplayInput);
-                setPartialInput("");
-                setFeedbackStatus(lastInputStatus);
-
-                const newPos = newDisplayInput.length;
-                setTimeout(() => {
-                  if (inputRef.current) {
-                    inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-                  }
-                }, 0);
-                return;
-              }
-
-              checkMatch(produced);
-            }
-            return;
+        // Helper for matching in Lesson mode
+        const checkMatch = (produced: string) => {
+          if (produced === targetText) {
+            setFeedbackStatus('success');
+            setInputText(inputText + targetText);
+            setPartialInput("");
+          } else if (isPotentialMatch(produced, targetText)) {
+            setFeedbackStatus('error');
+            setPartialInput(produced);
+          } else {
+            setFeedbackStatus('error');
+            setPartialInput("");
+            setInputText(inputText + produced);
           }
+        };
 
-          if (char === ' ') {
+        if (mode === 'lesson' && !isCustomSetup) {
+          // LESSON MODE HANDLING
+          if (type === 'backspace') {
+            const result = handleTamilBackspace(inputText + partialInput, start, end);
+            setInputText(result.text);
+            setPartialInput("");
+            if (selectedCategoryId === 'keyboard_practice') {
+              const { lastInputStatus } = calculateDynamicTape(targetText, result.text, inputHistory);
+              setFeedbackStatus(lastInputStatus);
+            } else if (result.text === '' || targetText.startsWith(result.text)) {
+              setFeedbackStatus('neutral');
+            }
+          } else if (value === ' ') {
             if (selectedCategoryId === 'keyboard_practice') {
               setInputHistory(inputHistory + inputText + ' ');
               setInputText('');
@@ -625,77 +600,53 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
             } else if (inputText.length > 0 || feedbackStatus === 'success') {
               advanceLesson();
             }
-            return;
-          }
+          } else if (type === 'char' || type === 'phonetic' || type === 'replace') {
+            const result = processTamilInput(partialInput, value, partialInput.length);
+            const produced = result.text;
 
-          newText = inputText.slice(0, start) + char + inputText.slice(start);
-        } else if (type === 'replace') {
-          const char = value;
-          const graphemes = getTamilGraphemes(inputText.slice(0, start));
-          const lastGrapheme = graphemes[graphemes.length - 1] || "";
-          const replaceLen = lastGrapheme.length;
-
-          newText = inputText.slice(0, start - replaceLen) + char + inputText.slice(start);
-          setInputText(newText);
-          const newPos = start - replaceLen + char.length;
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-            }
-          }, 0);
-        } else if (type === 'phonetic') {
-          const key = value;
-          const result = processTamilInput(inputText, key, start);
-          newText = result.text;
-          setInputText(newText);
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
-            }
-          }, 0);
-        } else if (type === 'backspace') {
-          const startForDelete = inputRef.current?.selectionStart || inputText.length;
-          const endForDelete = inputRef.current?.selectionEnd || inputText.length;
-
-          if (isActiveBaseDelete) {
-            const combinedForDelete = inputText + partialInput;
-            newText = combinedForDelete.slice(0, startForDelete - 1) + combinedForDelete.slice(startForDelete);
-            setInputText(newText);
-            setPartialInput("");
-            const newPos = startForDelete - 1;
-            setTimeout(() => {
-              if (inputRef.current) {
-                inputRef.current.selectionStart = inputRef.current.selectionEnd = newPos;
-              }
-            }, 0);
-          } else {
-            const result = handleTamilBackspace(inputText + partialInput, startForDelete, endForDelete);
-            newText = result.text;
-            setInputText(newText);
-            setPartialInput("");
-            setTimeout(() => {
-              if (inputRef.current) {
-                inputRef.current.selectionStart = inputRef.current.selectionEnd = result.newCursorPos;
-              }
-            }, 0);
-          }
-
-          // Reset feedback on backspace
-          if (mode === 'lesson') {
             if (selectedCategoryId === 'keyboard_practice') {
-              const { lastInputStatus } = calculateDynamicTape(targetText, newText, inputHistory);
+              const newDisplayInput = inputText + produced;
+              const { lastInputStatus } = calculateDynamicTape(targetText, newDisplayInput, inputHistory);
+              setInputText(newDisplayInput);
+              setPartialInput("");
               setFeedbackStatus(lastInputStatus);
-            } else if (newText === '' || targetText.startsWith(newText)) {
-              setFeedbackStatus('neutral');
+            } else {
+              checkMatch(produced);
             }
           }
-        }
+        } else {
+          // FREE / CUSTOM MODE HANDLING
+          let newText = inputText;
+          let newCursor = start;
 
-        // Check for next paragraph
-        if (mode === 'free') {
-          // Use activeCharIndex to ensure the last character is FULLY completed
-          // (activeCharIndex increments only after perfect match or non-potential error)
-          if (activeCharIndex >= targetGraphemes.length) {
+          if (type === 'backspace') {
+            const result = handleTamilBackspace(inputText + partialInput, start, end);
+            newText = result.text;
+            newCursor = result.newCursorPos;
+            setPartialInput("");
+          } else if (type === 'phonetic') {
+            const result = processTamilInput(inputText, value, start);
+            newText = result.text;
+            newCursor = result.newCursorPos;
+          } else if (type === 'char') {
+            newText = inputText.slice(0, start) + value + inputText.slice(end);
+            newCursor = start + value.length;
+          } else if (type === 'replace') {
+            const graphemes = getTamilGraphemes(inputText.slice(0, start));
+            const lastGrapheme = graphemes[graphemes.length - 1] || "";
+            const replaceLen = lastGrapheme.length;
+            newText = inputText.slice(0, start - replaceLen) + value + inputText.slice(end);
+            newCursor = start - replaceLen + value.length;
+          }
+
+          setInputText(newText);
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.selectionStart = inputRef.current.selectionEnd = newCursor;
+            }
+          }, 0);
+
+          if (mode === 'free' && activeCharIndex >= targetGraphemes.length) {
             setTargetText(prev => {
               const nextPara = getRandomText('free-typing', prev.split(' ').pop() || "");
               return prev.trimEnd() + " " + nextPara;
