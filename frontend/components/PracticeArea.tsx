@@ -566,12 +566,15 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
 
         // Helper for matching in Lesson mode
         const checkMatch = (produced: string) => {
-          if (produced === targetText) {
+          const normalizedProduced = produced.normalize('NFC');
+          const normalizedTarget = targetText.normalize('NFC');
+          if (normalizedProduced === normalizedTarget) {
             setFeedbackStatus('success');
             setInputText(inputText + targetText);
             setPartialInput("");
           } else if (isPotentialMatch(produced, targetText)) {
-            setFeedbackStatus('error');
+            // Potential match (e.g. typing 'i' for 'ஈ') should NOT be red
+            setFeedbackStatus('neutral');
             setPartialInput(produced);
           } else {
             setFeedbackStatus('error');
@@ -775,7 +778,10 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         }
 
         // ORIGINAL LESSON LOGIC: For single-character lessons (Uyir, Mei, etc.)
-        if (produced === targetText) {
+        const normalizedProduced = produced.normalize('NFC');
+        const normalizedTarget = targetText.normalize('NFC');
+
+        if (normalizedProduced === normalizedTarget) {
           // COMPLETE SUCCESS
           setFeedbackStatus('success');
           const newLessonInp = inputText + targetText;
@@ -792,8 +798,8 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
         }
 
         if (isPotentialMatch(produced, targetText)) {
-          // PARTIAL MATCH - show as error (red) until complete
-          setFeedbackStatus('error');
+          // PARTIAL MATCH - show as neutral (not red) until complete
+          setFeedbackStatus('neutral');
           setPartialInput(produced);
           return;
         }

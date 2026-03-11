@@ -35,9 +35,10 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, settings }) => {
             window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'char', value: '\n' } }));
         } else if (lowerKey === ' ') {
             window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'char', value: ' ' } }));
-        } else if (/^[a-z]$/.test(lowerKey)) {
+        } else if (/^[a-zA-Z]$/.test(keyId)) {
             // For A-Z keys, dispatch a 'phonetic' event so PracticeArea/TestArea can process them
-            window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'phonetic', value: lowerKey } }));
+            // Preserve case for Nedil (long vowel) support (e.g. 'I' for 'ஈ')
+            window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'phonetic', value: keyId } }));
         } else if (TAMIL_PHONETIC_MAP[lowerKey]) {
             window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'char', value: TAMIL_PHONETIC_MAP[lowerKey].main } }));
         } else if (label && label.length === 1) {
