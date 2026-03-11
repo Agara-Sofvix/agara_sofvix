@@ -15,9 +15,12 @@ import { getUploadBaseUrl } from '@/src/config/apiConfig';
 interface LeaderboardEntry {
   wpm: number;
   accuracy: number;
+  score: number;
   user: {
+    _id: string; // Added _id for consistency with global types
     username: string;
     name: string;
+    profilePic?: string; // Added profilePic for top user card
   };
 }
 
@@ -87,7 +90,9 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
       const newUserEntryRow: LeaderboardEntry = {
         wpm: 0,
         accuracy: 0,
+        score: 0,
         user: {
+          _id: stats.displayName, // Mocking ID
           username: stats.displayName,
           name: stats.displayName
         }
@@ -270,10 +275,17 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
                             <span className="text-xl font-black italic text-slate-400">0{i + 1}</span>
                             <div className="flex flex-col">
                               <span className="text-xs font-bold">{entry.user.username || entry.user.name} {(entry.user.username === stats.displayName || entry.user.name === stats.displayName) && '(You)'}</span>
-                              <span className="text-[8px] opacity-60 uppercase tracking-wider">{entry.accuracy}% Accuracy</span>
+                              <p className="text-[8px] opacity-60 uppercase tracking-wider font-bold">
+                                <span>{entry.wpm} WPM</span>
+                                <span className="mx-1 opacity-20">•</span>
+                                <span>{entry.accuracy}% ACC</span>
+                              </p>
                             </div>
                           </div>
-                          <span className="text-lg font-black text-primary">{entry.wpm} WPM</span>
+                          <div className="text-right">
+                            <span className="text-xl font-black text-[#92450f]">{entry.score || 0}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest ml-1 opacity-30">PTS</span>
+                          </div>
                         </div>
                       ))}
 
@@ -293,14 +305,23 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
                                   <span className="text-xl font-black italic text-primary/40">
                                     {userRank > 0 ? userRank.toString().padStart(2, '0') : '--'}
                                   </span>
-                                  <div className="flex flex-col">
-                                    <span className="text-xs font-bold">{userEntry.user.username || userEntry.user.name} (You)</span>
-                                    <span className="text-[8px] opacity-60 uppercase tracking-wider">
-                                      {isNoScore ? 'Registered' : `${userEntry.accuracy}% Accuracy`}
-                                    </span>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs font-bold">{userEntry.user.username || userEntry.user.name} (You)</span>
+                                      <p className="text-[8px] opacity-60 uppercase tracking-wider font-bold">
+                                        {isNoScore ? 'Registered' : (
+                                          <>
+                                            <span>{userEntry.wpm} WPM</span>
+                                            <span className="mx-1 opacity-20">•</span>
+                                            <span>{userEntry.accuracy}% ACC</span>
+                                          </>
+                                        )}
+                                      </p>
+                                    </div>
                                   </div>
-                                </div>
-                                <span className="text-lg font-black text-primary">{userEntry.wpm} WPM</span>
+                                  <div className="text-right">
+                                    <span className="text-xl font-black text-[#92450f]">{userEntry.score || 0}</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest ml-1 opacity-30">PTS</span>
+                                  </div>
                               </div>
                             </>
                           );
@@ -403,9 +424,13 @@ const TournamentArena: React.FC<TournamentArenaProps> = ({ onNavigate, stats, ac
                         <span className="text-[8px] font-black bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-[0.2em] shadow-sm">Rank #1</span>
                       </div>
                       <p className="text-xl font-black leading-none text-slate-800">{leaderboard[0].user.username || leaderboard[0].user.name}</p>
-                      <p className="text-[10px] font-bold uppercase opacity-60 mt-1.5 flex items-center gap-2 text-primary">
+                      <p className="text-2xl font-black text-[#92450f] mt-1.5 flex items-baseline gap-1">
+                        {leaderboard[0].score || 0}
+                        <span className="text-[9px] font-black uppercase tracking-widest opacity-30">Score</span>
+                      </p>
+                      <p className="text-[8px] font-bold uppercase opacity-40 mt-1 flex items-center gap-2 text-slate-500">
                         <span>{leaderboard[0].wpm} WPM</span>
-                        <span className="w-1 h-1 rounded-full bg-primary/30"></span>
+                        <span className="w-1 h-1 rounded-full bg-slate-300"></span>
                         <span>{leaderboard[0].accuracy}% ACC</span>
                       </p>
                     </div>
