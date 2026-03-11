@@ -554,7 +554,6 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
     return () => clearInterval(interval);
   }, [startTime, practiceDuration]);
 
-  useEffect(() => {
     const handleMobileInput = (e: Event) => {
       try {
         const customEvent = e as CustomEvent;
@@ -601,7 +600,7 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
                 setInputText(inputText + targetText);
                 setPartialInput("");
               } else if (isPotentialMatch(produced, targetText)) {
-                setFeedbackStatus('neutral'); // Neutral for progress
+                setFeedbackStatus('neutral'); // Neutral for progress (fix 'stuck' feeling)
                 setPartialInput(produced);
               } else {
                 setFeedbackStatus('error');
@@ -654,9 +653,14 @@ const PracticeArea: React.FC<PracticeAreaProps> = ({ onComplete, settings, activ
       }
     };
 
-    window.addEventListener('mobile-keyboard-input', handleMobileInput);
-    return () => window.removeEventListener('mobile-keyboard-input', handleMobileInput);
-  }, [inputText, startTime, mode, targetText, currentLessonIndex, selectedCategoryId, categories]);
+    const handlerRef = useRef(handleMobileInput);
+    handlerRef.current = handleMobileInput;
+
+    useEffect(() => {
+      const wrapped = (e: Event) => handlerRef.current(e);
+      window.addEventListener('mobile-keyboard-input', wrapped);
+      return () => window.removeEventListener('mobile-keyboard-input', wrapped);
+    }, []);
 
   const handleWordClick = (clickedIdxInPage: number) => {
     if (selectedCategoryId !== 'keyboard_practice') return;
