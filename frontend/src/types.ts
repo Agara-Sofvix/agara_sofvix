@@ -49,6 +49,7 @@ export interface TournamentScore {
 export interface LeaderboardEntry {
     wpm: number;
     accuracy: number;
+    score: number;
     user: {
         _id: string;
         username: string;

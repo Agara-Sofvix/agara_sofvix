@@ -171,8 +171,13 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) 
                                                 </p>
                                             </div>
                                             <div className="mt-2 flex flex-col items-center">
-                                                <p className={`font-black ${isRank1 ? 'text-4xl' : 'text-2xl'}`}>{entry.wpm}</p>
-                                                <p className="text-[8px] font-black uppercase tracking-widest opacity-40">Words / Min</p>
+                                                <p className={`font-black ${isRank1 ? 'text-5xl' : 'text-3xl'} text-[#92450f]`}>{entry.score || 0}</p>
+                                                <p className="text-[9px] font-black uppercase tracking-widest opacity-60">Match Score</p>
+                                                <div className="flex items-center gap-2 mt-1 opacity-40">
+                                                    <span className="text-[10px] font-bold">{entry.wpm} WPM</span>
+                                                    <span className="w-1 h-1 rounded-full bg-current"></span>
+                                                    <span className="text-[10px] font-bold">{entry.accuracy}% ACC</span>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -226,8 +231,17 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) 
                                                         </p>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <span className="text-base font-black">{entry.wpm}</span>
-                                                        <span className="text-[9px] font-black uppercase tracking-widest ml-2 opacity-30">WPM</span>
+                                                        <div className="flex flex-col items-end">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xl font-black text-[#92450f]">{entry.score || 0}</span>
+                                                                <span className="text-[9px] font-black uppercase tracking-widest opacity-30">PTS</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 opacity-40">
+                                                                <span className="text-[9px] font-bold">{entry.wpm} WPM</span>
+                                                                <span className="text-[9px] font-bold">|</span>
+                                                                <span className="text-[9px] font-bold">{entry.accuracy}%</span>
+                                                            </div>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             );
@@ -254,8 +268,13 @@ const LeaderboardPage: React.FC<LeaderboardPageProps> = ({ onNavigate, stats }) 
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-3xl font-black text-[#92450f]">{userEntry.wpm}</p>
-                                    <p className="text-[9px] font-black uppercase tracking-widest text-[#92450f]/40 mt-1">Current Speed</p>
+                                    <div className="flex flex-col items-end">
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-4xl font-black text-[#92450f]">{userEntry.score || 0}</p>
+                                            <p className="text-[9px] font-black uppercase tracking-widest text-[#92450f]/40">Score</p>
+                                        </div>
+                                        <p className="text-[10px] font-bold text-[#92450f]/60">{userEntry.wpm} WPM • {userEntry.accuracy}% Accuracy</p>
+                                    </div>
                                 </div>
                             </div>
                         )}
