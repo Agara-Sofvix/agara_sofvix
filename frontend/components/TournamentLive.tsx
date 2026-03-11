@@ -379,7 +379,7 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
       </header>
 
       <div className="flex-grow w-full flex flex-col items-center xs:py-2 py-8 overflow-y-auto">
-        <div className="w-full xl:w-[76%] 2xl:w-[70%] 3xl:w-[76%] mx-auto flex flex-col items-center xs:gap-2 gap-8 px-4 sm:px-0">
+        <div className="w-full xl:w-[94%] 2xl:w-[90%] mx-auto flex flex-col items-center xs:gap-2 gap-8 px-4 sm:px-0">
           <div
             ref={targetDisplayRef}
             className="w-full bg-cream-light rounded-[1.5rem] sm:rounded-[2.5rem] p-3 sm:p-4 md:p-5 paper-shadow border border-slate-100 font-tamil h-[80px] md:h-[110px] overflow-y-auto scroll-smooth animate-in slide-in-from-top-4 duration-700"
@@ -451,7 +451,7 @@ const TournamentLive: React.FC<TournamentLiveProps> = ({ onComplete, displayName
 
         {/* Standardized Keyboard Container */}
         <div className="w-full bg-transparent flex flex-col items-center pt-2 sm:pt-4 pb-4 sm:pb-8 px-2 sm:px-4 no-print">
-          <div className="w-full xl:w-[76%] 2xl:w-[70%] 3xl:w-[76%] max-w-[2400px] transition-all duration-300">
+          <div className="w-full xl:w-[94%] 2xl:w-[90%] max-w-[2400px] transition-all duration-300">
             <Keyboard activeKeys={activeKeys || new Set()} settings={settings} />
           </div>
         </div>
