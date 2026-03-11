@@ -85,26 +85,6 @@ const THEMES = [
     }
 ];
 
-const SAMPLE_ADS: Advertisement[] = [
-    {
-        _id: 'default-1',
-        title: 'Master Tamil Typing',
-        description: 'Join the most advanced Tamil typing tournament and win exciting prizes!',
-        ctaText: 'Start Now',
-        position: 'left-side',
-        themeIndex: 0,
-        linkUrl: '/practice'
-    },
-    {
-        _id: 'default-2',
-        title: 'Join Tournament',
-        description: 'New competition starts in 2 days. Register now to participate and climb the leaderboard.',
-        ctaText: 'Register',
-        position: 'right-side',
-        themeIndex: 1,
-        linkUrl: '/tournaments'
-    }
-];
 
 const GeneratedPoster: React.FC<GeneratedPosterProps> = ({ title, description, ctaText, imageUrl, adId, themeIndex }) => {
     // Use saved themeIndex if available, otherwise fallback to deterministic (for legacy ads)
@@ -189,13 +169,11 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
                 if (filtered.length > 0) {
                     setAds(filtered);
                 } else {
-                    // Fallback to sample ads if no ads found in DB for this side
-                    setAds(SAMPLE_ADS.filter(ad => ad.position === `${position}-side`));
+                    setAds([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch side advertisements:', error);
-                // Fallback to sample ads on error
-                setAds(SAMPLE_ADS.filter(ad => ad.position === `${position}-side`));
+                setAds([]);
             } finally {
                 setLoading(false);
             }
@@ -215,11 +193,12 @@ const SideAds: React.FC<SideAdsProps> = ({ position }) => {
         return () => clearInterval(interval);
     }, [ads.length]);
 
+    if (loading || ads.length === 0) return null;
     const currentAd = ads[currentIndex];
 
     return (
         <aside className="w-full h-full bg-slate-50/10">
-            {(!loading && currentAd) && (
+            {currentAd && (
                 <div className="w-full h-full relative group">
                     <a
                         href={currentAd.linkUrl}
