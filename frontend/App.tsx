@@ -738,7 +738,7 @@ const AppInner: React.FC = () => {
             ${(currentView === 'Ezhuthidu' || isTournamentLive) ? 'h-full' : 'min-h-full'} 
             max-w-screen-4xl
             grid-cols-1 md:grid-cols-1 lg:grid-cols-1
-            ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup') ? 'lg:grid-cols-[15%_70%_15%] xl:grid-cols-[20%_60%_20%]' : 'grid-cols-1'}
+            ${(currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup') ? 'lg:grid-cols-[15%_70%_15%]' : 'grid-cols-1'}
           `}>
           {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
             <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-80px)] mb-6 overflow-hidden border-r border-slate-100/50 z-[45] p-3 md:p-4">
@@ -880,9 +880,7 @@ const AppInner: React.FC = () => {
 
           {currentView !== 'TournamentLive' && !isTournamentLive && currentView !== 'TournamentResult' && currentView !== 'Login' && currentView !== 'Signup' && (
             <div className="hidden lg:block sticky top-[72px] h-[calc(100vh-80px)] mb-6 overflow-hidden border-l border-slate-100/50 z-[45] p-3 md:p-4">
-              <div className="w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/5">
-                <SideAds position="right" />
-              </div>
+              {/* Right side kept empty as per user request (15% gap) */}
             </div>
           )}
         </div>
