@@ -28,6 +28,7 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, settings }) => {
     const onKeyClick = (keyId: string, label?: string) => {
         if (!keyId) return;
         const lowerKey = keyId.toLowerCase();
+        const isShiftActive = activeKeys.has('shift');
 
         if (lowerKey === 'backspace') {
             window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'backspace', activeBase: false } }));
@@ -35,10 +36,12 @@ const Keyboard: React.FC<KeyboardProps> = ({ activeKeys, settings }) => {
             window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'char', value: '\n' } }));
         } else if (lowerKey === ' ') {
             window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'char', value: ' ' } }));
-        } else if (/^[a-zA-Z]$/.test(keyId)) {
-            // For A-Z keys, dispatch a 'phonetic' event so PracticeArea/TestArea can process them
-            // Preserve case for Nedil (long vowel) support (e.g. 'I' for 'ஈ')
-            window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'phonetic', value: keyId } }));
+        } else if (lowerKey === 'shift') {
+            window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'shift-toggle' } }));
+        } else if (/^[a-z]$/.test(lowerKey)) {
+            // Dispatch uppercase if shift is active
+            const value = isShiftActive ? lowerKey.toUpperCase() : lowerKey;
+            window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'phonetic', value } }));
         } else if (TAMIL_PHONETIC_MAP[lowerKey]) {
             window.dispatchEvent(new CustomEvent('mobile-keyboard-input', { detail: { type: 'char', value: TAMIL_PHONETIC_MAP[lowerKey].main } }));
         } else if (label && label.length === 1) {

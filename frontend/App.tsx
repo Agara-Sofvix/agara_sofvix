@@ -238,6 +238,23 @@ const AppInner: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const handleMobileInput = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { type } = customEvent.detail;
+      if (type === 'shift-toggle') {
+        setActiveKeys(prev => {
+          const next = new Set(prev);
+          if (next.has('shift')) next.delete('shift');
+          else next.add('shift');
+          return next;
+        });
+      }
+    };
+    window.addEventListener('mobile-keyboard-input', handleMobileInput);
+    return () => window.removeEventListener('mobile-keyboard-input', handleMobileInput);
+  }, []);
+
+  useEffect(() => {
     // Clear legacy localStorage data
     if (localStorage.getItem('ezhuthidu_signed_up_user')) {
       localStorage.removeItem('ezhuthidu_signed_up_user');
